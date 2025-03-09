@@ -53,13 +53,6 @@
         img.style.borderRadius = "15px"; // حواف دائرية
         imgDiv.appendChild(img);
 
-        // زر العداد (غير قابل للتفاعل)
-        const countButton = document.createElement("button");
-        countButton.classList.add("count-button");
-        countButton.innerHTML = heartsCount; // عرض عدد القلوب
-        countButton.disabled = true; // تعطيل التفاعل مع الزر
-        imgDiv.appendChild(countButton);
-
         // زر "الحمد لله" مع التفاعل
         const heartButton = document.createElement("button");
         heartButton.classList.add("heart-button");
@@ -72,6 +65,13 @@
           setTimeout(() => heartButton.classList.remove("clicked"), 300); // إزالة الكلاس بعد 300ms
         };
         imgDiv.appendChild(heartButton);
+
+        // زر العداد (غير قابل للتفاعل)
+        const countButton = document.createElement("button");
+        countButton.classList.add("count-button");
+        countButton.innerHTML = heartsCount; // عرض عدد القلوب
+        countButton.disabled = true; // تعطيل التفاعل مع الزر
+        imgDiv.appendChild(countButton);
 
         // زر الحذف
         const deleteButton = document.createElement("button");
@@ -265,34 +265,15 @@
       cursor: pointer;
     }
 
-    /* تصميم زر العداد */
-    .count-button {
-      position: absolute;
-      bottom: -30px;
-      left: 10px;
-      background: rgba(255, 255, 255, 0.2); /* نفس خلفية زر الحمد لله */
-      border: none;
-      padding: 4px 10px;
-      border-radius: 10px;
-      color: #FFA500;
-      font-size: 12px;
-      cursor: default; /* لا يتفاعل مع المؤشر */
-      pointer-events: none; /* تعطيل التفاعل */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 30px; /* نفس ارتفاع زر الحمد لله */
-    }
-
     /* تصميم زر الحمد لله */
     .heart-button {
       position: absolute;
       bottom: -30px;
-      left: 70px; /* تباعد عن زر العداد */
+      left: 10px; /* زر الحمد لله على اليسار */
       background: rgba(255, 255, 255, 0.2);
       border: none;
       padding: 4px 10px;
-      border-radius: 10px;
+      border-radius: 10px 0 0 10px; /* حواف دائرية على اليسار فقط */
       color: #FFA500;
       font-size: 12px;
       cursor: pointer;
@@ -309,13 +290,32 @@
     }
 
     .heart-button.clicked {
-      animation: pulse 0.3s ease-in-out; /* تأثير النبض عند الضغط */
+      animation: pulse 0.3s ease-in-out; /* ت��ثير النبض عند الضغط */
     }
 
     @keyframes pulse {
       0% { transform: scale(1); }
       50% { transform: scale(1.1); }
       100% { transform: scale(1); }
+    }
+
+    /* تصميم زر العداد */
+    .count-button {
+      position: absolute;
+      bottom: -30px;
+      left: 92px; /* ملتصق بجانب زر الحمد لله من اليمين */
+      background: rgba(255, 255, 255, 0.2); /* نفس خلفية زر الحمد لله */
+      border: none;
+      padding: 4px 10px;
+      border-radius: 0 10px 10px 0; /* حواف دائرية على اليمين فقط */
+      color: #FFA500;
+      font-size: 12px;
+      cursor: default; /* لا يتفاعل مع المؤشر */
+      pointer-events: none; /* تعطيل التفاعل */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 30px; /* نفس ارتفاع زر الحمد لله */
     }
 
     .delete-button {

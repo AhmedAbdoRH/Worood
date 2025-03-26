@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,79 +7,60 @@
     <style>
         body {
             font-family: Arial, sans-serif;
+            text-align: center;
             direction: rtl;
-            text-align: right;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 500px;
+            margin: 20px auto;
+            background: white;
             padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-
-        #blessings-list {
-            list-style-type: none;
+        input, button {
+            margin: 10px 0;
+            padding: 10px;
+            width: 80%;
+        }
+        ul {
+            list-style: none;
             padding: 0;
         }
-
-        .blessing-item {
-            margin-bottom: 20px;
+        li {
+            background: #fff;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            cursor: grab;
+            position: relative;
         }
-
-        .blessing-item h2 {
-            margin: 0;
-            color: #333;
-        }
-
-        .sub-items {
-            list-style-type: none;
-            padding: 0;
-            margin-top: 10px;
-        }
-
-        .sub-item {
-            background-color: #f0f0f0;
-            padding: 5px;
-            margin-bottom: 5px;
-            cursor: move;
-            border-radius: 3px;
-        }
-
-        form {
-            margin-top: 20px;
-        }
-
-        input[type="text"] {
-            padding: 5px;
-            width: 200px;
-        }
-
-        button {
-            padding: 5px 10px;
-            background-color: #4CAF50;
+        .delete-btn {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: red;
             color: white;
             border: none;
+            padding: 5px;
             cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #45a049;
+            border-radius: 5px;
         }
     </style>
 </head>
 <body>
-    <h1>شكر النعم</h1>
-    <div id="blessings-container">
-        <ul id="blessings-list">
-            <!-- النعم ستظهر هنا -->
-        </ul>
+    <div class="container">
+        <h1>شكر النعم</h1>
+        <input type="text" id="newBlessing" placeholder="أضف نعمة جديدة">
+        <button onclick="addBlessing()">إضافة نعمة</button>
+        <ul id="blessingsList"></ul>
     </div>
-    <form id="add-blessing-form">
-        <input type="text" id="blessing-input" placeholder="أدخل نعمة جديدة">
-        <button type="submit">إضافة نعمة</button>
-    </form>
 
-    <!-- إضافة مكتبات Firebase (الإصدار 10) -->
-    <script type="module">
-        // استيراد مكتبات Firebase
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc, orderBy, query } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
-
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js"></script>
+    <script>
         // تكوين Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAunLxvASN6Cbsa_Nc6l78_5lMhe5fP2Qg",
@@ -92,116 +73,69 @@
         };
 
         // تهيئة Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const blessingsCollection = collection(db, 'blessings');
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-        // تحميل Sortable.js
-        const sortableScript = document.createElement('script');
-        sortableScript.src = "https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js";
-        document.body.appendChild(sortableScript);
+        const blessingsList = document.getElementById("blessingsList");
 
-        sortableScript.onload = function() {
-            document.addEventListener('DOMContentLoaded', function() {
-                const blessingsList = document.getElementById('blessings-list');
-                const addBlessingForm = document.getElementById('add-blessing-form');
-                const blessingInput = document.getElementById('blessing-input');
+        // إضافة نعمة جديدة
+        function addBlessing() {
+            const blessingInput = document.getElementById("newBlessing");
+            const blessing = blessingInput.value.trim();
+            if (blessing) {
+                const newRef = db.ref("blessings").push();
+                newRef.set({ name: blessing });
+                blessingInput.value = "";
+            }
+        }
 
-                // دالة لإضافة نعمة جديدة إلى Firestore
-                async function addBlessing(text) {
-                    try {
-                        const blessing = { 
-                            text: text, 
-                            subItems: [], 
-                            timestamp: new Date().toISOString() 
-                        };
-                        const docRef = await addDoc(blessingsCollection, blessing);
-                        console.log("تمت إضافة النعمة بنجاح، المعرف:", docRef.id);
-                    } catch (error) {
-                        console.error("خطأ أثناء إضافة النعمة:", error);
-                    }
-                }
-
-                // دالة لعرض النعمة في الصفحة
-                function renderBlessing(blessing) {
-                    const li = document.createElement('li');
-                    li.className = 'blessing-item';
-                    li.dataset.id = blessing.id;
-                    li.innerHTML = `
-                        <h2>${blessing.text}</h2>
-                        <ul class="sub-items"></ul>
-                        <form class="add-sub-item-form">
-                            <input type="text" placeholder="أدخل طريقة الشكر">
-                            <button type="submit">إضافة</button>
-                        </form>
-                    `;
-                    blessingsList.appendChild(li);
-
-                    const subItemsList = li.querySelector('.sub-items');
-                    blessing.subItems.forEach(subItem => addSubItem(subItemsList, subItem));
-
-                    const addSubItemForm = li.querySelector('.add-sub-item-form');
-                    addSubItemForm.addEventListener('submit', async function(event) {
-                        event.preventDefault();
-                        const subItemText = addSubItemForm.querySelector('input[type="text"]').value.trim();
-                        if (subItemText !== '') {
-                            blessing.subItems.push(subItemText);
-                            try {
-                                await updateDoc(doc(db, 'blessings', blessing.id), { subItems: blessing.subItems });
-                                addSubItem(subItemsList, subItemText);
-                                addSubItemForm.querySelector('input[type="text"]').value = '';
-                            } catch (error) {
-                                console.error("خطأ أثناء إضافة البند:", error);
-                            }
-                        }
-                    });
-
-                    // تفعيل السحب والإفلات للبنود
-                    new Sortable(subItemsList, {
-                        animation: 150,
-                        ghostClass: 'sortable-ghost',
-                        onEnd: async function(evt) {
-                            const movedItem = blessing.subItems.splice(evt.oldIndex, 1)[0];
-                            blessing.subItems.splice(evt.newIndex, 0, movedItem);
-                            try {
-                                await updateDoc(doc(db, 'blessings', blessing.id), { subItems: blessing.subItems });
-                            } catch (error) {
-                                console.error("خطأ أثناء تحديث الترتيب:", error);
-                            }
-                        }
-                    });
-                }
-
-                // دالة لإضافة بند جديد
-                function addSubItem(list, text) {
-                    const li = document.createElement('li');
-                    li.className = 'sub-item';
-                    li.textContent = text;
-                    list.appendChild(li);
-                }
-
-                // تحميل النعم من Firestore
-                const q = query(blessingsCollection, orderBy('timestamp', 'desc'));
-                onSnapshot(q, (snapshot) => {
-                    blessingsList.innerHTML = ''; // مسح القائمة لإعادة التحميل
-                    snapshot.forEach(doc => {
-                        renderBlessing({ id: doc.id, ...doc.data() });
-                    });
-                }, (error) => {
-                    console.error("خطأ أثناء تحميل النعم:", error);
-                });
-
-                // التعامل مع إضافة نعمة جديدة
-                addBlessingForm.addEventListener('submit', function(event) {
-                    event.preventDefault();
-                    const blessingText = blessingInput.value.trim();
-                    if (blessingText !== '') {
-                        addBlessing(blessingText);
-                        blessingInput.value = '';
-                    }
-                });
+        // تحميل النعم من Firebase
+        db.ref("blessings").on("value", (snapshot) => {
+            blessingsList.innerHTML = "";
+            snapshot.forEach((childSnapshot) => {
+                const data = childSnapshot.val();
+                const li = document.createElement("li");
+                li.textContent = data.name;
+                li.setAttribute("draggable", true);
+                li.dataset.id = childSnapshot.key;
+                
+                // زر حذف النعمة
+                const deleteBtn = document.createElement("button");
+                deleteBtn.textContent = "X";
+                deleteBtn.classList.add("delete-btn");
+                deleteBtn.onclick = () => deleteBlessing(childSnapshot.key);
+                
+                li.appendChild(deleteBtn);
+                li.addEventListener("dragstart", dragStart);
+                blessingsList.appendChild(li);
             });
-        };
+        });
+
+        // حذف نعمة
+        function deleteBlessing(id) {
+            db.ref("blessings/" + id).remove();
+        }
+
+        // تمكين السحب والإفلات
+        let draggedItem = null;
+
+        function dragStart(e) {
+            draggedItem = e.target;
+            setTimeout(() => (e.target.style.display = "none"), 0);
+        }
+
+        blessingsList.addEventListener("dragover", (e) => {
+            e.preventDefault();
+        });
+
+        blessingsList.addEventListener("drop", (e) => {
+            e.preventDefault();
+            if (draggedItem) {
+                blessingsList.appendChild(draggedItem);
+                draggedItem.style.display = "block";
+                draggedItem = null;
+            }
+        });
     </script>
 </body>
 </html>

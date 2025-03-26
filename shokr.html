@@ -110,7 +110,11 @@
                 // دالة لإضافة نعمة جديدة إلى Firestore
                 async function addBlessing(text) {
                     try {
-                        const blessing = { text: text, subItems: [], timestamp: new Date().toISOString() };
+                        const blessing = { 
+                            text: text, 
+                            subItems: [], 
+                            timestamp: new Date().toISOString() 
+                        };
                         const docRef = await addDoc(blessingsCollection, blessing);
                         console.log("تمت إضافة النعمة بنجاح، المعرف:", docRef.id);
                     } catch (error) {

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>شكر النعم</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif; /* خط عربي احترافي */
+            direction: rtl;
+            text-align: right;
+            background: linear-gradient(135deg, #1a1a2e, #16213e); /* خلفية متدرجة داكنة */
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 30px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #00d4ff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+        }
+
+        #blessings-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        #blessings-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .blessing-item {
+            background: #2a2a3e;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            transition: transform 0.2s ease;
+        }
+
+        .blessing-item:hover {
+            transform: translateY(-3px);
+        }
+
+        .blessing-item img {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            margin-left: 15px;
+            object-fit: cover;
+            border: 2px solid #00d4ff;
+        }
+
+        .blessing-item h2 {
+            font-size: 1.5rem;
+            color: #fff;
+            flex-grow: 1;
+        }
+
+        .sub-items {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 10px;
+        }
+
+        .sub-item {
+            background: #3a3a4e;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            cursor: move;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: background 0.3s;
+        }
+
+        .sub-item:hover {
+            background: #4a4a5e;
+        }
+
+        form {
+            max-width: 800px;
+            margin: 20px auto;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        input[type="text"], input[type="file"] {
+            padding: 12px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 8px;
+            background: #3a3a4e;
+            color: #e0e0e0;
+            width: 250px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        input[type="text"]::placeholder {
+            color: #a0a0a0;
+        }
+
+        button {
+            padding: 12px 20px;
+            font-size: 1rem;
+            background: linear-gradient(45deg, #00d4ff, #007bff);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s, background 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(45deg, #007bff, #00d4ff);
+        }
+
+        .edit-btn {
+            background: linear-gradient(45deg, #ff9800, #f57c00);
+        }
+
+        .edit-btn:hover {
+            background: linear-gradient(45deg, #f57c00, #ff9800);
+        }
+
+        /* تنسيق النماذج الفرعية */
+        .add-sub-item-form {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <h1>شكر النعم</h1>
+    <div id="blessings-container">
+        <ul id="blessings-list">
+            <!-- النعم ستظهر هنا -->
+        </ul>
+    </div>
+    <form id="add-blessing-form">
+        <input type="text" id="blessing-input" placeholder="أدخل نعمة جديدة">
+        <input type="file" id="blessing-image" accept="image/*">
+        <button type="submit">إضافة نعمة</button>
+    </form>
+
+    <!-- إضافة مكتبات Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage.js"></script>
+    <!-- إضافة Sortable.js -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+    <script>
+        // تكوين Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAunLxvASN6Cbsa_Nc6l78_5lMhe5fP2Qg",
+            authDomain: "momtn-ecab7.firebaseapp.com",
+            projectId: "momtn-ecab7",
+            storageBucket: "momtn-ecab7.appspot.com",
+            messagingSenderId: "98544311111",
+            appId: "1:98544311111:web:0158668f45ae34818fca62",
+            measurementId: "G-W164SZBMDP"
+        };
+
+        // تهيئة Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+        const blessingsCollection = db.collection('blessings');
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const blessingsList = document.getElementById('blessings-list');
+            const addBlessingForm = document.getElementById('add-blessing-form');
+            const blessingInput = document.getElementById('blessing-input');
+            const blessingImage = document.getElementById('blessing-image');
+
+            // دالة لإضافة نعمة جديدة إلى Firestore مع صورة
+            async function addBlessing(text, imageFile) {
+                let imageUrl = '';
+                if (imageFile) {
+                    const storageRef = storage.ref(`blessing-icons/${Date.now()}_${imageFile.name}`);
+                    await storageRef.put(imageFile);
+                    imageUrl = await storageRef.getDownloadURL();
+                }
+                const blessing = { 
+                    text: text, 
+                    subItems: [], 
+                    imageUrl: imageUrl, 
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp() 
+                };
+                const docRef = await blessingsCollection.add(blessing);
+                renderBlessing({ id: docRef.id, ...blessing });
+            }
+
+            // دالة لعرض النعمة في الصفحة
+            function renderBlessing(blessing) {
+                const li = document.createElement('li');
+                li.className = 'blessing-item';
+                li.dataset.id = blessing.id;
+                li.innerHTML = `
+                    ${blessing.imageUrl ? `<img src="${blessing.imageUrl}" alt="أيقونة">` : ''}
+                    <h2>${blessing.text}</h2>
+                    <button class="edit-btn" onclick="editBlessing('${blessing.id}', '${blessing.text}')">تعديل</button>
+                    <ul class="sub-items"></ul>
+                    <form class="add-sub-item-form">
+                        <input type="text" placeholder="أدخل طريقة الشكر">
+                        <button type="submit">إضافة</button>
+                    </form>
+                `;
+                blessingsList.appendChild(li);
+
+                const subItemsList = li.querySelector('.sub-items');
+                blessing.subItems.forEach((subItem, index) => addSubItem(subItemsList, subItem, blessing.id, index));
+
+                const addSubItemForm = li.querySelector('.add-sub-item-form');
+                addSubItemForm.addEventListener('submit', async function(event) {
+                    event.preventDefault();
+                    const subItemText = addSubItemForm.querySelector('input[type="text"]').value.trim();
+                    if (subItemText !== '') {
+                        blessing.subItems.push(subItemText);
+                        await blessingsCollection.doc(blessing.id).update({ subItems: blessing.subItems });
+                        addSubItem(subItemsList, subItemText, blessing.id, blessing.subItems.length - 1);
+                        addSubItemForm.querySelector('input[type="text"]').value = '';
+                    }
+                });
+
+                new Sortable(subItemsList, {
+                    animation: 150,
+                    ghostClass: 'sortable-ghost',
+                    onEnd: async function(evt) {
+                        const movedItem = blessing.subItems.splice(evt.oldIndex, 1)[0];
+                        blessing.subItems.splice(evt.newIndex, 0, movedItem);
+                        await blessingsCollection.doc(blessing.id).update({ subItems: blessing.subItems });
+                    }
+                });
+            }
+
+            // دالة لإضافة بند فرعي
+            function addSubItem(list, text, blessingId, index) {
+                const li = document.createElement('li');
+                li.className = 'sub-item';
+                li.innerHTML = `
+                    ${text}
+                    <button class="edit-btn" onclick="editSubItem('${blessingId}', ${index}, '${text}')">تعديل</button>
+                `;
+                list.appendChild(li);
+            }
+
+            // دالة لتعديل النعمة
+            window.editBlessing = async function(id, currentText) {
+                const newText = prompt('أدخل النص الجديد للنعمة:', currentText);
+                if (newText && newText.trim() !== '') {
+                    await blessingsCollection.doc(id).update({ text: newText.trim() });
+                }
+            };
+
+            // دالة لتعديل البند الفرعي
+            window.editSubItem = async function(blessingId, index, currentText) {
+                const newText = prompt('أدخل النص الجديد لطريقة الشكر:', currentText);
+                if (newText && newText.trim() !== '') {
+                    const blessingDoc = await blessingsCollection.doc(blessingId).get();
+                    const blessing = blessingDoc.data();
+                    blessing.subItems[index] = newText.trim();
+                    await blessingsCollection.doc(blessingId).update({ subItems: blessing.subItems });
+                }
+            };
+
+            // تحميل النعم من Firestore
+            blessingsCollection.orderBy('timestamp', 'desc').onSnapshot(snapshot => {
+                blessingsList.innerHTML = '';
+                snapshot.forEach(doc => {
+                    renderBlessing({ id: doc.id, ...doc.data() });
+                });
+            });
+
+            // التعامل مع إضافة نعمة جديدة
+            addBlessingForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                const blessingText = blessingInput.value.trim();
+                const imageFile = blessingImage.files[0];
+                if (blessingText !== '') {
+                    addBlessing(blessingText, imageFile);
+                    blessingInput.value = '';
+                    blessingImage.value = '';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

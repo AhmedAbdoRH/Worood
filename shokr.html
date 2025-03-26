@@ -54,7 +54,7 @@
     <div class="container">
         <h1>شكر النعم</h1>
         <input type="text" id="newBlessing" placeholder="أضف نعمة جديدة">
-        <button onclick="addBlessing()">إضافة نعمة</button>
+        <button id="addButton">إضافة نعمة</button>
         <ul id="blessingsList"></ul>
     </div>
 
@@ -77,43 +77,49 @@
         const db = firebase.database();
 
         const blessingsList = document.getElementById("blessingsList");
+        const addButton = document.getElementById("addButton");
 
         // إضافة نعمة جديدة
-        function addBlessing() {
+        addButton.addEventListener("click", function() {
             const blessingInput = document.getElementById("newBlessing");
             const blessing = blessingInput.value.trim();
             if (blessing) {
                 const newRef = db.ref("blessings").push();
-                newRef.set({ name: blessing });
-                blessingInput.value = "";
+                newRef.set({ name: blessing }).then(() => {
+                    blessingInput.value = "";
+                });
             }
-        }
+        });
 
         // تحميل النعم من Firebase
-        db.ref("blessings").on("value", (snapshot) => {
-            blessingsList.innerHTML = "";
-            snapshot.forEach((childSnapshot) => {
-                const data = childSnapshot.val();
-                const li = document.createElement("li");
-                li.textContent = data.name;
-                li.setAttribute("draggable", true);
-                li.dataset.id = childSnapshot.key;
-                
-                // زر حذف النعمة
-                const deleteBtn = document.createElement("button");
-                deleteBtn.textContent = "X";
-                deleteBtn.classList.add("delete-btn");
-                deleteBtn.onclick = () => deleteBlessing(childSnapshot.key);
-                
-                li.appendChild(deleteBtn);
-                li.addEventListener("dragstart", dragStart);
-                blessingsList.appendChild(li);
+        function loadBlessings() {
+            db.ref("blessings").on("value", (snapshot) => {
+                blessingsList.innerHTML = "";
+                snapshot.forEach((childSnapshot) => {
+                    const data = childSnapshot.val();
+                    const li = document.createElement("li");
+                    li.textContent = data.name;
+                    li.setAttribute("draggable", true);
+                    li.dataset.id = childSnapshot.key;
+
+                    // زر حذف النعمة
+                    const deleteBtn = document.createElement("button");
+                    deleteBtn.textContent = "X";
+                    deleteBtn.classList.add("delete-btn");
+                    deleteBtn.addEventListener("click", () => deleteBlessing(childSnapshot.key));
+
+                    li.appendChild(deleteBtn);
+                    li.addEventListener("dragstart", dragStart);
+                    blessingsList.appendChild(li);
+                });
             });
-        });
+        }
 
         // حذف نعمة
         function deleteBlessing(id) {
-            db.ref("blessings/" + id).remove();
+            db.ref("blessings/" + id).remove().then(() => {
+                loadBlessings();
+            });
         }
 
         // تمكين السحب والإفلات
@@ -136,6 +142,9 @@
                 draggedItem = null;
             }
         });
+
+        // تحميل البيانات عند تشغيل الصفحة
+        loadBlessings();
     </script>
 </body>
 </html>

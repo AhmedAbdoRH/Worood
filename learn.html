@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مراجعة الكلمات (حذف الكل)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        html, body { background-color: #111827; color: #e5e7eb; font-family: 'Cairo', sans-serif; }
+        .card { @apply bg-gray-800 rounded-xl shadow-lg p-5 md:p-6 transition-all duration-300 border border-gray-700; }
+        .btn { @apply px-4 py-2 rounded-lg font-semibold text-white transition-all duration-200 shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 text-xs md:text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1 md:gap-2; }
+        .btn-sm { @apply px-3 py-1.5 text-xs rounded-md gap-1; }
+        .btn-primary-darkblue { @apply bg-blue-700 hover:bg-blue-800 focus:ring-blue-500; }
+        .btn-secondary-dark { @apply bg-gray-600 hover:bg-gray-700 focus:ring-gray-500; }
+        .btn-action { @apply py-2.5 px-5 text-sm font-bold rounded-lg transition-transform duration-150 ease-in-out transform hover:scale-105 shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1; }
+        .btn-success-action { @apply bg-green-600 hover:bg-green-700 text-white focus:ring-green-500; }
+        .btn-danger-action { @apply bg-red-600 hover:bg-red-700 text-white focus:ring-red-500; }
+        .btn-danger-outline { @apply bg-transparent border border-red-500 text-red-400 hover:bg-red-900/30 focus:ring-red-500; } /* Outline delete button */
+        .input-field, .textarea-field { @apply mt-1 block w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-sm shadow-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500; }
+        .textarea-readonly { @apply bg-gray-700 border-gray-600 text-gray-300; }
+        .label { @apply block text-xs font-medium text-gray-400 mb-1; }
+        .message-success { @apply text-green-400; } .message-error { @apply text-red-400; } .message-info { @apply text-blue-400; } .message-warning { @apply text-orange-400; } .message-default { @apply text-gray-500; }
+        #flashcardContent { @apply bg-gray-700 rounded-xl p-4 md:p-6 flex flex-col justify-center items-center border border-gray-600 shadow-inner mb-3; min-height: 220px; }
+        #wordDisplay { @apply text-6xl sm:text-7xl lg:text-8xl font-bold text-white mb-2 text-center break-words leading-none; }
+        #translationDisplay { @apply text-base md:text-lg text-gray-300 text-center break-words mt-1; }
+        .loader { @apply inline-block animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white; }
+        .page { @apply transition-opacity duration-300 ease-in-out; }
+        .small-text { @apply text-[10px] md:text-xs text-gray-400; }
+        .heading-1 { @apply text-2xl md:text-3xl font-bold text-center text-blue-400 mb-4; }
+        .heading-2 { @apply text-lg md:text-xl font-semibold text-gray-100 mb-3; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-2 md:p-4 bg-gradient-to-br from-gray-900 to-black">
+    <div class="container mx-auto max-w-md md:max-w-lg">
+        <h1 class="heading-1">
+             أداة مراجعة الكلمات (Firestore)
+        </h1>
+
+        <div id="pageAddWords" class="page">
+            <div class="card mb-4">
+                <h2 class="heading-2">1. إضافة كلمات جديدة</h2>
+                <div class="mb-1 relative">
+                    <label for="bulkInput" class="label">ألصق النص (كل سطر: كلمة فاصل ترجمة):</label>
+                    <textarea id="bulkInput" class="textarea-field pr-16" rows="5" placeholder="مثال:&#10;Hello : مرحباً&#10;Book = كتاب&#10;World	عالم"></textarea>
+                    <button id="pasteBtn" title="لصق من الحافظة" class="absolute top-6 left-2 btn btn-secondary-dark btn-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M15.99 4.01h-1.48a3.5 3.5 0 00-6.98 0H6.01a2 2 0 00-2 2v10a2 2 0 002 2h9.98a2 2 0 002-2V6.01a2 2 0 00-2-2zm-8.98 14V6.01h1.48v-.03a2 2 0 114 0v.03h1.48l.01 11.99H7.01zm4.49-11.03a.5.5 0 00-1 0v.03h1v-.03z" clip-rule="evenodd" /></svg>
+                    </button>
+                </div>
+                 <p id="pasteMessage" class="text-xs mt-1 text-gray-400 h-3"></p>
+                <button id="addBulkBtn" class="btn btn-primary-darkblue w-full mt-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" /></svg>
+                    <span id="addBtnText">إضافة الكلمات</span>
+                    <span id="addBtnLoader" class="loader hidden"></span>
+                </button>
+                <p id="addMessage" class="text-xs mt-2 text-center message-default h-4"></p>
+
+                <div class="mt-5 border-t border-gray-700 pt-4">
+                     <button id="gotoReviewBtn_FromAdd" class="btn btn-secondary-dark w-full mb-3">
+                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.201 2.466l-.312-.311h2.03a.75.75 0 000-1.5H4.333a.75.75 0 00-.75.75v3.167a.75.75 0 001.5 0v-2.03l.31.312a7 7 0 0011.712-3.138.75.75 0 00-1.449-.39zm1.23-3.723a.75.75 0 00-1.449.389A7 7 0 003.028 10.07l-.31.311H4.75a.75.75 0 000-1.5H1.583a.75.75 0 00-.75.75v3.167a.75.75 0 001.5 0v-2.03l.312-.31a5.5 5.5 0 019.201-2.466.75.75 0 001.449-.39z" clip-rule="evenodd" /></svg>
+                         بدء المراجعة مباشرة
+                     </button>
+                     <button id="deleteAllBtn" class="btn btn-danger-outline w-full">
+                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-1.006.086-1.86.64-2.4 1.331A2.75 2.75 0 001.25 8v6.5A2.75 2.75 0 004 17.25h12A2.75 2.75 0 0018.75 14.5V8A2.75 2.75 0 0016.4 5.524c-.54-.69-.1.394-2.4-1.331V3.75A2.75 2.75 0 0011.25 1h-2.5zM7.5 3.75c0-.69.56-1.25 1.25-1.25h2.5c.69 0 1.25.56 1.25 1.25v.443c-1.455.548-2.393 1.407-2.951 2.258a.75.75 0 00-1.1 0c-.558-.851-1.496-1.71-2.951-2.258V3.75zM4 8a1.25 1.25 0 011.25-1.25h9.5A1.25 1.25 0 0116 8v6.5a1.25 1.25 0 01-1.25 1.25H5A1.25 1.25 0 013.75 14.5V8z" clip-rule="evenodd" /></svg>
+                         <span id="deleteBtnText">حذف جميع الكلمات</span>
+                         <span id="deleteBtnLoader" class="loader hidden"></span>
+                     </button>
+                     <p id="deleteMessage" class="text-xs mt-2 text-center message-default h-4"></p>
+                 </div>
+            </div>
+        </div>
+
+        <div id="pageReview" class="page hidden">
+            <div class="card text-center">
+                <h2 class="heading-2">2. جلسة المراجعة</h2>
+                <button id="startSessionBtn" class="btn btn-primary-darkblue mb-4 btn-sm">
+                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" /></svg>
+                     <span id="startBtnText">بدء جلسة جديدة</span>
+                     <span id="startBtnLoader" class="loader hidden"></span>
+                </button>
+
+                <div id="flashcardContainer" class="hidden">
+                    <p id="progressDisplay" class="small-text mb-2"></p>
+                    <div id="flashcardContent">
+                        <div id="wordDisplay"></div>
+                        <div id="translationDisplay" class="hidden"></div>
+                    </div>
+                    <button id="showTranslationBtn" class="btn btn-secondary-dark mt-2 w-full sm:w-auto btn-sm">إظهار/إخفاء الترجمة</button>
+                    <div id="difficultyButtonsContainer" class="flex justify-center space-x-2 space-x-reverse mt-2">
+                         <button id="markHardBtn" class="btn-action btn-success-action">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"> <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /> </svg>
+                             صعبة
+                         </button>
+                         <button id="markEasyBtn" class="btn-action btn-danger-action">
+                              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"> <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /> </svg>
+                             سهلة
+                         </button>
+                    </div>
+                </div>
+                 <p id="sessionMessage" class="font-semibold mt-3 message-info h-5 text-xs"></p>
+
+                 <div id="hardWordsListContainer" class="mt-4 border-t border-gray-700 pt-3 hidden">
+                     <h3 class="text-sm font-semibold text-gray-200 mb-1">الكلمات المتبقية:</h3>
+                     <textarea id="hardWordsOutput" rows="4" readonly class="textarea-field textarea-readonly w-full text-xs"></textarea>
+                     <button id="copyHardWordsBtn" class="btn btn-secondary-dark btn-sm mt-1.5">
+                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM5 11a1 1 0 100 2h4a1 1 0 100-2H5z" /></svg>
+                         نسخ
+                     </button>
+                     <p id="copyMessage" class="text-xs mt-1 text-gray-400 h-3"></p>
+                 </div>
+
+                 <button id="gotoAddBtn_FromReview" class="btn btn-secondary-dark mt-4 w-full btn-sm">
+                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" /></svg>
+                     الذهاب إلى الإضافة
+                 </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, updateDoc, query, where, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+        // WARNING: Insecure config. Use Auth and Rules in production.
+        const firebaseConfig = {
+            apiKey: "AIzaSyAunLxvASN6Cbsa_Nc6l78_5lMhe5fP2Qg", // Replace with your actual API key if needed, but keep it secure
+            authDomain: "momtn-ecab7.firebaseapp.com",
+            projectId: "momtn-ecab7",
+            storageBucket: "momtn-ecab7.appspot.com",
+            messagingSenderId: "98544311111", // Replace if needed
+            appId: "1:98544311111:web:0158668f45ae34818fca62", // Replace if needed
+            measurementId: "G-W164SZBMDP" // Replace if needed
+        };
+
+        let app;
+        let db;
+        let firestoreInitialized = false;
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            firestoreInitialized = true;
+            console.log("Firebase initialized successfully.");
+        } catch (error) {
+            console.error("Firebase initialization failed:", error);
+        }
+
+        const WORDS_COLLECTION = 'userWords';
+
+        // --- Firestore Helper Functions ---
+        async function checkWordExists(word) {
+            if (!firestoreInitialized) return true;
+            const q = query(collection(db, WORDS_COLLECTION), where("word", "==", word));
+            try {
+                const querySnapshot = await getDocs(q);
+                return !querySnapshot.empty;
+            } catch (error) {
+                console.error("Error checking word existence:", error);
+                return true;
+            }
+        }
+
+        async function addWordFirestore(wordObject) {
+            if (!firestoreInitialized) return Promise.reject("Firestore not initialized");
+            return addDoc(collection(db, WORDS_COLLECTION), wordObject);
+        }
+
+        async function getHardWordsFirestore() {
+            if (!firestoreInitialized) return Promise.resolve([]);
+            const q = query(collection(db, WORDS_COLLECTION), where("status", "==", "hard"));
+            try {
+                const querySnapshot = await getDocs(q);
+                const words = [];
+                querySnapshot.forEach((doc) => {
+                    words.push({ id: doc.id, ...doc.data() });
+                });
+                return words;
+            } catch (error) {
+                console.error("Error getting hard words:", error);
+                return [];
+            }
+        }
+
+        async function updateWordStatusFirestore(docId, newStatus) {
+            if (!firestoreInitialized) return Promise.reject("Firestore not initialized");
+            const wordDocRef = doc(db, WORDS_COLLECTION, docId);
+            return updateDoc(wordDocRef, { status: newStatus });
+        }
+
+        async function deleteAllWordsFirestore() {
+            // NOTE: Client-side deletion of many documents can be slow and inefficient.
+            // Consider a Cloud Function for bulk deletes in production.
+            if (!firestoreInitialized) return Promise.reject("Firestore not initialized");
+            console.log("Attempting to delete all words...");
+            const q = query(collection(db, WORDS_COLLECTION));
+            try {
+                const querySnapshot = await getDocs(q);
+                const deletePromises = [];
+                querySnapshot.forEach((document) => {
+                    console.log(`Deleting doc: ${document.id}`);
+                    deletePromises.push(deleteDoc(doc(db, WORDS_COLLECTION, document.id)));
+                });
+                await Promise.all(deletePromises);
+                console.log(`Deleted ${deletePromises.length} documents.`);
+                return deletePromises.length;
+            } catch (error) {
+                 console.error("Error deleting all words:", error);
+                 throw error; // Re-throw the error to be caught by the caller
+            }
+        }
+
+
+        // --- UI Elements ---
+        const pageAddWords = document.getElementById('pageAddWords');
+        const pageReview = document.getElementById('pageReview');
+        const gotoAddBtn_FromReview = document.getElementById('gotoAddBtn_FromReview');
+        const gotoReviewBtn_FromAdd = document.getElementById('gotoReviewBtn_FromAdd');
+        const bulkInput = document.getElementById('bulkInput');
+        const pasteBtn = document.getElementById('pasteBtn');
+        const pasteMessage = document.getElementById('pasteMessage');
+        const addBulkBtn = document.getElementById('addBulkBtn');
+        const addBtnText = document.getElementById('addBtnText');
+        const addBtnLoader = document.getElementById('addBtnLoader');
+        const addMessage = document.getElementById('addMessage');
+        const deleteAllBtn = document.getElementById('deleteAllBtn');
+        const deleteBtnText = document.getElementById('deleteBtnText');
+        const deleteBtnLoader = document.getElementById('deleteBtnLoader');
+        const deleteMessage = document.getElementById('deleteMessage');
+        const startSessionBtn = document.getElementById('startSessionBtn');
+        const startBtnText = document.getElementById('startBtnText');
+        const startBtnLoader = document.getElementById('startBtnLoader');
+        const flashcardContainer = document.getElementById('flashcardContainer');
+        const progressDisplay = document.getElementById('progressDisplay');
+        const flashcardContent = document.getElementById('flashcardContent');
+        const wordDisplay = document.getElementById('wordDisplay');
+        const translationDisplay = document.getElementById('translationDisplay');
+        const showTranslationBtn = document.getElementById('showTranslationBtn');
+        const difficultyButtonsContainer = document.getElementById('difficultyButtonsContainer');
+        const markEasyBtn = document.getElementById('markEasyBtn');
+        const markHardBtn = document.getElementById('markHardBtn');
+        const sessionMessage = document.getElementById('sessionMessage');
+        const hardWordsListContainer = document.getElementById('hardWordsListContainer');
+        const hardWordsOutput = document.getElementById('hardWordsOutput');
+        const copyHardWordsBtn = document.getElementById('copyHardWordsBtn');
+        const copyMessage = document.getElementById('copyMessage');
+
+        // --- Application Logic ---
+        let currentSessionWords = [];
+        let currentWordIndex = 0;
+
+        function showPage(pageId) {
+            pageAddWords.classList.add('hidden');
+            pageReview.classList.add('hidden');
+            const pageToShow = document.getElementById(pageId);
+            if (pageToShow) {
+                pageToShow.classList.remove('hidden');
+            }
+        }
+
+        function toggleButtonLoading(button, textElement, loaderElement, isLoading, loadingText = '') {
+             const originalText = textElement.dataset.originalText || textElement.textContent;
+             if (isLoading) {
+                 loaderElement.classList.remove('hidden');
+                 button.disabled = true;
+                 if (!textElement.dataset.originalText) { textElement.dataset.originalText = originalText; }
+                 textElement.textContent = loadingText; // Show specific loading text or empty
+             } else {
+                 loaderElement.classList.add('hidden');
+                 button.disabled = false;
+                 textElement.textContent = originalText;
+             }
+        }
+
+        async function handlePaste() {
+            pasteMessage.textContent = '';
+            if (!navigator.clipboard || !navigator.clipboard.readText) {
+                setTemporaryMessage(pasteMessage, 'المتصفح لا يدعم اللصق أو تحتاج لـ HTTPS.', 'message-warning', true);
+                return;
+            }
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text) {
+                    bulkInput.value += (bulkInput.value ? '\n' : '') + text;
+                    setTemporaryMessage(pasteMessage, 'تم اللصق بنجاح.', 'message-success', true);
+                } else {
+                     setTemporaryMessage(pasteMessage, 'الحافظة فارغة.', 'message-info', true);
+                }
+            } catch (err) {
+                console.error('Failed to read clipboard contents: ', err);
+                setTemporaryMessage(pasteMessage, 'فشل اللصق. قد تحتاج لإعطاء الإذن.', 'message-error', true);
+            }
+        }
+
+        async function addWordsFromText() {
+            if (!firestoreInitialized) {
+                 setTemporaryMessage(addMessage, 'فشل الاتصال بقاعدة البيانات.', 'message-error', false); return;
+            }
+            const text = bulkInput.value.trim();
+            if (!text) { setTemporaryMessage(addMessage, "الرجاء إدخال النص أولاً.", "message-error", false); return; }
+
+            toggleButtonLoading(addBulkBtn, addBtnText, addBtnLoader, true);
+            setTemporaryMessage(addMessage, 'جاري إضافة الكلمات...', 'message-info', false);
+
+            const lines = text.split('\n');
+            let addedCount = 0; let skippedCount = 0; let errorCount = 0;
+            const wordsToAdd = [];
+
+            lines.forEach(line => {
+                line = line.trim(); if (!line) return;
+                const parts = line.split(/[:=\t]/, 2);
+                if (parts.length === 2) {
+                    const word = parts[0].trim(); const translation = parts[1].trim();
+                    if (word && translation) {
+                        wordsToAdd.push({ word: word, translation: translation, status: 'hard' });
+                    } else { skippedCount++; }
+                } else { skippedCount++; }
+            });
+
+            for (const wordObj of wordsToAdd) {
+                try {
+                    const exists = await checkWordExists(wordObj.word);
+                    if (!exists) {
+                        await addWordFirestore(wordObj);
+                        addedCount++;
+                    } else {
+                        skippedCount++;
+                    }
+                } catch (error) {
+                    errorCount++;
+                }
+            }
+
+            let messageText = ''; let messageClass = 'message-default';
+            if (addedCount > 0) { messageText += `تمت إضافة ${addedCount} كلمة جديدة. `; messageClass = 'message-success'; }
+            if (skippedCount > 0) { messageText += `تم تخطي ${skippedCount} سطراً. `; if (addedCount === 0 && errorCount === 0) messageClass = 'message-warning'; }
+            if (errorCount > 0) { messageText += `فشل إضافة ${errorCount} كلمة. `; messageClass = 'message-error'; }
+            if (!messageText && lines.filter(l=>l.trim()).length > 0) { messageText = "لم تتم إضافة أي كلمات جديدة."; messageClass = 'message-info'; }
+            else if (lines.filter(l=>l.trim()).length === 0) { messageText = "لم يتم إدخال أي نص."; messageClass = 'message-warning'; }
+
+            setTemporaryMessage(addMessage, messageText.trim(), messageClass, false);
+            if(addedCount > 0) bulkInput.value = '';
+            toggleButtonLoading(addBulkBtn, addBtnText, addBtnLoader, false);
+        }
+
+        async function handleDeleteAll() {
+             if (!firestoreInitialized) {
+                 setTemporaryMessage(deleteMessage, 'فشل الاتصال بقاعدة البيانات.', 'message-error', false); return;
+             }
+             if (!confirm('هل أنت متأكد أنك تريد حذف جميع الكلمات؟ لا يمكن التراجع عن هذا الإجراء.')) {
+                 return;
+             }
+
+             toggleButtonLoading(deleteAllBtn, deleteBtnText, deleteBtnLoader, true, 'جاري الحذف...');
+             setTemporaryMessage(deleteMessage, 'جاري حذف جميع الكلمات...', 'message-info', false);
+
+             try {
+                 const deletedCount = await deleteAllWordsFirestore();
+                 setTemporaryMessage(deleteMessage, `تم حذف ${deletedCount} كلمة بنجاح.`, 'message-success', false);
+             } catch (error) {
+                 setTemporaryMessage(deleteMessage, 'حدث خطأ أثناء حذف الكلمات.', 'message-error', false);
+             } finally {
+                 toggleButtonLoading(deleteAllBtn, deleteBtnText, deleteBtnLoader, false);
+             }
+        }
+
+
+        async function startSession() {
+             if (!firestoreInitialized) {
+                 setSessionMessage('فشل الاتصال بقاعدة البيانات.', 'message-error'); return;
+            }
+            hardWordsListContainer.classList.add('hidden');
+            copyMessage.textContent = '';
+            toggleButtonLoading(startSessionBtn, startBtnText, startBtnLoader, true);
+            setSessionMessage('جاري تحميل الكلمات الصعبة...', 'message-info');
+            flashcardContainer.classList.add('hidden');
+            try {
+                currentSessionWords = await getHardWordsFirestore();
+                if (currentSessionWords.length === 0) {
+                    setSessionMessage('لا توجد كلمات صعبة للمراجعة.', 'message-info');
+                    flashcardContainer.classList.add('hidden');
+                    startSessionBtn.classList.remove('hidden'); return;
+                }
+                for (let i = currentSessionWords.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [currentSessionWords[i], currentSessionWords[j]] = [currentSessionWords[j], currentSessionWords[i]]; }
+                currentWordIndex = 0;
+                setSessionMessage('', 'message-info');
+                flashcardContainer.classList.remove('hidden');
+                startSessionBtn.classList.add('hidden');
+                displayCurrentWord();
+            } catch (error) { console.error("Error starting session:", error); setSessionMessage('حدث خطأ أثناء بدء الجلسة.', 'message-error');
+            } finally { toggleButtonLoading(startSessionBtn, startBtnText, startBtnLoader, false); }
+        }
+
+        async function endSession() {
+             flashcardContainer.classList.add('hidden');
+             startSessionBtn.classList.remove('hidden');
+             setSessionMessage('رائع! اكتملت الجلسة.', 'message-success');
+             if (!firestoreInitialized) {
+                 setSessionMessage('اكتملت الجلسة (لا يمكن عرض القائمة - خطأ اتصال).', 'message-warning'); return;
+             }
+             try {
+                 const remainingHardWords = await getHardWordsFirestore();
+                 if (remainingHardWords.length > 0) {
+                     const formattedList = remainingHardWords
+                         .map(item => `${item.word} : ${item.translation}`)
+                         .join('\n');
+                     hardWordsOutput.value = formattedList;
+                     hardWordsListContainer.classList.remove('hidden');
+                 } else {
+                     hardWordsOutput.value = '';
+                     hardWordsListContainer.classList.add('hidden');
+                     setSessionMessage('رائع! لقد أتقنت كل الكلمات.', 'message-success');
+                 }
+             } catch (error) {
+                 console.error("Error fetching hard words at end of session:", error);
+                 hardWordsListContainer.classList.add('hidden');
+             }
+        }
+
+        function displayCurrentWord() {
+             if (currentWordIndex >= currentSessionWords.length) {
+                 endSession();
+                 return;
+             }
+             const currentWord = currentSessionWords[currentWordIndex];
+             wordDisplay.textContent = currentWord.word;
+             translationDisplay.textContent = currentWord.translation;
+             progressDisplay.textContent = `الكلمة ${currentWordIndex + 1} / ${currentSessionWords.length}`;
+             translationDisplay.classList.add('hidden');
+             difficultyButtonsContainer.classList.remove('hidden');
+             showTranslationBtn.classList.remove('hidden');
+             markEasyBtn.disabled = false;
+             markHardBtn.disabled = false;
+        }
+
+        function handleShowTranslation() {
+             translationDisplay.classList.toggle('hidden');
+        }
+
+        async function markEasy() {
+             if (!firestoreInitialized) { setSessionMessage('خطأ اتصال.', 'message-error'); return; }
+             if (currentWordIndex >= currentSessionWords.length) return;
+             markEasyBtn.disabled = true; markHardBtn.disabled = true;
+             const currentWordObject = currentSessionWords[currentWordIndex];
+             try {
+                 await updateWordStatusFirestore(currentWordObject.id, 'easy');
+                 goToNextWord();
+             } catch(error) {
+                 console.error("Error marking easy:", error);
+                 setSessionMessage("خطأ في تحديث حالة الكلمة.", "message-error");
+                 markEasyBtn.disabled = false; markHardBtn.disabled = false;
+             }
+        }
+
+        function markHard() {
+             if (currentWordIndex >= currentSessionWords.length) return;
+             markEasyBtn.disabled = true; markHardBtn.disabled = true;
+             goToNextWord();
+        }
+
+        function goToNextWord() {
+             currentWordIndex++;
+             flashcardContent.classList.add('opacity-0');
+             setTimeout(() => {
+                  displayCurrentWord();
+                  flashcardContent.classList.remove('opacity-0');
+                  flashcardContent.classList.add('transition-opacity', 'duration-150', 'ease-out');
+             }, 50);
+        }
+
+        async function handleCopyHardWords() {
+            copyMessage.textContent = '';
+             const textToCopy = hardWordsOutput.value;
+             if (!textToCopy) {
+                 setTemporaryMessage(copyMessage, 'لا توجد كلمات لنسخها.', 'message-warning', true);
+                 return;
+             }
+             if (!navigator.clipboard || !navigator.clipboard.writeText) {
+                 setTemporaryMessage(copyMessage, 'المتصفح لا يدعم النسخ أو تحتاج لـ HTTPS.', 'message-warning', true);
+                 return;
+             }
+             try {
+                 await navigator.clipboard.writeText(textToCopy);
+                 setTemporaryMessage(copyMessage, 'تم النسخ بنجاح!', 'message-success', true);
+             } catch (err) {
+                 console.error('Failed to copy text: ', err);
+                 setTemporaryMessage(copyMessage, 'فشل النسخ.', 'message-error', true);
+             }
+         }
+
+        function setTemporaryMessage(element, message, cssClass, isSmall = false) {
+            element.textContent = message;
+            const sizeClass = isSmall ? 'text-xs mt-1' : 'text-xs mt-2';
+            const heightClass = isSmall ? 'h-3' : 'h-4';
+            element.className = `${sizeClass} text-center ${cssClass} ${heightClass}`;
+            const duration = message.length > 30 ? 4000 : 3000;
+            setTimeout(() => { if (element.textContent === message) { element.textContent = ''; element.className = `${sizeClass} text-center message-default ${heightClass}`; } }, duration);
+        }
+        function setSessionMessage(message, cssClass) {
+             sessionMessage.textContent = message;
+             sessionMessage.className = `font-semibold mt-4 message-info h-5 text-xs`;
+         }
+
+        // --- Event Listeners ---
+        gotoAddBtn_FromReview.addEventListener('click', () => showPage('pageAddWords'));
+        gotoReviewBtn_FromAdd.addEventListener('click', () => showPage('pageReview'));
+        pasteBtn.addEventListener('click', handlePaste);
+        addBulkBtn.addEventListener('click', addWordsFromText);
+        deleteAllBtn.addEventListener('click', handleDeleteAll); // Added listener
+        startSessionBtn.addEventListener('click', startSession);
+        showTranslationBtn.addEventListener('click', handleShowTranslation);
+        markEasyBtn.addEventListener('click', markEasy);
+        markHardBtn.addEventListener('click', markHard);
+        copyHardWordsBtn.addEventListener('click', handleCopyHardWords);
+
+        // --- Initialize ---
+        document.addEventListener('DOMContentLoaded', () => {
+             const allButtons = document.querySelectorAll('button');
+             allButtons.forEach(btn => btn.disabled = true);
+
+             if (firestoreInitialized) {
+                 setSessionMessage('قاعدة البيانات جاهزة.', 'message-info');
+                 allButtons.forEach(btn => btn.disabled = false);
+                 showPage('pageAddWords'); // Default to Add page
+             } else {
+                  setSessionMessage('فشل تهيئة قاعدة البيانات!', 'message-error');
+                  const navButtons = [gotoAddBtn_FromReview, gotoReviewBtn_FromAdd, pasteBtn, addBulkBtn, startSessionBtn, deleteAllBtn];
+                  navButtons.forEach(btn => btn.disabled = false); // Enable basic navigation/adding/deleting
+                  showPage('pageAddWords'); // Default to Add page even on DB error
+             }
+        });
+
+    </script>
+</body>
+</html>
+

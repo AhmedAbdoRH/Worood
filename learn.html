@@ -246,45 +246,33 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, updateDoc, query, where, doc, deleteDoc, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
-         // ========================================================================
-         // هام جداً: استبدل هذه القيم بالقيم الفعلية لمشروع Firebase الخاص بك!
-         // ========================================================================
+         // --- Firebase Configuration (Using User Provided Values) ---
          const firebaseConfig = {
-            apiKey: "YOUR_API_KEY", // <--- استبدل هنا
-            authDomain: "YOUR_AUTH_DOMAIN", // <--- استبدل هنا
-            projectId: "YOUR_PROJECT_ID", // <--- استبدل هنا
-            storageBucket: "YOUR_STORAGE_BUCKET", // <--- استبدل هنا
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // <--- استبدل هنا
-            appId: "YOUR_APP_ID", // <--- استبدل هنا
-            measurementId: "YOUR_MEASUREMENT_ID" // <--- اختياري، استبدل هنا
-        };
-         // ========================================================================
+            apiKey: "AIzaSyAunLxvASN6Cbsa_Nc6l78_5lMhe5fP2Qg",
+            authDomain: "momtn-ecab7.firebaseapp.com",
+            projectId: "momtn-ecab7",
+            storageBucket: "momtn-ecab7.appspot.com",
+            messagingSenderId: "98544311111", // Keep as string
+            appId: "1:98544311111:web:0158668f45ae34818fca62",
+            measurementId: "G-W164SZBMDP"
+         };
+         // ----------------------------------------------------------
 
         // --- Firebase Initialization ---
         let app;
         let db;
         let firestoreInitialized = false;
         try {
-            // Check if placeholder values are still present
-            if (firebaseConfig.apiKey.startsWith("YOUR_") || firebaseConfig.projectId.startsWith("YOUR_")) {
-                console.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                console.error("خطأ فادح: لم يتم استبدال قيم firebaseConfig المؤقتة!");
-                console.error("الرجاء استبدال 'YOUR_API_KEY', 'YOUR_PROJECT_ID', إلخ في الكود.");
-                console.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                // Optionally display a message to the user on the page itself
-                // document.body.innerHTML = '<h1 style="color:red; text-align:center; margin-top: 50px;">خطأ: إعدادات Firebase غير صحيحة. يرجى مراجعة الكود.</h1>';
-                throw new Error("Firebase config placeholders not replaced."); // Stop initialization
+            if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+                 throw new Error("Firebase config is missing apiKey or projectId.");
             }
             app = initializeApp(firebaseConfig);
             db = getFirestore(app);
             firestoreInitialized = true;
-            console.log("Firebase initialized successfully.");
+            console.log("Firebase initialized successfully with provided config.");
         } catch (error) {
             console.error("Firebase initialization failed:", error);
-            firestoreInitialized = false; // Ensure flag is false on error
-            // Display a user-friendly error message on the page if needed
-            // document.getElementById('sessionMessage').textContent = `فشل تهيئة Firebase: ${error.message}`;
-            // document.getElementById('sessionMessage').className = 'message message-error';
+            firestoreInitialized = false;
         }
 
         // --- Firestore Constants and Functions ---
@@ -325,7 +313,6 @@
                 return docRef;
             } catch (error) {
                  console.error(`Error adding word "${wordObject.word}" to Firestore:`, error);
-                 // Check for permission errors specifically
                  let userMessage = `خطأ عند إضافة كلمة "${wordObject.word}" لقاعدة البيانات.`;
                  if (error.code === 'permission-denied') {
                      userMessage = `خطأ صلاحية: ليس لديك الإذن لإضافة كلمات. تحقق من قواعد الأمان في Firestore.`;
@@ -358,7 +345,7 @@
                  } else {
                      setSessionMessage(`خطأ عند جلب الكلمات: ${error.message}`, 'message-error');
                  }
-                return [];
+                return null;
             }
         }
         async function updateWordStatusFirestore(docId, newStatus) {
@@ -395,7 +382,7 @@
                 console.error("Error deleting all words:", error);
                  if (error.code === 'permission-denied') {
                      console.error("Firestore Security Rules might be blocking deletes.");
-                     alert("خطأ صلاحية: ليس لديك الإذن لحذف الكلمات."); // Use alert for critical ops
+                     alert("خطأ صلاحية: ليس لديك الإذن لحذف الكلمات.");
                  }
                 throw error;
             }
@@ -451,7 +438,6 @@
             if (mainHeading) {
                 if (pageId === 'pageReview') {
                     mainHeading.classList.add('hidden');
-                    // Ensure the parent card of flashcardContainer exists and is shown
                     if (flashcardContainer && flashcardContainer.parentElement) {
                        flashcardContainer.parentElement.classList.remove('hidden');
                     }
@@ -558,13 +544,18 @@
             if (!firestoreInitialized) {
                 console.error("Firestore not initialized. Aborting addWordsFromText.");
                 setTemporaryMessage(addMessage, 'فشل الاتصال بقاعدة البيانات. لا يمكن إضافة الكلمات. تأكد من صحة firebaseConfig.', 'message-error', false);
-                 toggleButtonLoading(addBulkBtn, addBtnText, addBtnLoader, false); // Restore button
+                 // Attempt to restore button state even if elements are missing initially
+                 if(addBulkBtn && addBtnText && addBtnLoader) {
+                    toggleButtonLoading(addBulkBtn, addBtnText, addBtnLoader, false);
+                 }
                 return;
             }
             if (!bulkInput || !addBulkBtn || !addBtnLoader || !addMessage) {
                  console.error("One or more required DOM elements for adding words are missing.");
                  setTemporaryMessage(addMessage,"خطأ في واجهة المستخدم: بعض العناصر مفقودة.", 'message-error', false);
-                 toggleButtonLoading(addBulkBtn, addBtnText, addBtnLoader, false); // Restore button
+                 if(addBulkBtn && addBtnText && addBtnLoader) {
+                    toggleButtonLoading(addBulkBtn, addBtnText, addBtnLoader, false);
+                 }
                  return;
             }
 
@@ -578,7 +569,6 @@
             }
 
             // --- Start Processing (Show Loader) ---
-            // Note: toggleButtonLoading handles disabling the button
             toggleButtonLoading(addBulkBtn, addBtnText, addBtnLoader, true, 'جار الإضافة...');
             setTemporaryMessage(addMessage, 'جاري تحليل وإضافة الكلمات...', 'message-info', false); // Clear previous message
 
@@ -663,7 +653,6 @@
             }
              if (addedCount > 0) {
                 messageText += `تمت إضافة ${addedCount} كلمة جديدة بنجاح. `;
-                 // Set success only if no errors occurred
                  if (messageClass !== 'message-error') messageClass = 'message-success';
             }
              if (skippedCount > 0) {
@@ -679,8 +668,7 @@
             } else if (nonEmptyLines === 0 && text) {
                  messageText = "النص المدخل يحتوي فقط على أسطر فارغة أو تعليقات.";
                  messageClass = 'message-info';
-            } else if (!messageText) {
-                 // If no counts and no specific message, means input was likely empty or only invalid lines
+            } else if (!messageText.trim()) { // Check if message is still empty after counts
                  messageText = "لم تتم إضافة أو تخطي أي كلمات.";
                  messageClass = 'message-info';
             }
@@ -710,9 +698,8 @@
             flashcardContainer.classList.add('hidden');
             wordDisplayCard.classList.add('hidden');
             try {
-                currentSessionWords = await getHardWordsFirestore(); // This function now handles permission errors
-                if (currentSessionWords === null) { // Check if getHardWordsFirestore indicated an error
-                     // Message already set by getHardWordsFirestore
+                currentSessionWords = await getHardWordsFirestore();
+                if (currentSessionWords === null) {
                      flashcardContainer.classList.add('hidden');
                      wordDisplayCard.classList.add('hidden');
                      return;
@@ -726,7 +713,7 @@
                 currentWordIndex = 0;
                 setSessionMessage('', 'message-default');
                 displayCurrentWord();
-            } catch (error) { // Catch any unexpected errors during session start
+            } catch (error) {
                 console.error("Unexpected error starting session:", error);
                 setSessionMessage('حدث خطأ غير متوقع أثناء بدء المراجعة.', 'message-error');
                  flashcardContainer.classList.add('hidden');
@@ -743,7 +730,7 @@
              }
              try {
                  const remainingHardWords = await getHardWordsFirestore();
-                  if (remainingHardWords === null) { // Check for error from Firestore fetch
+                  if (remainingHardWords === null) {
                      setSessionMessage('اكتملت الجلسة (خطأ في جلب الكلمات المتبقية).', 'message-warning');
                      hardWordsListContainer.classList.add('hidden');
                      return;
@@ -760,7 +747,7 @@
                      hardWordsListContainer.classList.add('hidden');
                      setSessionMessage('ممتاز! لقد أتقنت كل الكلمات.', 'message-success');
                  }
-             } catch (error) { // Catch unexpected errors
+             } catch (error) {
                  console.error("Unexpected error fetching remaining hard words:", error);
                  hardWordsListContainer.classList.add('hidden');
                  setSessionMessage('اكتملت الجلسة (حدث خطأ غير متوقع في عرض الكلمات المتبقية).', 'message-warning');
@@ -775,7 +762,6 @@
             if (!currentWord || !currentWord.word || !currentWord.translation) {
                  console.error("Invalid word object found at index:", currentWordIndex, currentWord);
                  setSessionMessage("خطأ: تم العثور على بيانات كلمة غير صالحة.", "message-error");
-                 // Skip this word and try the next one
                  goToNextWord();
                  return;
             }
@@ -804,7 +790,7 @@
              if (!currentWordObject || !currentWordObject.id) {
                  console.error("Cannot mark word as easy: Invalid word object or missing ID.", currentWordObject);
                  setSessionMessage("خطأ: بيانات الكلمة الحالية غير صالحة.", "message-error");
-                 markEasyBtn.disabled = false; // Re-enable buttons to allow user to potentially skip
+                 markEasyBtn.disabled = false;
                  markHardBtn.disabled = false;
                  return;
              }
@@ -812,7 +798,6 @@
                 await updateWordStatusFirestore(currentWordObject.id, 'easy');
                 goToNextWord();
             } catch(error) {
-                // Error message handled in updateWordStatusFirestore or caught here
                 console.error("Error marking word as easy (caught in handler):", error);
                 markEasyBtn.disabled = false;
                 markHardBtn.disabled = false;
@@ -824,7 +809,6 @@
              if (!currentWordObject || !currentWordObject.word) {
                   console.error("Cannot mark word as hard: Invalid word object.", currentWordObject);
                   setSessionMessage("خطأ: بيانات الكلمة الحالية غير صالحة.", "message-error");
-                  // Skip this word
                   goToNextWord();
                   return;
              }
@@ -880,41 +864,26 @@
         }
 
 
-        // --- Event Listeners ---
+        // --- Event Listeners (Simplified for Debugging) ---
         function attachEventListeners() {
+            console.log("Attempting to attach event listeners (Simplified)...");
             try {
-                // Detach existing listeners first to prevent duplicates if this runs multiple times
-                if (gotoAddBtn_FromReview) gotoAddBtn_FromReview.replaceWith(gotoAddBtn_FromReview.cloneNode(true));
-                if (gotoReviewBtn_FromAdd) gotoReviewBtn_FromAdd.replaceWith(gotoReviewBtn_FromAdd.cloneNode(true));
-                if (pasteBtn) pasteBtn.replaceWith(pasteBtn.cloneNode(true));
-                if (addBulkBtn) addBulkBtn.replaceWith(addBulkBtn.cloneNode(true));
-                if (showTranslationBtn) showTranslationBtn.replaceWith(showTranslationBtn.cloneNode(true));
-                if (markEasyBtn) markEasyBtn.replaceWith(markEasyBtn.cloneNode(true));
-                if (markHardBtn) markHardBtn.replaceWith(markHardBtn.cloneNode(true));
-                if (copyHardWordsBtn) copyHardWordsBtn.replaceWith(copyHardWordsBtn.cloneNode(true));
+                // Directly attach listeners without cloning
+                if (gotoAddBtn_FromReview) gotoAddBtn_FromReview.addEventListener('click', () => showPage('pageAddWords')); else console.warn("gotoAddBtn_FromReview not found.");
+                if (gotoReviewBtn_FromAdd) gotoReviewBtn_FromAdd.addEventListener('click', () => { showPage('pageReview'); startSession(); }); else console.warn("gotoReviewBtn_FromAdd not found.");
+                if (pasteBtn) pasteBtn.addEventListener('click', handlePaste); else console.warn("pasteBtn not found.");
+                if (addBulkBtn) addBulkBtn.addEventListener('click', addWordsFromText); else console.error("addBulkBtn not found! Add words will not work."); // Critical
+                if (showTranslationBtn) showTranslationBtn.addEventListener('click', handleShowTranslation); else console.warn("showTranslationBtn not found.");
+                if (markEasyBtn) markEasyBtn.addEventListener('click', markWordAsEasy); else console.warn("markEasyBtn not found.");
+                if (markHardBtn) markHardBtn.addEventListener('click', markWordAsHard); else console.warn("markHardBtn not found.");
+                if (copyHardWordsBtn) copyHardWordsBtn.addEventListener('click', handleCopyHardWords); else console.warn("copyHardWordsBtn not found.");
 
-                // Re-fetch potentially replaced elements
-                const newGotoAddBtn = document.getElementById('gotoAddBtn_FromReview');
-                const newGotoReviewBtn = document.getElementById('gotoReviewBtn_FromAdd');
-                const newPasteBtn = document.getElementById('pasteBtn');
-                const newAddBulkBtn = document.getElementById('addBulkBtn');
-                const newShowTranslationBtn = document.getElementById('showTranslationBtn');
-                const newMarkEasyBtn = document.getElementById('markEasyBtn');
-                const newMarkHardBtn = document.getElementById('markHardBtn');
-                const newCopyHardWordsBtn = document.getElementById('copyHardWordsBtn');
+                // Check if the critical button listener was attached
+                if (!addBulkBtn) {
+                     throw new Error("addBulkBtn element not found, cannot attach listener.");
+                }
 
-
-                // Attach listeners to the new elements
-                if (newGotoAddBtn) newGotoAddBtn.addEventListener('click', () => showPage('pageAddWords')); else console.warn("gotoAddBtn_FromReview not found after clone.");
-                if (newGotoReviewBtn) newGotoReviewBtn.addEventListener('click', () => { showPage('pageReview'); startSession(); }); else console.warn("gotoReviewBtn_FromAdd not found after clone.");
-                if (newPasteBtn) newPasteBtn.addEventListener('click', handlePaste); else console.warn("pasteBtn not found after clone.");
-                if (newAddBulkBtn) newAddBulkBtn.addEventListener('click', addWordsFromText); else console.error("addBulkBtn not found after clone! Add words will not work."); // Critical
-                if (newShowTranslationBtn) newShowTranslationBtn.addEventListener('click', handleShowTranslation); else console.warn("showTranslationBtn not found after clone.");
-                if (newMarkEasyBtn) newMarkEasyBtn.addEventListener('click', markWordAsEasy); else console.warn("markEasyBtn not found after clone.");
-                if (newMarkHardBtn) newMarkHardBtn.addEventListener('click', markWordAsHard); else console.warn("markHardBtn not found after clone.");
-                if (newCopyHardWordsBtn) newCopyHardWordsBtn.addEventListener('click', handleCopyHardWords); else console.warn("copyHardWordsBtn not found after clone.");
-
-                console.log("Event listeners attached/reattached successfully.");
+                console.log("Event listeners attached successfully (Simplified).");
                 return true; // Indicate success
             } catch(e) {
                 console.error("Error attaching one or more event listeners:", e);
@@ -926,53 +895,76 @@
 
         // --- Initialization on DOMContentLoaded ---
         document.addEventListener('DOMContentLoaded', () => {
-             console.log("DOMContentLoaded event fired.");
-             const allButtons = document.querySelectorAll('button');
-             allButtons.forEach(btn => btn.disabled = true); // Disable all initially
+             try { // Wrap main initialization logic in try...catch
+                 console.log("DOMContentLoaded event fired.");
+                 const allButtons = document.querySelectorAll('button');
+                 console.log(`Found ${allButtons.length} buttons. Disabling all initially.`);
+                 allButtons.forEach(btn => btn.disabled = true);
 
-             const listenersAttached = attachEventListeners(); // Attach listeners
-
-             // Check Firebase status and enable UI accordingly
-             if (firestoreInitialized) {
-                 setSessionMessage('قاعدة البيانات جاهزة.', 'message-success');
-                 if (listenersAttached) { // Only enable if listeners are okay
-                    allButtons.forEach(btn => btn.disabled = false);
-                 } else {
-                     setSessionMessage('قاعدة البيانات جاهزة، لكن هناك خطأ في ربط الأزرار.', 'message-warning');
+                 // Check if critical button exists early
+                 if (!document.getElementById('addBulkBtn')) {
+                     console.error("CRITICAL: addBulkBtn element not found in DOM!");
                  }
-                 showPage('pageAddWords');
-             } else {
-                  // Display persistent error if Firebase failed during initial try
-                  setSessionMessage('فشل تهيئة قاعدة البيانات! تأكد من صحة firebaseConfig وقواعد الأمان. لا يمكن حفظ أو تحميل الكلمات.', 'message-error');
-                  // Enable only non-DB dependent buttons if listeners attached
-                  if (listenersAttached) {
-                      const nonDbButtons = [
-                          document.getElementById('gotoAddBtn_FromReview'),
-                          document.getElementById('gotoReviewBtn_FromAdd'),
-                          document.getElementById('pasteBtn')
-                      ];
-                      nonDbButtons.forEach(btn => { if(btn) btn.disabled = false; });
-                  }
-                  if (mainHeading) mainHeading.classList.remove('hidden');
-                  showPage('pageAddWords');
-             }
 
-             // Add a small delay then check Firestore status again, just in case initialization was slow
-             setTimeout(() => {
-                if (!firestoreInitialized) {
-                     console.warn("Firestore still not initialized after 3 seconds.");
-                     // Update message only if it wasn't already showing the critical init error
-                     if (!sessionMessage.classList.contains('message-error')) {
-                         setSessionMessage('الاتصال بقاعدة البيانات يستغرق وقتاً أطول من المعتاد أو فشل. تأكد من الإعدادات.', 'message-warning');
-                     }
-                } else if (sessionMessage.classList.contains('message-warning') || sessionMessage.textContent === '') {
-                    // If it became ready after the delay, or if initial message was cleared/warning
-                    setSessionMessage('قاعدة البيانات جاهزة.', 'message-success');
-                    if (listenersAttached) { // Re-enable all if needed
+                 const listenersAttached = attachEventListeners(); // Attach listeners using simplified method
+                 console.log(`attachEventListeners returned: ${listenersAttached}`);
+
+                 // Check Firebase status and enable UI accordingly
+                 console.log(`Checking Firestore status. firestoreInitialized = ${firestoreInitialized}`);
+                 if (firestoreInitialized) {
+                     setSessionMessage('قاعدة البيانات جاهزة.', 'message-success');
+                     if (listenersAttached) {
+                        console.log("Firebase ready and listeners attached. Enabling all buttons.");
                         allButtons.forEach(btn => btn.disabled = false);
+                     } else {
+                         console.warn("Firebase ready, but listeners failed to attach. Some buttons may not work.");
+                         setSessionMessage('قاعدة البيانات جاهزة، لكن هناك خطأ في ربط الأزرار.', 'message-warning');
+                         // Optionally enable only non-DB buttons here if needed
+                     }
+                     showPage('pageAddWords');
+                 } else {
+                      console.error("Firestore initialization failed. Buttons depending on DB will remain disabled.");
+                      setSessionMessage('فشل تهيئة قاعدة البيانات! تأكد من صحة firebaseConfig وقواعد الأمان. لا يمكن حفظ أو تحميل الكلمات.', 'message-error');
+                      // Enable only non-DB dependent buttons if listeners attached
+                      if (listenersAttached) {
+                          console.log("Enabling non-DB buttons only.");
+                          const nonDbButtons = [
+                              document.getElementById('gotoAddBtn_FromReview'),
+                              document.getElementById('gotoReviewBtn_FromAdd'),
+                              document.getElementById('pasteBtn')
+                          ];
+                          nonDbButtons.forEach(btn => { if(btn) btn.disabled = false; });
+                      }
+                      if (mainHeading) mainHeading.classList.remove('hidden');
+                      showPage('pageAddWords');
+                 }
+
+                 // Remove the timeout check for now to simplify debugging the initial state
+                 /*
+                 setTimeout(() => {
+                    console.log(`Timeout check: firestoreInitialized = ${firestoreInitialized}`);
+                    if (!firestoreInitialized) {
+                         console.warn("Firestore still not initialized after 3 seconds.");
+                         if (!sessionMessage.classList.contains('message-error')) {
+                             setSessionMessage('الاتصال بقاعدة البيانات يستغرق وقتاً أطول من المعتاد أو فشل. تأكد من الإعدادات.', 'message-warning');
+                         }
+                    } else if (sessionMessage.classList.contains('message-warning') || sessionMessage.textContent === '') {
+                        setSessionMessage('قاعدة البيانات جاهزة.', 'message-success');
+                        if (listenersAttached) {
+                            allButtons.forEach(btn => btn.disabled = false);
+                        }
                     }
-                }
-             }, 3000);
+                 }, 3000);
+                 */
+             } catch (initError) {
+                 console.error("FATAL ERROR during DOMContentLoaded:", initError);
+                 // Display a critical error message to the user
+                 document.body.innerHTML = `<div style="padding: 20px; color: red; text-align: center;">
+                                                <h1>خطأ فادح</h1>
+                                                <p>حدث خطأ غير متوقع أثناء تحميل الصفحة. يرجى التحقق من الكونسول (F12) وإعادة تحميل الصفحة.</p>
+                                                <p>${initError.message}</p>
+                                            </div>`;
+             }
         });
 
     </script>

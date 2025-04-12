@@ -3,421 +3,333 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مراجعة الكلمات</title>
+    <title>مراجعة الكلمات (مع تسجيل الدخول)</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-:root {
-    --bg-dark-primary: #0a0f1a;
-    --bg-dark-secondary: #151c2a;
-    --bg-dark-tertiary: #2a3447;
-    --bg-dark-quaternary: #3e4859;
-    --border-dark: #2a3447;
-    --border-dark-focus: #60a5fa;
-    --text-light-primary: #e5e7eb;
-    --text-light-secondary: #d1d5db;
-    --text-light-tertiary: #9ca3af;
-    --text-placeholder: #6b7280;
-    --primary-color: #b91c1c;
-    --primary-color-hover: #9b1717;
-    --secondary-color: #3e4859;
-    --secondary-color-hover: #2a3447;
-    --success-color: #137c3a;
-    --success-color-hover: #106632;
-    --danger-color: #b91c1c;
-    --danger-color-hover: #9b1717;
-    --danger-outline-color: #e55e5e;
-    --danger-outline-hover-bg: rgba(185, 28, 28, 0.1);
-    --font-family-base: 'Cairo', sans-serif;
-    --border-radius-lg: 0.75rem;
-    --border-radius-md: 0.5rem;
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    --blur: 8px;
-    --white0: hsla(0, 0%, 100%, 0);
-    --white50: hsla(0, 0%, 100%, 0.05);
-    --white100: hsla(0, 0%, 50%, 0.3);
-    --white200: hsla(0, 0%, 50%, 0.4);
-    --white300: hsla(0, 0%, 80%, 0.5);
-    --white: hsl(0, 0%, 100%);
-    font-size: clamp(0.95rem, 0.75rem + 0.6vw, 1.85rem);
-}
-*, *::before, *::after {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    border: 0;
-}
-html, body {
-    background-color: var(--bg-dark-primary);
-    color: var(--text-light-primary);
-    font-family: var(--font-family-base);
-    line-height: 1.5;
-}
-body {
-    min-height: 100vh;
-    display: grid;
-    place-items: center;
-    padding: 0.5rem;
-    background: linear-gradient(90deg, var(--bg-dark-secondary), var(--bg-dark-primary));
-}
-.hidden { display: none !important; }
-.container {
-    width: 100%;
-    max-width: 36rem;
-    margin-left: auto;
-    margin-right: auto;
-}
-@media (min-width: 768px) { .container { max-width: 42rem; } }
-.page { transition: opacity 0.3s ease-in-out; }
-.heading-1 {
-    font-size: 1.875rem;
-    font-weight: 700;
-    text-align: center;
-    color: var(--border-dark-focus);
-    margin-bottom: 1rem;
-}
-@media (min-width: 768px) {
-    .heading-1 { font-size: 2.25rem; margin-bottom: 1.5rem; }
-}
-.heading-2 {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: var(--text-light-primary);
-    margin-bottom: 0.75rem;
-}
-@media (min-width: 768px) { .heading-2 { font-size: 1.25rem; } }
-.card {
-    padding: 1.25rem;
-    border-radius: var(--border-radius-lg);
-    transition: all 0.3s ease-in-out;
-    text-align: center;
-    color: var(--text-light-primary);
-    background-color: transparent;
-    border: none;
-    box-shadow: none;
-    position: relative;
-    backdrop-filter: blur(var(--blur));
-    -webkit-backdrop-filter: blur(var(--blur));
-    background-image: linear-gradient(90deg, var(--white200), var(--white50));
-    overflow: hidden;
-    [dir="rtl"] & {
-        background-image: linear-gradient(-90deg, var(--white200), var(--white50));
-    }
-}
-.card:before,
-.card:after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    z-index: -1;
-}
-.card:before {
-    border: 1px solid var(--white);
-    mask-image: linear-gradient(135deg, var(--white), var(--white0) 50%);
-    -webkit-mask-image: linear-gradient(135deg, var(--white), var(--white0) 50%);
-    [dir="rtl"] & {
-        mask-image: linear-gradient(-135deg, var(--white), var(--white0) 50%);
-        -webkit-mask-image: linear-gradient(-135deg, var(--white), var(--white0) 50%);
-    }
-}
-.card:after {
-    border: 1px solid var(--primary-color);
-    mask-image: linear-gradient(135deg, var(--white0) 50%, var(--white));
-    -webkit-mask-image: linear-gradient(135deg, var(--white0) 50%, var(--white));
-    [dir="rtl"] & {
-        mask-image: linear-gradient(-135deg, var(--white0) 50%, var(--white));
-        -webkit-mask-image: linear-gradient(-135deg, var(--white0) 50%, var(--white));
-    }
-}
-.card--add {
-    text-align: right;
-    margin-bottom: 1rem;
-}
-.card--word-display {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 2rem;
-    padding: 1.5rem;
-}
-@media (min-width: 768px) {
-    .card { padding: 1.5rem; }
-    .card--word-display { padding: 1.5rem; }
-}
-.word-display-large {
-    font-size: clamp(2rem, 13vw, 6.5rem);
-    font-weight: 700;
-    color: white;
-    text-align: center;
-    word-break: break-word;
-    overflow-wrap: break-word;
-    line-height: 1.1;
-    width: 100%;
-    padding: 0.25rem 0;
-    margin-bottom: 0.25rem;
-    min-height: 1.2em;
-}
-#wordDisplayCard #translationDisplay {
-    font-size: 1rem;
-    color: var(--text-light-secondary);
-    margin-top: 0;
-    margin-bottom: 0;
-    font-weight: 400;
-    text-align: center;
-    word-break: break-word;
-    width: 100%;
-    padding-bottom: 0.5rem;
-    min-height: 1.2em;
-}
-@media (min-width: 768px) {
-    #wordDisplayCard #translationDisplay {
-        font-size: 1.125rem;
-    }
-}
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.25rem; padding: 0.5rem 1rem; border-radius: var(--border-radius-md); font-weight: 600; color: white; transition: all 0.2s ease-in-out; box-shadow: var(--shadow-md); border: none; cursor: pointer; font-size: 0.75rem; line-height: 1.25; text-decoration: none; }
-@media (min-width: 768px) { .btn { font-size: 0.875rem; gap: 0.5rem; } }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.btn:focus { outline: none; box-shadow: 0 0 0 3px var(--bg-dark-primary), 0 0 0 5px var(--border-dark-focus); }
-.btn--sm { padding: 0.375rem 0.75rem; font-size: 0.75rem; gap: 0.25rem; border-radius: 0.375rem; }
-.btn--primary { background-color: var(--primary-color); }
-.btn--primary:hover:not(:disabled) { background-color: var(--primary-color-hover); }
-.btn--secondary { background-color: var(--secondary-color); }
-.btn--secondary:hover:not(:disabled) { background-color: var(--secondary-color-hover); }
-.btn--action { padding: 0.625rem 1.25rem; font-size: 0.875rem; font-weight: 700; border-radius: var(--border-radius-md); gap: 0.25rem; }
-.btn--action:hover:not(:disabled) { transform: scale(1.05); }
-.btn--success { background-color: var(--success-color); }
-.btn--success:hover:not(:disabled) { background-color: var(--success-color-hover); }
-.btn--success:focus { box-shadow: 0 0 0 3px var(--bg-dark-primary), 0 0 0 5px var(--success-color); }
-.btn--danger { background-color: var(--danger-color); }
-.btn--danger:hover:not(:disabled) { background-color: var(--danger-color-hover); }
-.btn--danger:focus { box-shadow: 0 0 0 3px var(--bg-dark-primary), 0 0 0 5px var(--danger-color); }
-.btn--full-width { width: 100%; }
-.btn--fixed {
-    position: fixed;
-    bottom: 1rem;
-    left: 1rem;
-    z-index: 1000;
-    padding: 0.5rem 1rem;
-    background-color: var(--secondary-color);
-}
-.btn--fixed:hover:not(:disabled) { background-color: var(--secondary-color-hover); }
-.label { display: block; font-size: 0.75rem; font-weight: 500; color: var(--text-light-secondary); margin-bottom: 0.25rem; }
-.input-field, .textarea-field { margin-top: 0.25rem; display: block; width: 100%; padding: 0.5rem 1rem; background-color: var(--bg-dark-primary); border: 1px solid var(--border-dark); border-radius: var(--border-radius-md); font-size: 0.875rem; box-shadow: var(--shadow-md); color: var(--text-light-primary); }
-.textarea-field { min-height: 80px; line-height: 1.5; }
-.input-field::placeholder, .textarea-field::placeholder { color: var(--text-placeholder); }
-.input-field:focus, .textarea-field:focus { outline: none; border-color: var(--border-dark-focus); box-shadow: 0 0 0 1px var(--border-dark-focus); }
-.textarea-readonly { background-color: var(--bg-dark-tertiary); border-color: var(--border-dark); color: var(--text-light-secondary); cursor: default; }
-.textarea-readonly:focus { border-color: var(--border-dark); box-shadow: none; }
-.input-container { margin-bottom: 0.25rem; }
-.message { font-size: 0.75rem; margin-top: 0.5rem; text-align: center; min-height: 1rem; }
-.message--small { margin-top: 0.25rem; min-height: 0.75rem; }
-.message--success { color: var(--success-color); }
-.message--error { color: var(--danger-color); }
-.message--info { color: var(--text-light-secondary); }
-.message--warning { color: #facc15; }
-.message--default { color: var(--text-light-tertiary); }
-.button-group { display: flex; justify-content: center; gap: 0.5rem; margin-top: 1rem; }
-.margin-top-1 { margin-top: 0.25rem; } .margin-top-2 { margin-top: 0.5rem; } .margin-top-3 { margin-top: 0.75rem; } .margin-top-4 { margin-top: 1rem; } .margin-top-5 { margin-top: 1.25rem; }
-.margin-bottom-3 { margin-bottom: 0.75rem; } .margin-bottom-4 { margin-bottom: 1rem; }
-.padding-top-3 { padding-top: 0.75rem; } .padding-top-4 { padding-top: 1rem; }
-.border-top { border-top: 1px solid var(--border-dark); }
-.loader { display: inline-block; animation: spin 1s linear infinite; border-radius: 50%; width: 1rem; height: 1rem; border-top: 2px solid white; border-bottom: 2px solid white; border-left: 2px solid transparent; border-right: 2px solid transparent; margin-left: 0.5rem; }
-.btn .loader { margin-left: 0; }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-.small-text { font-size: 0.625rem; color: var(--text-light-tertiary); }
-@media (min-width: 768px) { .small-text { font-size: 0.75rem; } }
-.icon { width: 1rem; height: 1rem; display: inline-block; vertical-align: middle; }
-.icon--sm { width: 0.75rem; height: 0.75rem; }
-.icon--lg { width: 1.25rem; height: 1.25rem; }
+        :root {
+            --bg-dark-primary: #0a0f1a;
+            --bg-dark-secondary: #151c2a;
+            --bg-dark-tertiary: #2a3447;
+            --bg-dark-quaternary: #3e4859;
+            --border-dark: #2a3447;
+            --border-dark-focus: #60a5fa;
+            --text-light-primary: #e5e7eb;
+            --text-light-secondary: #d1d5db;
+            --text-light-tertiary: #9ca3af;
+            --text-placeholder: #6b7280;
+            --primary-color: #b91c1c; /* Red */
+            --primary-color-hover: #9b1717;
+            --secondary-color: #3e4859; /* Gray */
+            --secondary-color-hover: #2a3447;
+            --success-color: #137c3a; /* Green */
+            --success-color-hover: #106632;
+            --danger-color: #b91c1c; /* Red */
+            --danger-color-hover: #9b1717;
+            --danger-outline-color: #e55e5e;
+            --danger-outline-hover-bg: rgba(185, 28, 28, 0.1);
+            --font-family-base: 'Cairo', sans-serif;
+            --border-radius-lg: 0.75rem;
+            --border-radius-md: 0.5rem;
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --blur: 8px;
+            --white0: hsla(0, 0%, 100%, 0);
+            --white50: hsla(0, 0%, 100%, 0.05);
+            --white100: hsla(0, 0%, 50%, 0.3);
+            --white200: hsla(0, 0%, 50%, 0.4);
+            --white300: hsla(0, 0%, 80%, 0.5);
+            --white: hsl(0, 0%, 100%);
+            font-size: clamp(0.95rem, 0.75rem + 0.6vw, 1.85rem);
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; border: 0; }
+        html, body { background-color: var(--bg-dark-primary); color: var(--text-light-primary); font-family: var(--font-family-base); line-height: 1.5; }
+        body { min-height: 100vh; display: grid; place-items: center; padding: 0.5rem; background: linear-gradient(90deg, var(--bg-dark-secondary), var(--bg-dark-primary)); }
+        .hidden { display: none !important; }
+        .container { width: 100%; max-width: 36rem; margin-left: auto; margin-right: auto; }
+        @media (min-width: 768px) { .container { max-width: 42rem; } }
+        .page { transition: opacity 0.3s ease-in-out; }
+        .heading-1 { font-size: 1.875rem; font-weight: 700; text-align: center; color: var(--border-dark-focus); margin-bottom: 1rem; }
+        @media (min-width: 768px) { .heading-1 { font-size: 2.25rem; margin-bottom: 1.5rem; } }
+        .heading-2 { font-size: 1.125rem; font-weight: 600; color: var(--text-light-primary); margin-bottom: 0.75rem; }
+        @media (min-width: 768px) { .heading-2 { font-size: 1.25rem; } }
+        .card { padding: 1.25rem; border-radius: var(--border-radius-lg); transition: all 0.3s ease-in-out; text-align: center; color: var(--text-light-primary); background-color: transparent; border: none; box-shadow: none; position: relative; backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur)); background-image: linear-gradient(90deg, var(--white200), var(--white50)); overflow: hidden; }
+        [dir="rtl"] .card { background-image: linear-gradient(-90deg, var(--white200), var(--white50)); }
+        .card:before, .card:after { content: ""; position: absolute; inset: 0; border-radius: inherit; z-index: -1; }
+        .card:before { border: 1px solid var(--white); mask-image: linear-gradient(135deg, var(--white), var(--white0) 50%); -webkit-mask-image: linear-gradient(135deg, var(--white), var(--white0) 50%); }
+        [dir="rtl"] .card:before { mask-image: linear-gradient(-135deg, var(--white), var(--white0) 50%); -webkit-mask-image: linear-gradient(-135deg, var(--white), var(--white0) 50%); }
+        .card:after { border: 1px solid var(--primary-color); mask-image: linear-gradient(135deg, var(--white0) 50%, var(--white)); -webkit-mask-image: linear-gradient(135deg, var(--white0) 50%, var(--white)); }
+        [dir="rtl"] .card:after { mask-image: linear-gradient(-135deg, var(--white0) 50%, var(--white)); -webkit-mask-image: linear-gradient(-135deg, var(--white0) 50%, var(--white)); }
+        .card--add { text-align: right; margin-bottom: 1rem; }
+        .card--word-display { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 2rem; padding: 1.5rem; }
+        .card--auth { max-width: 28rem; margin: 2rem auto; text-align: right; }
+        @media (min-width: 768px) { .card { padding: 1.5rem; } .card--word-display { padding: 1.5rem; } }
+        .word-display-large { font-size: clamp(2rem, 13vw, 6.5rem); font-weight: 700; color: white; text-align: center; word-break: break-word; overflow-wrap: break-word; line-height: 1.1; width: 100%; padding: 0.25rem 0; margin-bottom: 0.25rem; min-height: 1.2em; }
+        #wordDisplayCard #translationDisplay { font-size: 1rem; color: var(--text-light-secondary); margin-top: 0; margin-bottom: 0; font-weight: 400; text-align: center; word-break: break-word; width: 100%; padding-bottom: 0.5rem; min-height: 1.2em; }
+        @media (min-width: 768px) { #wordDisplayCard #translationDisplay { font-size: 1.125rem; } }
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.25rem; padding: 0.5rem 1rem; border-radius: var(--border-radius-md); font-weight: 600; color: white; transition: all 0.2s ease-in-out; box-shadow: var(--shadow-md); border: none; cursor: pointer; font-size: 0.75rem; line-height: 1.25; text-decoration: none; }
+        @media (min-width: 768px) { .btn { font-size: 0.875rem; gap: 0.5rem; } }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn:focus { outline: none; box-shadow: 0 0 0 3px var(--bg-dark-primary), 0 0 0 5px var(--border-dark-focus); }
+        .btn--sm { padding: 0.375rem 0.75rem; font-size: 0.75rem; gap: 0.25rem; border-radius: 0.375rem; }
+        .btn--primary { background-color: var(--primary-color); }
+        .btn--primary:hover:not(:disabled) { background-color: var(--primary-color-hover); }
+        .btn--secondary { background-color: var(--secondary-color); }
+        .btn--secondary:hover:not(:disabled) { background-color: var(--secondary-color-hover); }
+        .btn--action { padding: 0.625rem 1.25rem; font-size: 0.875rem; font-weight: 700; border-radius: var(--border-radius-md); gap: 0.25rem; }
+        .btn--action:hover:not(:disabled) { transform: scale(1.05); }
+        .btn--success { background-color: var(--success-color); }
+        .btn--success:hover:not(:disabled) { background-color: var(--success-color-hover); }
+        .btn--success:focus { box-shadow: 0 0 0 3px var(--bg-dark-primary), 0 0 0 5px var(--success-color); }
+        .btn--danger { background-color: var(--danger-color); }
+        .btn--danger:hover:not(:disabled) { background-color: var(--danger-color-hover); }
+        .btn--danger:focus { box-shadow: 0 0 0 3px var(--bg-dark-primary), 0 0 0 5px var(--danger-color); }
+        .btn--full-width { width: 100%; }
+        .btn--fixed { position: fixed; bottom: 1rem; left: 1rem; z-index: 1000; padding: 0.5rem 1rem; background-color: var(--secondary-color); }
+        .btn--fixed:hover:not(:disabled) { background-color: var(--secondary-color-hover); }
+        .label { display: block; font-size: 0.75rem; font-weight: 500; color: var(--text-light-secondary); margin-bottom: 0.25rem; }
+        .input-field, .textarea-field { margin-top: 0.25rem; display: block; width: 100%; padding: 0.5rem 1rem; background-color: var(--bg-dark-primary); border: 1px solid var(--border-dark); border-radius: var(--border-radius-md); font-size: 0.875rem; box-shadow: var(--shadow-md); color: var(--text-light-primary); }
+        .textarea-field { min-height: 80px; line-height: 1.5; }
+        .input-field::placeholder, .textarea-field::placeholder { color: var(--text-placeholder); }
+        .input-field:focus, .textarea-field:focus { outline: none; border-color: var(--border-dark-focus); box-shadow: 0 0 0 1px var(--border-dark-focus); }
+        .textarea-readonly { background-color: var(--bg-dark-tertiary); border-color: var(--border-dark); color: var(--text-light-secondary); cursor: default; }
+        .textarea-readonly:focus { border-color: var(--border-dark); box-shadow: none; }
+        .input-container { margin-bottom: 0.25rem; }
+        .message { font-size: 0.75rem; margin-top: 0.5rem; text-align: center; min-height: 1rem; }
+        .message--small { margin-top: 0.25rem; min-height: 0.75rem; }
+        .message--success { color: var(--success-color); }
+        .message--error { color: var(--danger-color); }
+        .message--info { color: var(--text-light-secondary); }
+        .message--warning { color: #facc15; /* Yellow */ }
+        .message--default { color: var(--text-light-tertiary); }
+        .button-group { display: flex; justify-content: center; gap: 0.5rem; margin-top: 1rem; }
+        .margin-top-1 { margin-top: 0.25rem; } .margin-top-2 { margin-top: 0.5rem; } .margin-top-3 { margin-top: 0.75rem; } .margin-top-4 { margin-top: 1rem; } .margin-top-5 { margin-top: 1.25rem; } .margin-top-7 { margin-top: 1.75rem; }
+        .margin-bottom-3 { margin-bottom: 0.75rem; } .margin-bottom-4 { margin-bottom: 1rem; } .margin-bottom-6 { margin-bottom: 1.5rem; }
+        .padding-top-3 { padding-top: 0.75rem; } .padding-top-4 { padding-top: 1rem; }
+        .border-top { border-top: 1px solid var(--border-dark); }
+        .loader { display: inline-block; animation: spin 1s linear infinite; border-radius: 50%; width: 1rem; height: 1rem; border-top: 2px solid white; border-bottom: 2px solid white; border-left: 2px solid transparent; border-right: 2px solid transparent; margin-left: 0.5rem; }
+        .btn .loader { margin-left: 0; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .small-text { font-size: 0.625rem; color: var(--text-light-tertiary); }
+        @media (min-width: 768px) { .small-text { font-size: 0.75rem; } }
+        .icon { width: 1rem; height: 1rem; display: inline-block; vertical-align: middle; }
+        .icon--sm { width: 0.75rem; height: 0.75rem; }
+        .icon--lg { width: 1.25rem; height: 1.25rem; }
+        #authStatus { text-align: left; padding: 0.5rem 1rem; font-size: 0.8rem; color: var(--text-light-secondary); }
+        #authStatus span { font-weight: 600; color: var(--text-light-primary); }
+        #logoutBtn { margin-right: auto; /* Pushes button to the left in RTL */ }
+        #mainAppContainer { transition: opacity 0.3s ease-in-out; }
+        .link-like {
+            background: none;
+            border: none;
+            color: var(--border-dark-focus);
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 0.75rem;
+            padding: 0;
+            margin-top: 0.5rem;
+        }
+        .link-like:hover {
+            color: #3b82f6; /* Lighter blue on hover */
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1 class="heading-1">
-             أداة مراجعة الكلمات
-        </h1>
-        <div id="pageAddWords" class="page">
-             <div class="card card--add">
-                 <h2 class="heading-2">1. إضافة كلمات جديدة</h2>
-                 <div class="input-container">
-                     <label for="bulkInput" class="label">ألصق النص (كل سطر: كلمة فاصل ترجمة):</label>
-                     <textarea id="bulkInput" class="textarea-field" rows="5" placeholder="مثال:
+
+        <div id="authSection" class="hidden">
+            <div class="card card--auth">
+                <div id="loginForm">
+                    <h2 class="heading-2">تسجيل الدخول</h2>
+                    <div class="input-container margin-bottom-3">
+                        <label for="loginEmail" class="label">البريد الإلكتروني:</label>
+                        <input type="email" id="loginEmail" class="input-field" placeholder="email@example.com" required>
+                    </div>
+                    <div class="input-container margin-bottom-4">
+                        <label for="loginPassword" class="label">كلمة المرور:</label>
+                        <input type="password" id="loginPassword" class="input-field" required>
+                    </div>
+                    <button id="loginBtn" class="btn btn--primary btn--full-width">تسجيل الدخول</button>
+                    <p id="loginMessage" class="message message--default"></p>
+                    <button id="showSignupBtn" class="link-like">ليس لديك حساب؟ إنشاء حساب جديد</button>
+                </div>
+
+                <div id="signupForm" class="hidden">
+                    <h2 class="heading-2">إنشاء حساب جديد</h2>
+                    <div class="input-container margin-bottom-3">
+                        <label for="signupEmail" class="label">البريد الإلكتروني:</label>
+                        <input type="email" id="signupEmail" class="input-field" placeholder="email@example.com" required>
+                    </div>
+                    <div class="input-container margin-bottom-4">
+                        <label for="signupPassword" class="label">كلمة المرور:</label>
+                        <input type="password" id="signupPassword" class="input-field" required placeholder="6 أحرف على الأقل">
+                    </div>
+                    <button id="signupBtn" class="btn btn--primary btn--full-width">إنشاء حساب</button>
+                    <p id="signupMessage" class="message message--default"></p>
+                    <button id="showLoginBtn" class="link-like">لديك حساب بالفعل؟ تسجيل الدخول</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="mainAppContainer" class="hidden">
+            <div id="authStatus" class="margin-bottom-4">
+                 مرحباً <span id="userEmailDisplay"></span>
+                 <button id="logoutBtn" class="btn btn--secondary btn--sm" style="float: left;">تسجيل الخروج</button>
+            </div>
+
+            <h1 class="heading-1">
+                 أداة مراجعة الكلمات
+            </h1>
+            <div id="pageAddWords" class="page">
+                 <div class="card card--add">
+                     <h2 class="heading-2">1. إضافة كلمات جديدة</h2>
+                     <div class="input-container">
+                         <label for="bulkInput" class="label">ألصق النص (كل سطر: كلمة فاصل ترجمة):</label>
+                         <textarea id="bulkInput" class="textarea-field" rows="5" placeholder="مثال:
 Hello : مرحباً
 Book = كتاب
 World	عالم"></textarea>
-                 </div>
-                  <p id="pasteMessage" class="message message--small message--default"></p>
-                 <button id="addBulkBtn" class="btn btn--primary btn--full-width margin-top-3">
-                     <svg xmlns="http://www.w3.org/2000/svg" class="icon icon--lg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" /></svg>
-                     <span id="addBtnText">إضافة الكلمات</span>
-                     <span id="addBtnLoader" class="loader hidden"></span>
-                 </button>
-                 <p id="addMessage" class="message message--default"></p>
-                 <div class="paste-button-container margin-top-4">
-                     <button id="pasteBtn" title="لصق من الحافظة" class="btn btn--secondary btn--sm btn--full-width">
-                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="icon"><path fill-rule="evenodd" d="M15.99 4.01h-1.48a3.5 3.5 0 00-6.98 0H6.01a2 2 0 00-2 2v10a2 2 0 002 2h9.98a2 2 0 002-2V6.01a2 2 0 00-2-2zm-8.98 14V6.01h1.48v-.03a2 2 0 114 0v.03h1.48l.01 11.99H7.01zm4.49-11.03a.5.5 0 00-1 0v.03h1v-.03z" clip-rule="evenodd" /></svg>
-                         <span>لصق من الحافظة</span>
+                     </div>
+                      <p id="pasteMessage" class="message message--small message--default"></p>
+                     <button id="addBulkBtn" class="btn btn--primary btn--full-width margin-top-3">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="icon icon--lg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" /></svg>
+                         <span id="addBtnText">إضافة الكلمات</span>
+                         <span id="addBtnLoader" class="loader hidden"></span>
                      </button>
+                     <p id="addMessage" class="message message--default"></p>
+                     <div class="paste-button-container margin-top-4">
+                         <button id="pasteBtn" title="لصق من الحافظة" class="btn btn--secondary btn--sm btn--full-width">
+                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="icon"><path fill-rule="evenodd" d="M15.99 4.01h-1.48a3.5 3.5 0 00-6.98 0H6.01a2 2 0 00-2 2v10a2 2 0 002 2h9.98a2 2 0 002-2V6.01a2 2 0 00-2-2zm-8.98 14V6.01h1.48v-.03a2 2 0 114 0v.03h1.48l.01 11.99H7.01zm4.49-11.03a.5.5 0 00-1 0v.03h1v-.03z" clip-rule="evenodd" /></svg>
+                             <span>لصق من الحافظة</span>
+                         </button>
+                     </div>
+                     <div class="margin-top-5 border-top padding-top-4">
+                          <button id="gotoReviewBtn_FromAdd" class="btn btn--secondary btn--full-width margin-bottom-6">
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="icon icon--lg"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.201 2.466l-.312-.311h2.03a.75.75 0 000-1.5H4.333a.75.75 0 00-.75.75v3.167a.75.75 0 001.5 0v-2.03l.31.312a7 7 0 0011.712-3.138.75.75 0 00-1.449-.39zm1.23-3.723a.75.75 0 00-1.449.389A7 7 0 003.028 10.07l-.31.311H4.75a.75.75 0 000-1.5H1.583a.75.75 0 00-.75.75v3.167a.75.75 0 001.5 0v-2.03l.312-.31a5.5 5.5 0 019.201-2.466.75.75 0 001.449-.39z" clip-rule="evenodd" /></svg>
+                              بدء المراجعة مباشرة
+                          </button>
+                     </div>
                  </div>
-                 <div class="margin-top-5 border-top padding-top-4">
-                      <button id="gotoReviewBtn_FromAdd" class="btn btn--secondary btn--full-width margin-bottom-6">
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="icon icon--lg"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.201 2.466l-.312-.311h2.03a.75.75 0 000-1.5H4.333a.75.75 0 00-.75.75v3.167a.75.75 0 001.5 0v-2.03l.31.312a7 7 0 0011.712-3.138.75.75 0 00-1.449-.39zm1.23-3.723a.75.75 0 00-1.449.389A7 7 0 003.028 10.07l-.31.311H4.75a.75.75 0 000-1.5H1.583a.75.75 0 00-.75.75v3.167a.75.75 0 001.5 0v-2.03l.312-.31a5.5 5.5 0 019.201-2.466.75.75 0 001.449-.39z" clip-rule="evenodd" /></svg>
-                          بدء المراجعة مباشرة
-                      </button>
-                 </div>
-             </div>
-        </div>
-        <div id="pageReview" class="page hidden">
-            <div id="wordDisplayCard" class="card--word-display hidden">
-                <div id="wordDisplayLarge" class="word-display-large"></div>
-                <div id="translationDisplay" class="translation-display hidden"></div>
             </div>
-            <div class="card">
-                <div id="flashcardContainer" class="hidden">
-                    <p id="progressDisplay" class="small-text margin-bottom-3"></p>
-                    <button id="showTranslationBtn" class="btn btn--secondary btn--sm margin-top-2 margin-bottom-3">إظهار/إخفاء الترجمة</button>
-                    <div id="difficultyButtonsContainer" class="button-group">
-                         <button id="markEasyBtn" class="btn btn--action btn--success"> <svg xmlns="http://www.w3.org/2000/svg" class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"> <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /> </svg>
-                             أعرفها (سهلة)
-                         </button>
-                         <button id="markHardBtn" class="btn btn--action btn--danger"> <svg xmlns="http://www.w3.org/2000/svg" class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"> <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /> </svg>
-                             لا أعرفها (صعبة)
-                         </button>
-                    </div>
+            <div id="pageReview" class="page hidden">
+                <div id="wordDisplayCard" class="card--word-display hidden">
+                    <div id="wordDisplayLarge" class="word-display-large"></div>
+                    <div id="translationDisplay" class="translation-display hidden"></div>
                 </div>
-                 <p id="sessionMessage" class="message message--info"></p>
-                 <div id="hardWordsListContainer" class="margin-top-4 border-top padding-top-3 hidden">
-                     <h3 class="heading-2" style="font-size: 0.875rem; margin-bottom: 0.25rem;">الكلمات المتبقية للمراجعة:</h3>
-                     <textarea id="hardWordsOutput" rows="4" readonly class="textarea-field textarea-readonly" style="font-size: 0.75rem;"></textarea>
-                     <button id="copyHardWordsBtn" class="btn btn--secondary btn--sm margin-top-2">
-                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="icon icon--sm"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM5 11a1 1 0 100 2h4a1 1 0 100-2H5z" /></svg>
-                         نسخ القائمة
+                <div class="card">
+                    <div id="flashcardContainer" class="hidden">
+                        <p id="progressDisplay" class="small-text margin-bottom-3"></p>
+                        <button id="showTranslationBtn" class="btn btn--secondary btn--sm margin-top-2 margin-bottom-3">إظهار/إخفاء الترجمة</button>
+                        <div id="difficultyButtonsContainer" class="button-group">
+                             <button id="markEasyBtn" class="btn btn--action btn--success"> <svg xmlns="http://www.w3.org/2000/svg" class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"> <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /> </svg>
+                                 أعرفها (سهلة)
+                             </button>
+                             <button id="markHardBtn" class="btn btn--action btn--danger"> <svg xmlns="http://www.w3.org/2000/svg" class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"> <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /> </svg>
+                                 لا أعرفها (صعبة)
+                             </button>
+                        </div>
+                    </div>
+                     <p id="sessionMessage" class="message message--info"></p>
+                     <div id="hardWordsListContainer" class="margin-top-4 border-top padding-top-3 hidden">
+                         <h3 class="heading-2" style="font-size: 0.875rem; margin-bottom: 0.25rem;">الكلمات المتبقية للمراجعة:</h3>
+                         <textarea id="hardWordsOutput" rows="4" readonly class="textarea-field textarea-readonly" style="font-size: 0.75rem;"></textarea>
+                         <button id="copyHardWordsBtn" class="btn btn--secondary btn--sm margin-top-2">
+                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="icon icon--sm"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM5 11a1 1 0 100 2h4a1 1 0 100-2H5z" /></svg>
+                             نسخ القائمة
+                         </button>
+                         <p id="copyMessage" class="message message--small message--default"></p>
+                     </div>
+                     <button id="gotoAddBtn_FromReview" class="btn btn--secondary btn--full-width margin-top-7 btn--sm">
+                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="icon"><path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" /></svg>
+                         العودة لإضافة كلمات
                      </button>
-                     <p id="copyMessage" class="message message--small message--default"></p>
-                 </div>
-                 <button id="gotoAddBtn_FromReview" class="btn btn--secondary btn--full-width margin-top-7 btn--sm">
-                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="currentColor" class="icon"><path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" /></svg>
-                     العودة لإضافة كلمات
-                 </button>
+                </div>
             </div>
+            <button id="gotoHardWordsBtn" class="btn btn--fixed btn--sm">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="icon"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM5 11a1 1 0 100 2h4a1 1 0 100-2H5z" /></svg>
+                الكلمات الصعبة
+            </button>
+        </div> <div id="globalStatus" class="message message-info" style="position: fixed; top: 1rem; left: 50%; transform: translateX(-50%); background: var(--bg-dark-tertiary); padding: 0.5rem 1rem; border-radius: var(--border-radius-md); z-index: 2000; display: none; box-shadow: var(--shadow-lg);">
+            جاري التحميل...
         </div>
-        <button id="gotoHardWordsBtn" class="btn btn--fixed btn--sm">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50" fill="currentColor" class="icon"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM5 11a1 1 0 100 2h4a1 1 0 100-2H5z" /></svg>
-            الكلمات الصعبة
-        </button>
-    </div>
-    <script type="module">
+
+    </div> <script type="module">
+        // --- Firebase SDK Imports ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, updateDoc, query, where, doc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
-         const firebaseConfig = {
-            apiKey: "AIzaSyAunLxvASN6Cbsa_Nc6l78_5lMhe5fP2Qg",
-            authDomain: "momtn-ecab7.firebaseapp.com",
-            projectId: "momtn-ecab7",
-            storageBucket: "momtn-ecab7.appspot.com",
-            messagingSenderId: "98544311111",
-            appId: "1:98544311111:web:0158668f45ae34818fca62",
-            measurementId: "G-W164SZBMDP"
-         };
+        import {
+            getFirestore, collection, addDoc, getDocs, updateDoc, query, where, doc, deleteDoc, serverTimestamp
+        } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+        import {
+            getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged
+        } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+
+        // --- Firebase Configuration ---
+        // !! تأكد من أن هذه المعلومات صحيحة لمشروعك في Firebase !!
+        const firebaseConfig = {
+           apiKey: "YOUR_API_KEY", // استبدل بمفتاح API الخاص بك
+           authDomain: "YOUR_AUTH_DOMAIN", // استبدل بنطاق المصادقة الخاص بك
+           projectId: "YOUR_PROJECT_ID", // استبدل بمعرف المشروع الخاص بك
+           storageBucket: "YOUR_STORAGE_BUCKET", // استبدل بمخزن التخزين الخاص بك
+           messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // استبدل بمعرف المرسل الخاص بك
+           appId: "YOUR_APP_ID", // استبدل بمعرف التطبيق الخاص بك
+           measurementId: "YOUR_MEASUREMENT_ID" // اختياري: استبدل بمعرف القياس الخاص بك
+        };
+
+        // --- Firebase Initialization ---
         let app;
         let db;
+        let auth;
         let firestoreInitialized = false;
+        let authInitialized = false;
+        let currentUserId = null; // لتخزين معرف المستخدم الحالي
+
         try {
-            if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
-                 throw new Error("Firebase config is missing apiKey or projectId.");
+            // تحقق من وجود القيم الأساسية قبل التهيئة
+            if (!firebaseConfig.apiKey || !firebaseConfig.projectId || !firebaseConfig.authDomain) {
+                 throw new Error("Firebase config is missing required fields (apiKey, projectId, authDomain).");
             }
             app = initializeApp(firebaseConfig);
             db = getFirestore(app);
+            auth = getAuth(app);
             firestoreInitialized = true;
+            authInitialized = true;
         } catch (error) {
+            console.error("Firebase Initialization Error:", error);
             firestoreInitialized = false;
-        }
-        const WORDS_COLLECTION = 'userWords';
-        async function checkWordExists(word) {
-            if (!firestoreInitialized) {
-                 return true;
-            }
-            const q = query(collection(db, WORDS_COLLECTION), where("word", "==", word));
-            try {
-                const querySnapshot = await getDocs(q);
-                return !querySnapshot.empty;
-            } catch (error) {
-                setTemporaryMessage(addMessage, `خطأ عند التحقق من وجود كلمة "${word}".`, 'message-error', false);
-                return true;
+            authInitialized = false;
+            // عرض رسالة خطأ للمستخدم تفيد بفشل تهيئة Firebase
+            const globalStatus = document.getElementById('globalStatus');
+            if (globalStatus) {
+                globalStatus.textContent = `فشل تهيئة Firebase: ${error.message}. لا يمكن استخدام التطبيق.`;
+                globalStatus.className = 'message message-error';
+                globalStatus.style.display = 'block';
             }
         }
-        async function addWordFirestore(wordObject) {
-            if (!firestoreInitialized) {
-                return Promise.reject("Firestore not initialized");
-            }
-            try {
-                 const docRef = await addDocr(collection(db, WORDS_COLLECTION), {
-                    ...wordObject,
-                    status: 'hard',
-                    createdAt: serverTimestamp()
-                });
-                return docRef;
-            } catch (error) {
-                 let userMessage = `خطأ عند إضافة كلمة "${wordObject.word}" لقاعدة البيانات.`;
-                 if (error.code === 'permission-denied') {
-                     userMessage = `خطأ صلاحية: ليس لديك الإذن لإضافة كلمات. تحقق من قواعد الأمان في Firestore.`;
-                 }
-                 setTemporaryMessage(addMessage, userMessage, 'message-error', false);
-                 return null;
-            }
-        }
-        async function getHardWordsFirestore() {
-            if (!firestoreInitialized) return Promise.resolve([]);
-            const q = query(collection(db, WORDS_COLLECTION), where("status", "==", "hard"));
-            try {
-                const querySnapshot = await getDocs(q);
-                const words = [];
-                querySnapshot.forEach((doc) => {
-                    words.push({ id: doc.id, ...doc.data() });
-                });
-                return words.sort(() => Math.random() - 0.5);
-            } catch (error) {
-                 if (error.code === 'permission-denied') {
-                     setSessionMessage(`خطأ صلاحية: ليس لديك الإذن لقراءة الكلمات. تحقق من قواعد الأمان في Firestore.`, 'message-error');
-                 } else {
-                     setSessionMessage(`خطأ عند جلب الكلمات: ${error.message}`, 'message-error');
-                 }
-                return null;
-            }
-        }
-        async function updateWordStatusFirestore(docId, newStatus) {
-             if (!firestoreInitialized) return Promise.reject("Firestore not initialized");
-             const wordDocRef = doc(db, WORDS_COLLECTION, docId);
-             try {
-                await updateDoc(wordDocRef, { status: newStatus });
-             } catch (error) {
-                let userMessage = `خطأ في تحديث حالة الكلمة (ID: ${docId}).`;
-                 if (error.code === 'permission-denied') {
-                     userMessage = `خطأ صلاحية: ليس لديك الإذن لتحديث الكلمات. تحقق من قواعد الأمان في Firestore.`;
-                 }
-                setSessionMessage(userMessage, 'message-error');
-                throw error;
-             }
-        }
-        async function deleteAllWordsFirestore() {
-            if (!firestoreInitialized) return Promise.reject("Firestore not initialized");
-            const q = query(collection(db, WORDS_COLLECTION));
-            try {
-                const querySnapshot = await getDocs(q);
-                const deletePromises = [];
-                querySnapshot.forEach((document) => {
-                    deletePromises.push(deleteDoc(doc(db, WORDS_COLLECTION, document.id)));
-                });
-                await Promise.all(deletePromises);
-                return deletePromises.length;
-            } catch (error) {
-                 if (error.code === 'permission-denied') {
-                     alert("خطأ صلاحية: ليس لديك الإذن لحذف الكلمات.");
-                 }
-                throw error;
-            }
-        }
+
+        // --- Firestore Constants ---
+        const WORDS_COLLECTION = 'userWords'; // اسم المجموعة في Firestore
+
+        // --- DOM Element References ---
+        // Auth Elements
+        const authSection = document.getElementById('authSection');
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        const loginEmailInput = document.getElementById('loginEmail');
+        const loginPasswordInput = document.getElementById('loginPassword');
+        const loginBtn = document.getElementById('loginBtn');
+        const loginMessage = document.getElementById('loginMessage');
+        const showSignupBtn = document.getElementById('showSignupBtn');
+        const signupEmailInput = document.getElementById('signupEmail');
+        const signupPasswordInput = document.getElementById('signupPassword');
+        const signupBtn = document.getElementById('signupBtn');
+        const signupMessage = document.getElementById('signupMessage');
+        const showLoginBtn = document.getElementById('showLoginBtn');
+        const authStatus = document.getElementById('authStatus');
+        const userEmailDisplay = document.getElementById('userEmailDisplay');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        // Main App Elements
+        const mainAppContainer = document.getElementById('mainAppContainer');
+        const globalStatus = document.getElementById('globalStatus');
         const mainHeading = document.querySelector('.heading-1');
         const pageAddWords = document.getElementById('pageAddWords');
         const pageReview = document.getElementById('pageReview');
@@ -445,458 +357,874 @@ World	عالم"></textarea>
         const copyHardWordsBtn = document.getElementById('copyHardWordsBtn');
         const copyMessage = document.getElementById('copyMessage');
         const gotoHardWordsBtn = document.getElementById('gotoHardWordsBtn');
+
+        // --- App State ---
         let currentSessionWords = [];
         let currentWordIndex = 0;
-         function showPage(pageId) {
+
+        // --- Utility Functions ---
+        function showGlobalStatus(message, type = 'info', duration = 3000) {
+            if (!globalStatus) return;
+            globalStatus.textContent = message;
+            globalStatus.className = `message message-${type}`; // Apply type class
+            globalStatus.style.display = 'block';
+            if (duration > 0) {
+                setTimeout(() => {
+                    globalStatus.style.display = 'none';
+                }, duration);
+            }
+        }
+
+        function hideGlobalStatus() {
+            if (globalStatus) globalStatus.style.display = 'none';
+        }
+
+        function showPage(pageId) {
+            // Hide all pages first
             pageAddWords.classList.add('hidden');
             pageReview.classList.add('hidden');
+
             const pageToShow = document.getElementById(pageId);
             if (pageToShow) {
                  pageToShow.classList.remove('hidden');
                  pageToShow.style.opacity = '0';
                  setTimeout(() => pageToShow.style.opacity = '1', 50);
             }
+
+            // Adjust heading visibility based on the page
             if (mainHeading) {
                 if (pageId === 'pageReview') {
-                    mainHeading.classList.add('hidden');
-                    if (flashcardContainer && flashcardContainer.parentElement) {
+                    // Hide main heading only if showing the review card itself
+                    const isReviewCardVisible = !flashcardContainer.classList.contains('hidden');
+                    mainHeading.classList.toggle('hidden', isReviewCardVisible);
+                     if (flashcardContainer && flashcardContainer.parentElement && isReviewCardVisible) {
                        flashcardContainer.parentElement.classList.remove('hidden');
                     }
-                } else {
+                } else { // pageAddWords
                     mainHeading.classList.remove('hidden');
-                    if(wordDisplayCard) wordDisplayCard.classList.add('hidden');
+                    if(wordDisplayCard) wordDisplayCard.classList.add('hidden'); // Ensure word display is hidden when adding
                 }
             }
-             if (translationDisplay) translationDisplay.classList.add('hidden');
+             if (translationDisplay) translationDisplay.classList.add('hidden'); // Always hide translation on page switch
         }
+
         function toggleButtonLoading(button, textElement, loaderElement, isLoading, loadingText = '') {
              if (!button || !textElement || !loaderElement) {
+                 console.warn("toggleButtonLoading: Missing element reference.");
                  return;
              }
              if (!textElement.dataset.originalText) {
                  textElement.dataset.originalText = textElement.textContent;
              }
              const originalText = textElement.dataset.originalText;
+             button.disabled = isLoading; // Disable button when loading
              if (isLoading) {
-                 loaderElement.classList.remove('hidden'); button.disabled = true;
+                 loaderElement.classList.remove('hidden');
                  textElement.textContent = loadingText || originalText;
              } else {
-                 loaderElement.classList.add('hidden'); button.disabled = false;
+                 loaderElement.classList.add('hidden');
                  textElement.textContent = originalText;
              }
         }
-        function setTemporaryMessage(element, message, cssClassSuffix, isSmall = false) {
-            if (!element) {
-                return;
-            }
+
+        function setTemporaryMessage(element, message, cssClassSuffix, isSmall = false, duration = 3500) {
+            if (!element) return;
             element.textContent = message;
-            element.classList.remove('message-success', 'message-error', 'message-info', 'message-warning', 'message-default');
-            element.classList.add(`message-${cssClassSuffix}`);
+            // Reset classes first
+            element.className = 'message'; // Base class
+            element.classList.add(`message--${cssClassSuffix}`);
             element.classList.toggle('message--small', isSmall);
-            const duration = message.length > 50 ? 5000 : 3500;
+
+            // Clear message after duration
             setTimeout(() => {
-                if (element.textContent === message) {
+                if (element.textContent === message) { // Only clear if the message hasn't changed
                     element.textContent = '';
-                    element.classList.remove(`message-${cssClassSuffix}`);
-                    element.classList.remove('message--small');
-                    element.classList.add('message-default');
+                    element.className = 'message message--default'; // Reset to default
+                    element.classList.toggle('message--small', isSmall); // Keep small if it was
                 }
             }, duration);
         }
-        function setSessionMessage(message, cssClassSuffix) {
-            if (!sessionMessage){
-                 return;
-            }
+
+        function setSessionMessage(message, cssClassSuffix = 'info') {
+            if (!sessionMessage) return;
             sessionMessage.textContent = message;
-            sessionMessage.classList.remove('message-success', 'message-error', 'message-info', 'message-warning', 'message-default');
-            if (cssClassSuffix !== 'default') {
-                sessionMessage.classList.add(`message-${cssClassSuffix}`);
-            }
-             sessionMessage.className = `message message--info h-5 text-xs font-semibold mt-4 text-center ${cssClassSuffix ? `message-${cssClassSuffix}` : 'message-default'}`;
+            // Reset classes first
+            sessionMessage.className = 'message'; // Base class
+            sessionMessage.classList.add(`message--${cssClassSuffix}`);
         }
+
+        // --- Firestore Functions (User-Specific) ---
+
+        /**
+         * Checks if a specific word already exists for the current user.
+         * @param {string} word The word to check.
+         * @returns {Promise<boolean>} True if the word exists for the user, false otherwise.
+         */
+        async function checkWordExists(word) {
+            if (!firestoreInitialized || !currentUserId) {
+                 console.error("checkWordExists: Firestore not ready or user not logged in.");
+                 setTemporaryMessage(addMessage, 'خطأ: لا يمكن التحقق من الكلمة (مشكلة اتصال أو تسجيل دخول).', 'error', false);
+                 return true; // Assume exists to prevent duplicates on error
+            }
+            const q = query(collection(db, WORDS_COLLECTION),
+                            where("word", "==", word),
+                            where("userId", "==", currentUserId)); // Filter by userId
+            try {
+                const querySnapshot = await getDocs(q);
+                return !querySnapshot.empty;
+            } catch (error) {
+                console.error("Error checking word existence:", error);
+                setTemporaryMessage(addMessage, `خطأ عند التحقق من وجود كلمة "${word}".`, 'error', false);
+                return true; // Assume exists on error
+            }
+        }
+
+        /**
+         * Adds a new word object to Firestore for the current user.
+         * @param {object} wordObject Object containing { word, translation }.
+         * @returns {Promise<DocumentReference|null>} Firestore document reference or null on error.
+         */
+        async function addWordFirestore(wordObject) {
+            if (!firestoreInitialized || !currentUserId) {
+                console.error("addWordFirestore: Firestore not ready or user not logged in.");
+                setTemporaryMessage(addMessage, 'خطأ: لا يمكن إضافة الكلمة (مشكلة اتصال أو تسجيل دخول).', 'error', false);
+                return null;
+            }
+            try {
+                 const docRef = await addDoc(collection(db, WORDS_COLLECTION), {
+                    ...wordObject,
+                    userId: currentUserId, // Add the current user's ID
+                    status: 'hard', // Default status
+                    createdAt: serverTimestamp() // Timestamp
+                });
+                return docRef;
+            } catch (error) {
+                 console.error("Error adding word:", error);
+                 let userMessage = `خطأ عند إضافة كلمة "${wordObject.word}" لقاعدة البيانات.`;
+                 if (error.code === 'permission-denied') {
+                     userMessage = `خطأ صلاحية: ليس لديك الإذن لإضافة كلمات. تأكد من تحديث قواعد الأمان في Firestore للسماح بالكتابة للمستخدمين المسجلين.`;
+                 }
+                 setTemporaryMessage(addMessage, userMessage, 'error', false);
+                 return null;
+            }
+        }
+
+        /**
+         * Fetches all 'hard' words for the current logged-in user.
+         * @returns {Promise<Array|null>} Array of word objects or null on error.
+         */
+        async function getHardWordsFirestore() {
+            if (!firestoreInitialized || !currentUserId) {
+                console.error("getHardWordsFirestore: Firestore not ready or user not logged in.");
+                setSessionMessage('خطأ: لا يمكن جلب الكلمات (مشكلة اتصال أو تسجيل دخول).', 'error');
+                return null;
+            }
+            // Query for words belonging to the current user with status 'hard'
+            const q = query(collection(db, WORDS_COLLECTION),
+                            where("userId", "==", currentUserId),
+                            where("status", "==", "hard"));
+            try {
+                const querySnapshot = await getDocs(q);
+                const words = [];
+                querySnapshot.forEach((doc) => {
+                    words.push({ id: doc.id, ...doc.data() });
+                });
+                // Shuffle the words for review
+                return words.sort(() => Math.random() - 0.5);
+            } catch (error) {
+                 console.error("Error fetching hard words:", error);
+                 if (error.code === 'permission-denied') {
+                     setSessionMessage(`خطأ صلاحية: ليس لديك الإذن لقراءة الكلمات. تأكد من تحديث قواعد الأمان في Firestore للسماح بالقراءة للمستخدمين المسجلين.`, 'error');
+                 } else {
+                     setSessionMessage(`خطأ عند جلب الكلمات: ${error.message}`, 'error');
+                 }
+                return null;
+            }
+        }
+
+        /**
+         * Updates the status of a specific word document for the current user.
+         * @param {string} docId The Firestore document ID of the word.
+         * @param {string} newStatus The new status ('easy' or 'hard').
+         * @returns {Promise<void>}
+         */
+        async function updateWordStatusFirestore(docId, newStatus) {
+             if (!firestoreInitialized || !currentUserId) {
+                 console.error("updateWordStatusFirestore: Firestore not ready or user not logged in.");
+                 setSessionMessage('خطأ: لا يمكن تحديث حالة الكلمة (مشكلة اتصال أو تسجيل دخول).', 'error');
+                 throw new Error("Firestore not ready or user not logged in.");
+             }
+             // Note: We don't strictly need to check userId here if rules are set correctly,
+             // but it's good practice if rules might be permissive.
+             // Firestore rules *should* prevent unauthorized updates.
+             const wordDocRef = doc(db, WORDS_COLLECTION, docId);
+             try {
+                await updateDoc(wordDocRef, { status: newStatus });
+             } catch (error) {
+                console.error("Error updating word status:", error);
+                let userMessage = `خطأ في تحديث حالة الكلمة (ID: ${docId}).`;
+                 if (error.code === 'permission-denied') {
+                     userMessage = `خطأ صلاحية: ليس لديك الإذن لتحديث هذه الكلمة.`;
+                 }
+                setSessionMessage(userMessage, 'error');
+                throw error; // Re-throw to handle in calling function
+             }
+        }
+
+        // Note: deleteAllWordsFirestore is generally unsafe in a multi-user context
+        // unless strictly controlled (e.g., admin function).
+        // If needed, it *must* be modified to delete only the current user's words.
+        // Example (Use with caution):
+        /*
+        async function deleteAllCurrentUserWordsFirestore() {
+            if (!firestoreInitialized || !currentUserId) return Promise.reject("Not initialized or not logged in");
+            const q = query(collection(db, WORDS_COLLECTION), where("userId", "==", currentUserId));
+            try {
+                const querySnapshot = await getDocs(q);
+                const deletePromises = [];
+                querySnapshot.forEach((document) => {
+                    deletePromises.push(deleteDoc(doc(db, WORDS_COLLECTION, document.id)));
+                });
+                await Promise.all(deletePromises);
+                console.log(`Deleted ${deletePromises.length} words for user ${currentUserId}`);
+                return deletePromises.length;
+            } catch (error) {
+                console.error("Error deleting user words:", error);
+                if (error.code === 'permission-denied') {
+                     alert("خطأ صلاحية: ليس لديك الإذن لحذف الكلمات.");
+                 }
+                throw error;
+            }
+        }
+        */
+
+        // --- Authentication Functions ---
+        function handleLogin(event) {
+            event.preventDefault(); // Prevent form submission
+            const email = loginEmailInput.value.trim();
+            const password = loginPasswordInput.value;
+            loginMessage.textContent = ''; // Clear previous messages
+
+            if (!email || !password) {
+                setTemporaryMessage(loginMessage, 'الرجاء إدخال البريد الإلكتروني وكلمة المرور.', 'warning', false);
+                return;
+            }
+
+            showGlobalStatus('جاري تسجيل الدخول...', 'info', 0); // Show indefinitely
+
+            signInWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    // Signed in successfully
+                    // onAuthStateChanged will handle UI updates
+                    hideGlobalStatus();
+                    // No need to show message here, onAuthStateChanged handles UI switch
+                })
+                .catch((error) => {
+                    hideGlobalStatus();
+                    console.error("Login Error:", error);
+                    let message = 'فشل تسجيل الدخول. ';
+                    switch (error.code) {
+                        case 'auth/user-not-found':
+                        case 'auth/wrong-password':
+                            message += 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
+                            break;
+                        case 'auth/invalid-email':
+                            message += 'البريد الإلكتروني غير صالح.';
+                            break;
+                        case 'auth/user-disabled':
+                            message += 'تم تعطيل هذا الحساب.';
+                            break;
+                        default:
+                            message += 'حدث خطأ غير متوقع.';
+                    }
+                    setTemporaryMessage(loginMessage, message, 'error', false, 5000);
+                });
+        }
+
+        function handleSignup(event) {
+            event.preventDefault(); // Prevent form submission
+            const email = signupEmailInput.value.trim();
+            const password = signupPasswordInput.value;
+            signupMessage.textContent = ''; // Clear previous messages
+
+            if (!email || !password) {
+                setTemporaryMessage(signupMessage, 'الرجاء إدخال البريد الإلكتروني وكلمة المرور.', 'warning', false);
+                return;
+            }
+            if (password.length < 6) {
+                setTemporaryMessage(signupMessage, 'يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.', 'warning', false);
+                return;
+            }
+
+            showGlobalStatus('جاري إنشاء الحساب...', 'info', 0); // Show indefinitely
+
+            createUserWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    // Signed up and signed in successfully
+                    // onAuthStateChanged will handle UI updates
+                    hideGlobalStatus();
+                     // Optionally show a success message before UI switches
+                     // showGlobalStatus('تم إنشاء الحساب وتسجيل الدخول بنجاح!', 'success', 2000);
+                })
+                .catch((error) => {
+                    hideGlobalStatus();
+                    console.error("Signup Error:", error);
+                    let message = 'فشل إنشاء الحساب. ';
+                    switch (error.code) {
+                        case 'auth/email-already-in-use':
+                            message += 'هذا البريد الإلكتروني مستخدم بالفعل.';
+                            break;
+                        case 'auth/invalid-email':
+                            message += 'البريد الإلكتروني غير صالح.';
+                            break;
+                        case 'auth/weak-password':
+                            message += 'كلمة المرور ضعيفة جداً.';
+                            break;
+                        default:
+                            message += 'حدث خطأ غير متوقع.';
+                    }
+                    setTemporaryMessage(signupMessage, message, 'error', false, 5000);
+                });
+        }
+
+        function handleLogout() {
+            showGlobalStatus('جاري تسجيل الخروج...', 'info', 0);
+            signOut(auth).then(() => {
+                // Sign-out successful.
+                // onAuthStateChanged will handle UI updates
+                hideGlobalStatus();
+            }).catch((error) => {
+                hideGlobalStatus();
+                console.error("Logout Error:", error);
+                showGlobalStatus('فشل تسجيل الخروج.', 'error', 3000);
+            });
+        }
+
+        // --- Word Management Functions ---
+
         async function handlePaste() {
              pasteMessage.textContent = '';
             if (!navigator.clipboard || !navigator.clipboard.readText) {
-                setTemporaryMessage(pasteMessage, 'المتصفح لا يدعم اللصق أو تحتاج لـ HTTPS.', 'message-warning', true);
+                setTemporaryMessage(pasteMessage, 'المتصفح لا يدعم اللصق أو تحتاج لـ HTTPS.', 'warning', true);
                 return;
             }
             try {
                 const text = await navigator.clipboard.readText();
                 if (text) {
                     bulkInput.value += (bulkInput.value ? '\n' : '') + text;
-                    setTemporaryMessage(pasteMessage, 'تم اللصق بنجاح.', 'message-success', true);
-                    bulkInput.scrollTop = bulkInput.scrollHeight;
+                    setTemporaryMessage(pasteMessage, 'تم اللصق بنجاح.', 'success', true);
+                    bulkInput.scrollTop = bulkInput.scrollHeight; // Scroll to bottom
                 } else {
-                    setTemporaryMessage(pasteMessage, 'الحافظة فارغة.', 'message-info', true);
+                    setTemporaryMessage(pasteMessage, 'الحافظة فارغة.', 'info', true);
                 }
             } catch (err) {
-                setTemporaryMessage(pasteMessage, 'فشل اللصق. قد تحتاج لإعطاء الإذن للموقع.', 'message-error', true);
+                console.warn("Paste error:", err);
+                setTemporaryMessage(pasteMessage, 'فشل اللصق. قد تحتاج لإعطاء الإذن للموقع.', 'error', true);
             }
         }
+
         async function addWordsFromText() {
-            if (addBtnText) {
-                addBtnText.textContent = '... جاري ...';
-            } else {
-                 return;
-            }
-            if (!firestoreInitialized) {
-                setTemporaryMessage(addMessage, 'فشل الاتصال بقاعدة البيانات. لا يمكن إضافة الكلمات. تأكد من صحة firebaseConfig.', 'message-error', false);
-                 if(addBulkBtn && addBtnText && addBtnLoader) {
-                    toggleButtonLoading(addBulkBtn, addBtnText, addBtnLoader, false);
-                 }
+            if (!firestoreInitialized || !currentUserId) {
+                setTemporaryMessage(addMessage, 'يجب تسجيل الدخول أولاً لإضافة الكلمات.', 'warning', false);
                 return;
             }
-            if (!bulkInput || !addBulkBtn || !addBtnLoader || !addMessage) {
-                 setTemporaryMessage(addMessage,"خطأ في واجهة المستخدم: بعض العناصر مفقودة.", 'message-error', false);
-                 if(addBulkBtn && addBtnText && addBtnLoader) {
-                    toggleButtonLoading(addBulkBtn, addBtnText, addBtnLoader, false);
-                 }
+             if (!bulkInput || !addBulkBtn || !addBtnText || !addBtnLoader || !addMessage) {
+                 console.error("addWordsFromText: Missing UI elements.");
+                 setTemporaryMessage(addMessage,"خطأ في واجهة المستخدم.", 'error', false);
                  return;
-            }
+             }
+
             const text = bulkInput.value.trim();
             if (!text) {
-                setTemporaryMessage(addMessage, "الرجاء إدخال أو لصق النص أولاً.", "message-warning", false);
-                toggleButtonLoading(addBulkBtn, addBtnText, addBtnLoader, false);
+                setTemporaryMessage(addMessage, "الرجاء إدخال أو لصق النص أولاً.", "warning", false);
                 return;
             }
+
             toggleButtonLoading(addBulkBtn, addBtnText, addBtnLoader, true, 'جار الإضافة...');
-            setTemporaryMessage(addMessage, 'جاري تحليل وإضافة الكلمات...', 'message-info', false);
+            setTemporaryMessage(addMessage, 'جاري تحليل وإضافة الكلمات...', 'info', false);
+
             const lines = text.split('\n');
             let addedCount = 0;
             let skippedCount = 0;
             let errorCount = 0;
             const wordsToAddPromises = [];
-            lines.forEach((line, index) => {
-                line = line.trim();
-                if (!line || line.startsWith('#') || line.startsWith('//')) {
-                    return;
+
+            // Process lines sequentially to avoid overwhelming Firestore writes if many duplicates exist
+            for (const line of lines) {
+                const trimmedLine = line.trim();
+                if (!trimmedLine || trimmedLine.startsWith('#') || trimmedLine.startsWith('//')) {
+                    continue; // Skip empty lines and comments
                 }
-                const parts = line.split(/\s*[:=\t]\s*/, 2);
+
+                // Split by common delimiters: :, =, tab
+                const parts = trimmedLine.split(/\s*[:=\t]\s*/, 2);
                 if (parts.length === 2) {
                     const word = parts[0].trim();
                     const translation = parts[1].trim();
+
                     if (word && translation) {
-                        const task = async () => {
-                            try {
-                                const exists = await checkWordExists(word);
-                                if (!exists) {
-                                    const addedDoc = await addWordFirestore({ word, translation });
-                                    if (addedDoc) {
-                                        addedCount++;
-                                    } else {
-                                        errorCount++;
-                                    }
+                        try {
+                            const exists = await checkWordExists(word); // Check if word exists *for this user*
+                            if (!exists) {
+                                const addedDoc = await addWordFirestore({ word, translation });
+                                if (addedDoc) {
+                                    addedCount++;
                                 } else {
-                                    skippedCount++;
+                                    // Error message already shown by addWordFirestore
+                                    errorCount++;
                                 }
-                            } catch (err) {
-                                setTemporaryMessage(addMessage, `خطأ غير متوقع عند معالجة كلمة "${word}".`, 'message-error', false);
-                                errorCount++;
+                            } else {
+                                console.log(`Skipping duplicate word: ${word}`);
+                                skippedCount++;
                             }
-                        };
-                        wordsToAddPromises.push(task());
+                        } catch (err) {
+                             console.error(`Error processing line for word "${word}":`, err);
+                             setTemporaryMessage(addMessage, `خطأ غير متوقع عند معالجة كلمة "${word}".`, 'error', false);
+                             errorCount++;
+                        }
                     } else {
-                        skippedCount++;
+                        console.log(`Skipping line with empty word or translation: ${trimmedLine}`);
+                        skippedCount++; // Skipped due to invalid format (empty word/translation)
                     }
                 } else {
-                    skippedCount++;
+                    console.log(`Skipping invalid format line: ${trimmedLine}`);
+                    skippedCount++; // Skipped due to invalid format (no valid delimiter)
                 }
-            });
-            try {
-                await Promise.all(wordsToAddPromises);
-            } catch (overallError) {
-                 errorCount++;
-                 setTemporaryMessage(addMessage, `حدث خطأ عام أثناء عملية الإضافة.`, 'message-error', false);
-            }
+            } // End of loop
+
+            // --- Construct final message ---
             let messageText = '';
-            let messageClass = 'message-default';
+            let messageClass = 'default';
+
             if (errorCount > 0) {
-                 messageText += `حدث ${errorCount} خطأ أثناء الإضافة أو التحقق (راجع الكونسول لمزيد من التفاصيل). `;
-                 messageClass = 'message-error';
+                 messageText += `حدث ${errorCount} خطأ أثناء الإضافة أو التحقق. `;
+                 messageClass = 'error';
             }
              if (addedCount > 0) {
                 messageText += `تمت إضافة ${addedCount} كلمة جديدة بنجاح. `;
-                 if (messageClass !== 'message-error') messageClass = 'message-success';
+                 if (messageClass !== 'error') messageClass = 'success';
             }
              if (skippedCount > 0) {
                 messageText += `تم تخطي ${skippedCount} سطراً (مكرر أو تنسيق غير صحيح أو فارغ). `;
-                if (messageClass === 'message-default') messageClass = 'message-warning';
+                if (messageClass === 'default') messageClass = 'warning';
             }
+
             const nonEmptyLines = lines.filter(l => l.trim() && !l.trim().startsWith('#') && !l.trim().startsWith('//')).length;
              if (addedCount === 0 && skippedCount === 0 && errorCount === 0 && nonEmptyLines > 0) {
-                 messageText = "لم يتم العثور على كلمات صالحة للإضافة في النص المدخل (قد يكون التنسيق غير صحيح في كل الأسطر).";
-                 messageClass = 'message-warning';
+                 messageText = "لم يتم العثور على كلمات صالحة للإضافة في النص المدخل.";
+                 messageClass = 'warning';
             } else if (nonEmptyLines === 0 && text) {
-                 messageText = "النص المدخل يحتوي فقط على أسطر فارغة أو تعليقات.";
-                 messageClass = 'message-info';
+                 messageText = "النص المدخل فارغ أو يحتوي فقط على تعليقات.";
+                 messageClass = 'info';
             } else if (!messageText.trim()) {
                  messageText = "لم تتم إضافة أو تخطي أي كلمات.";
-                 messageClass = 'message-info';
+                 messageClass = 'info';
             }
-            setTemporaryMessage(addMessage, messageText.trim(), messageClass, false);
+
+            setTemporaryMessage(addMessage, messageText.trim(), messageClass, false, 5000); // Show for 5 seconds
+
             if (addedCount > 0) {
-                bulkInput.value = '';
+                bulkInput.value = ''; // Clear input on successful additions
             }
             toggleButtonLoading(addBulkBtn, addBtnText, addBtnLoader, false);
         }
+
+        // --- Review Session Functions ---
+
         async function startSession() {
-            if (!firestoreInitialized) {
-                setSessionMessage('فشل الاتصال بقاعدة البيانات. لا يمكن بدء المراجعة.', 'message-error');
+            if (!firestoreInitialized || !currentUserId) {
+                setSessionMessage('يجب تسجيل الدخول أولاً لبدء المراجعة.', 'warning');
+                flashcardContainer.classList.add('hidden');
+                wordDisplayCard.classList.add('hidden');
                 return;
             }
-            hardWordsListContainer.classList.add('hidden');
+
+            hardWordsListContainer.classList.add('hidden'); // Hide previous list if shown
             copyMessage.textContent = '';
-            setSessionMessage('جاري تحميل الكلمات للمراجعة...', 'message-info');
+            setSessionMessage('جاري تحميل الكلمات للمراجعة...', 'info');
             flashcardContainer.classList.add('hidden');
             wordDisplayCard.classList.add('hidden');
+
             try {
-                currentSessionWords = await getHardWordsFirestore();
+                currentSessionWords = await getHardWordsFirestore(); // Fetches words for the current user
+
                 if (currentSessionWords === null) {
+                     // Error handled within getHardWordsFirestore, message already set
                      flashcardContainer.classList.add('hidden');
                      wordDisplayCard.classList.add('hidden');
-                     return;
+                     return; // Stop if words couldn't be fetched
                 }
+
                 if (currentSessionWords.length === 0) {
-                    setSessionMessage('لا توجد كلمات للمراجعة حالياً. أحسنت! أضف المزيد من الكلمات.', 'message-success');
+                    setSessionMessage('لا توجد كلمات للمراجعة حالياً. أحسنت! أضف المزيد من الكلمات.', 'success');
                     flashcardContainer.classList.add('hidden');
                     wordDisplayCard.classList.add('hidden');
-                    return;
+                    return; // No words to review
                 }
+
+                // Start the session
                 currentWordIndex = 0;
-                setSessionMessage('', 'message-default');
-                displayCurrentWord();
+                setSessionMessage('', 'default'); // Clear loading message
+                displayCurrentWord(); // Display the first word
+                showPage('pageReview'); // Ensure review page is visible
+
             } catch (error) {
-                setSessionMessage('حدث خطأ غير متوقع أثناء بدء المراجعة.', 'message-error');
+                // Catch any unexpected errors during the start process
+                console.error("Error starting review session:", error);
+                setSessionMessage('حدث خطأ غير متوقع أثناء بدء المراجعة.', 'error');
                  flashcardContainer.classList.add('hidden');
                  wordDisplayCard.classList.add('hidden');
             }
         }
-        async function endSession() {
-             flashcardContainer.classList.add('hidden');
-             wordDisplayCard.classList.add('hidden');
-             setSessionMessage('رائع! اكتملت جلسة المراجعة هذه.', 'message-success');
-             if (!firestoreInitialized) {
-                 setSessionMessage('اكتملت الجلسة (لا يمكن عرض القائمة المتبقية - خطأ اتصال).', 'message-warning');
+
+        function displayCurrentWord() {
+            if (currentWordIndex >= currentSessionWords.length) {
+                endSession(); // All words reviewed
+                return;
+            }
+
+            const currentWord = currentSessionWords[currentWordIndex];
+            if (!currentWord || !currentWord.word || !currentWord.translation || !currentWord.id) {
+                 console.error("Invalid word data found:", currentWord);
+                 setSessionMessage("خطأ: تم العثور على بيانات كلمة غير صالحة. الانتقال للتالي...", "error");
+                 // Skip this invalid word and try the next one
+                 setTimeout(goToNextWord, 500); // Add a small delay before skipping
+                 return;
+            }
+
+            // Update UI elements
+            wordDisplayLarge.textContent = currentWord.word;
+            translationDisplay.textContent = currentWord.translation;
+            translationDisplay.classList.add('hidden'); // Hide translation initially
+            progressDisplay.textContent = `الكلمة ${currentWordIndex + 1} / ${currentSessionWords.length}`;
+
+            // Show the relevant containers
+            wordDisplayCard.classList.remove('hidden');
+            flashcardContainer.classList.remove('hidden');
+            if (flashcardContainer.parentElement) {
+                flashcardContainer.parentElement.classList.remove('hidden'); // Ensure the card container is visible
+            }
+            if (mainHeading) mainHeading.classList.add('hidden'); // Hide main title during review card display
+
+            // Enable buttons
+            markEasyBtn.disabled = false;
+            markHardBtn.disabled = false;
+            showTranslationBtn.classList.remove('hidden'); // Ensure button is visible
+        }
+
+        function handleShowTranslation() {
+            if (translationDisplay) {
+                translationDisplay.classList.toggle('hidden');
+            }
+        }
+
+        async function markWordAsEasy() {
+            if (!firestoreInitialized || !currentUserId) {
+                setSessionMessage('خطأ اتصال، لا يمكن تحديث حالة الكلمة.', 'error');
+                return;
+            }
+            if (currentWordIndex >= currentSessionWords.length) return; // Out of bounds
+
+            markEasyBtn.disabled = true; // Disable buttons during processing
+            markHardBtn.disabled = true;
+
+            const currentWordObject = currentSessionWords[currentWordIndex];
+             if (!currentWordObject || !currentWordObject.id) {
+                 console.error("markWordAsEasy: Invalid current word object.");
+                 setSessionMessage("خطأ: بيانات الكلمة الحالية غير صالحة.", "error");
+                 markEasyBtn.disabled = false; // Re-enable buttons on error
+                 markHardBtn.disabled = false;
                  return;
              }
+
+            try {
+                await updateWordStatusFirestore(currentWordObject.id, 'easy');
+                goToNextWord(); // Move to the next word on success
+            } catch(error) {
+                // Error message already set by updateWordStatusFirestore
+                markEasyBtn.disabled = false; // Re-enable buttons on failure
+                markHardBtn.disabled = false;
+            }
+        }
+
+        function markWordAsHard() {
+            // No Firestore update needed, just move to the next word
+            if (currentWordIndex >= currentSessionWords.length) return;
+
+             const currentWordObject = currentSessionWords[currentWordIndex];
+             if (!currentWordObject || !currentWordObject.word) {
+                  console.error("markWordAsHard: Invalid current word object.");
+                  setSessionMessage("خطأ: بيانات الكلمة الحالية غير صالحة.", "error");
+                  goToNextWord(); // Skip to next word
+                  return;
+             }
+
+            markEasyBtn.disabled = true;
+            markHardBtn.disabled = true;
+
+            // Optionally show translation if hidden
+            if (translationDisplay && translationDisplay.classList.contains('hidden')) {
+                translationDisplay.classList.remove('hidden');
+            }
+
+            // Add a slight delay so the user sees the translation (if shown)
+            const delay = 1000; // 1 second delay
+            setTimeout(() => {
+                goToNextWord();
+            }, delay);
+        }
+
+        function goToNextWord() {
+             currentWordIndex++;
+             // Fade out effect
+             if (wordDisplayCard) {
+                 wordDisplayCard.style.opacity = '0';
+                 wordDisplayCard.style.transition = 'opacity 0.15s ease-out';
+             }
+             // After fade out, display the next word (or end session) and fade in
+             setTimeout(() => {
+                 displayCurrentWord(); // This will either show next word or call endSession
+                 if (wordDisplayCard && !wordDisplayCard.classList.contains('hidden')) {
+                     wordDisplayCard.style.transition = 'opacity 0.25s ease-in';
+                     wordDisplayCard.style.opacity = '1';
+                 }
+             }, 150); // Wait for fade out transition
+        }
+
+        async function endSession() {
+             // Hide the review card interface
+             flashcardContainer.classList.add('hidden');
+             wordDisplayCard.classList.add('hidden');
+             if (mainHeading) mainHeading.classList.remove('hidden'); // Show main title again
+
+             setSessionMessage('رائع! اكتملت جلسة المراجعة هذه.', 'success');
+
+             // Optionally, show remaining hard words
+             if (!firestoreInitialized || !currentUserId) {
+                 setSessionMessage('اكتملت الجلسة (لا يمكن عرض القائمة المتبقية - خطأ اتصال أو تسجيل دخول).', 'warning');
+                 return;
+             }
+
              try {
+                 // Fetch the *currently* hard words for this user again
                  const remainingHardWords = await getHardWordsFirestore();
+
                   if (remainingHardWords === null) {
-                     setSessionMessage('اكتملت الجلسة (خطأ في جلب الكلمات المتبقية).', 'message-warning');
+                     // Error message handled by getHardWordsFirestore
+                     setSessionMessage('اكتملت الجلسة (خطأ في جلب الكلمات المتبقية).', 'warning');
                      hardWordsListContainer.classList.add('hidden');
                      return;
                  }
+
                  if (remainingHardWords.length > 0) {
                      const formattedList = remainingHardWords
                          .map(item => `${item.word} : ${item.translation}`)
                          .join('\n');
                      hardWordsOutput.value = formattedList;
                      hardWordsListContainer.classList.remove('hidden');
-                     setSessionMessage(`اكتملت الجلسة. الكلمات المتبقية للمراجعة (${remainingHardWords.length}):`, 'message-info');
+                     // Update message to show remaining count
+                     setSessionMessage(`اكتملت الجلسة. الكلمات المتبقية للمراجعة (${remainingHardWords.length}):`, 'info');
                  } else {
+                     // All words are now 'easy'
                      hardWordsOutput.value = '';
                      hardWordsListContainer.classList.add('hidden');
-                     setSessionMessage('ممتاز! لقد أتقنت كل الكلمات.', 'message-success');
+                     setSessionMessage('ممتاز! لقد أتقنت كل الكلمات في هذه الجلسة.', 'success');
                  }
              } catch (error) {
+                 // Catch unexpected errors during the final fetch
+                 console.error("Error fetching remaining hard words after session:", error);
                  hardWordsListContainer.classList.add('hidden');
-                 setSessionMessage('اكتملت الجلسة (حدث خطأ غير متوقع في عرض الكلمات المتبقية).', 'message-warning');
+                 setSessionMessage('اكتملت الجلسة (حدث خطأ غير متوقع في عرض الكلمات المتبقية).', 'warning');
              }
         }
-        function displayCurrentWord() {
-            if (currentWordIndex >= currentSessionWords.length) {
-                endSession();
-                return;
-            }
-            const currentWord = currentSessionWords[currentWordIndex];
-            if (!currentWord || !currentWord.word || !currentWord.translation) {
-                 setSessionMessage("خطأ: تم العثور على بيانات كلمة غير صالحة.", "message-error");
-                 goToNextWord();
-                 return;
-            }
-            wordDisplayLarge.textContent = currentWord.word;
-            translationDisplay.textContent = currentWord.translation;
-            translationDisplay.classList.add('hidden');
-            wordDisplayCard.classList.remove('hidden');
-            flashcardContainer.classList.remove('hidden');
-            progressDisplay.textContent = `الكلمة ${currentWordIndex + 1} / ${currentSessionWords.length}`;
-            markEasyBtn.disabled = false;
-            markHardBtn.disabled = false;
-            showTranslationBtn.classList.remove('hidden');
-        }
-        function handleShowTranslation() {
-            translationDisplay.classList.toggle('hidden');
-        }
-        async function markWordAsEasy() {
-            if (!firestoreInitialized) {
-                setSessionMessage('خطأ اتصال، لا يمكن تحديث حالة الكلمة.', 'message-error');
-                return;
-            }
-            if (currentWordIndex >= currentSessionWords.length) return;
-            markEasyBtn.disabled = true;
-            markHardBtn.disabled = true;
-            const currentWordObject = currentSessionWords[currentWordIndex];
-             if (!currentWordObject || !currentWordObject.id) {
-                 setSessionMessage("خطأ: بيانات الكلمة الحالية غير صالحة.", "message-error");
-                 markEasyBtn.disabled = false;
-                 markHardBtn.disabled = false;
-                 return;
-             }
-            try {
-                await updateWordStatusFirestore(currentWordObject.id, 'easy');
-                goToNextWord();
-            } catch(error) {
-                markEasyBtn.disabled = false;
-                markHardBtn.disabled = false;
-            }
-        }
-        function markWordAsHard() {
-            if (currentWordIndex >= currentSessionWords.length) return;
-             const currentWordObject = currentSessionWords[currentWordIndex];
-             if (!currentWordObject || !currentWordObject.word) {
-                  setSessionMessage("خطأ: بيانات الكلمة الحالية غير صالحة.", "message-error");
-                  goToNextWord();
-                  return;
-             }
-            markEasyBtn.disabled = true;
-            markHardBtn.disabled = true;
-            if (translationDisplay.classList.contains('hidden')) {
-                translationDisplay.classList.remove('hidden');
-            }
-            const delay = 1500;
-            setTimeout(() => {
-                goToNextWord();
-            }, delay);
-        }
-        function goToNextWord() {
-             currentWordIndex++;
-             wordDisplayCard.style.opacity = '0';
-             wordDisplayCard.style.transition = 'opacity 0.15s ease-out';
-             setTimeout(() => {
-                 displayCurrentWord();
-                 wordDisplayCard.style.transition = 'opacity 0.25s ease-in';
-                 if (!wordDisplayCard.classList.contains('hidden')) {
-                     wordDisplayCard.style.opacity = '1';
-                 }
-             }, 150);
-        }
+
+        // --- Hard Words List Functions ---
+
         async function handleCopyHardWords() {
-            copyMessage.textContent = '';
+            copyMessage.textContent = ''; // Clear previous message
             const textToCopy = hardWordsOutput.value;
+
             if (!textToCopy) {
-                setTemporaryMessage(copyMessage, 'لا توجد كلمات لنسخها.', 'message-warning', true);
+                setTemporaryMessage(copyMessage, 'لا توجد كلمات لنسخها.', 'warning', true);
                 return;
             }
+
             if (!navigator.clipboard || !navigator.clipboard.writeText) {
-                setTemporaryMessage(copyMessage, 'المتصفح لا يدعم النسخ التلقائي. حاول النسخ يدوياً.', 'message-warning', true);
+                setTemporaryMessage(copyMessage, 'المتصفح لا يدعم النسخ التلقائي. حاول النسخ يدوياً.', 'warning', true);
+                // Fallback: try to select the text
                 try {
                     hardWordsOutput.select();
-                    hardWordsOutput.setSelectionRange(0, 99999);
-                } catch (e) { }
+                    hardWordsOutput.setSelectionRange(0, 99999); // For mobile devices
+                } catch (e) {
+                    console.warn("Fallback text selection failed:", e);
+                }
                 return;
             }
+
             try {
                 await navigator.clipboard.writeText(textToCopy);
-                setTemporaryMessage(copyMessage, 'تم نسخ القائمة بنجاح!', 'message-success', true);
+                setTemporaryMessage(copyMessage, 'تم نسخ القائمة بنجاح!', 'success', true);
             } catch (err) {
-                setTemporaryMessage(copyMessage, 'فشل النسخ التلقائي. حاول النسخ يدوياً.', 'message-error', true);
+                console.error("Clipboard write error:", err);
+                setTemporaryMessage(copyMessage, 'فشل النسخ التلقائي. حاول النسخ يدوياً.', 'error', true);
+                 // Fallback: try to select the text
                  try {
                     hardWordsOutput.select();
                     hardWordsOutput.setSelectionRange(0, 99999);
-                } catch (e) { }
+                } catch (e) {
+                     console.warn("Fallback text selection failed:", e);
+                 }
             }
         }
+
         async function showHardWordsList() {
-            showPage('pageReview');
+             if (!firestoreInitialized || !currentUserId) {
+                 showGlobalStatus('يجب تسجيل الدخول أولاً لعرض الكلمات الصعبة.', 'warning', 3000);
+                 return;
+             }
+            showPage('pageReview'); // Switch to review page structure
+            // Ensure review elements are hidden, only show list
             flashcardContainer.classList.add('hidden');
             wordDisplayCard.classList.add('hidden');
-            copyMessage.textContent = '';
-            if (!firestoreInitialized) {
-                setSessionMessage('فشل الاتصال بقاعدة البيانات. لا يمكن عرض الكلمات الصعبة.', 'message-error');
-                return;
-            }
-            setSessionMessage('جاري تحميل الكلمات الصعبة...', 'message-info');
+            if (mainHeading) mainHeading.classList.remove('hidden'); // Show main title
+            copyMessage.textContent = ''; // Clear copy message
+
+            setSessionMessage('جاري تحميل الكلمات الصعبة...', 'info');
+            hardWordsListContainer.classList.add('hidden'); // Hide while loading
+
             try {
-                const hardWords = await getHardWordsFirestore();
+                const hardWords = await getHardWordsFirestore(); // Fetch current hard words
+
                 if (hardWords === null) {
-                    setSessionMessage('خطأ في جلب الكلمات الصعبة.', 'message-error');
-                    hardWordsListContainer.classList.add('hidden');
+                    // Error handled by getHardWordsFirestore
+                    setSessionMessage('خطأ في جلب الكلمات الصعبة.', 'error');
                     return;
                 }
+
                 if (hardWords.length > 0) {
                     const formattedList = hardWords
                         .map(item => `${item.word} : ${item.translation}`)
                         .join('\n');
                     hardWordsOutput.value = formattedList;
-                    hardWordsListContainer.classList.remove('hidden');
-                    setSessionMessage(`الكلمات الصعبة (${hardWords.length}):`, 'message-info');
+                    hardWordsListContainer.classList.remove('hidden'); // Show the list container
+                    setSessionMessage(`الكلمات الصعبة (${hardWords.length}):`, 'info'); // Update message
                 } else {
-                    hardWordsOutput.value = '';
-                    hardWordsListContainer.classList.add('hidden');
-                    setSessionMessage('لا توجد كلمات صعبة حالياً. أحسنت!', 'message-success');
+                    hardWordsOutput.value = ''; // Clear textarea
+                    hardWordsListContainer.classList.add('hidden'); // Keep it hidden
+                    setSessionMessage('لا توجد كلمات صعبة حالياً. أحسنت!', 'success');
                 }
             } catch (error) {
+                console.error("Error showing hard words list:", error);
                 hardWordsListContainer.classList.add('hidden');
-                setSessionMessage('حدث خطأ غير متوقع أثناء عرض الكلمات الصعبة.', 'message-error');
+                setSessionMessage('حدث خطأ غير متوقع أثناء عرض الكلمات الصعبة.', 'error');
             }
         }
-        function attachEventListeners() {
-            try {
-                if (gotoAddBtn_FromReview) gotoAddBtn_FromReview.addEventListener('click', () => showPage('pageAddWords'));
-                if (gotoReviewBtn_FromAdd) gotoReviewBtn_FromAdd.addEventListener('click', () => { showPage('pageReview'); startSession(); });
-                if (pasteBtn) pasteBtn.addEventListener('click', handlePaste);
-                if (addBulkBtn) addBulkBtn.addEventListener('click', addWordsFromText);
-                if (showTranslationBtn) showTranslationBtn.addEventListener('click', handleShowTranslation);
-                if (markEasyBtn) markEasyBtn.addEventListener('click', markWordAsEasy);
-                if (markHardBtn) markHardBtn.addEventListener('click', markWordAsHard);
-                if (copyHardWordsBtn) copyHardWordsBtn.addEventListener('click', handleCopyHardWords);
-                if (gotoHardWordsBtn) gotoHardWordsBtn.addEventListener('click', showHardWordsList);
-                if (!addBulkBtn) {
-                     throw new Error("addBulkBtn element not found, cannot attach listener.");
-                }
-                return true;
-            } catch(e) {
-                alert("حدث خطأ أثناء إعداد واجهة المستخدم. قد لا تعمل بعض الأزرار.");
-                return false;
-            }
+
+
+        // --- Initialization and Event Listeners ---
+
+        function setupAuthUI() {
+            // Show Login/Signup toggle
+            if (showSignupBtn) showSignupBtn.addEventListener('click', () => {
+                loginForm.classList.add('hidden');
+                signupForm.classList.remove('hidden');
+                loginMessage.textContent = ''; // Clear messages
+            });
+            if (showLoginBtn) showLoginBtn.addEventListener('click', () => {
+                signupForm.classList.add('hidden');
+                loginForm.classList.remove('hidden');
+                signupMessage.textContent = ''; // Clear messages
+            });
+
+            // Auth form submissions
+            if (loginForm) loginForm.addEventListener('submit', handleLogin);
+            if (signupForm) signupForm.addEventListener('submit', handleSignup);
+            if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
         }
+
+        function setupAppUI() {
+            // Page Navigation
+             if (gotoAddBtn_FromReview) gotoAddBtn_FromReview.addEventListener('click', () => showPage('pageAddWords'));
+             if (gotoReviewBtn_FromAdd) gotoReviewBtn_FromAdd.addEventListener('click', startSession); // Changed to call startSession directly
+
+            // Add Words Page
+            if (pasteBtn) pasteBtn.addEventListener('click', handlePaste);
+            if (addBulkBtn) addBulkBtn.addEventListener('click', addWordsFromText);
+
+            // Review Page
+            if (showTranslationBtn) showTranslationBtn.addEventListener('click', handleShowTranslation);
+            if (markEasyBtn) markEasyBtn.addEventListener('click', markWordAsEasy);
+            if (markHardBtn) markHardBtn.addEventListener('click', markWordAsHard);
+            if (copyHardWordsBtn) copyHardWordsBtn.addEventListener('click', handleCopyHardWords);
+            if (gotoHardWordsBtn) gotoHardWordsBtn.addEventListener('click', showHardWordsList);
+        }
+
+        // --- Main Execution ---
         document.addEventListener('DOMContentLoaded', () => {
-             try {
-                 const allButtons = document.querySelectorAll('button');
-                 allButtons.forEach(btn => btn.disabled = true);
-                 if (!document.getElementById('addBulkBtn')) {
-                 }
-                 const listenersAttached = attachEventListeners();
-                 if (firestoreInitialized) {
-                     setSessionMessage('قاعدة البيانات جاهزة.', 'message-success');
-                     if (listenersAttached) {
-                        allButtons.forEach(btn => btn.disabled = false);
-                     } else {
-                         setSessionMessage('قاعدة البيانات جاهزة، لكن هناك خطأ في ربط الأزرار.', 'message-warning');
-                     }
-                     showPage('pageAddWords');
-                 } else {
-                      setSessionMessage('فشل تهيئة قاعدة البيانات! تأكد من صحة firebaseConfig وقواعد الأمان. لا يمكن حفظ أو تحميل الكلمات.', 'message-error');
-                      if (listenersAttached) {
-                          const nonDbButtons = [
-                              document.getElementById('gotoAddBtn_FromReview'),
-                              document.getElementById('gotoReviewBtn_FromAdd'),
-                              document.getElementById('pasteBtn'),
-                              document.getElementById('gotoHardWordsBtn')
-                          ];
-                          nonDbButtons.forEach(btn => { if(btn) btn.disabled = false; });
-                      }
-                      if (mainHeading) mainHeading.classList.remove('hidden');
-                      showPage('pageAddWords');
-                 }
-             } catch (initError) {
-                 document.body.innerHTML = `<div style="padding: 20px; color: red; text-align: center;">
-                                                <h1>خطأ فادح</h1>
-                                                <p>حدث خطأ غير متوقع أثناء تحميل الصفحة. يرجى التحقق من الكونسول (F12) وإعادة تحميل الصفحة.</p>
-                                                <p>${initError.message}</p>
-                                            </div>`;
-             }
-        });
+            showGlobalStatus('جاري تهيئة التطبيق...', 'info', 0); // Show loading status
+
+            if (!firestoreInitialized || !authInitialized) {
+                // Error already shown during initialization
+                // Hide loading message if it's still showing from init failure
+                 setTimeout(hideGlobalStatus, 1000); // Give some time to see the init error
+                return; // Stop execution if Firebase failed
+            }
+
+            // Setup UI switching buttons regardless of auth state
+            setupAuthUI();
+            setupAppUI(); // Setup app buttons, they will be hidden/shown by auth state
+
+            // Listen for authentication state changes
+            onAuthStateChanged(auth, (user) => {
+                hideGlobalStatus(); // Hide loading message once auth state is known
+                if (user) {
+                    // --- User is signed in ---
+                    currentUserId = user.uid;
+                    if (userEmailDisplay) userEmailDisplay.textContent = user.email || 'المستخدم';
+
+                    // Hide Auth section, Show App section
+                    authSection.classList.add('hidden');
+                    mainAppContainer.classList.remove('hidden');
+                    mainAppContainer.style.opacity = '0';
+                    setTimeout(() => mainAppContainer.style.opacity = '1', 50);
+
+
+                    // Reset app state for the new user
+                    currentSessionWords = [];
+                    currentWordIndex = 0;
+                    hardWordsListContainer.classList.add('hidden'); // Hide hard words list
+                    sessionMessage.textContent = ''; // Clear session messages
+                    addMessage.textContent = ''; // Clear add messages
+                    bulkInput.value = ''; // Clear text area
+
+
+                    // Default to Add Words page when logged in
+                    showPage('pageAddWords');
+
+                } else {
+                    // --- User is signed out ---
+                    currentUserId = null;
+
+                    // Hide App section, Show Auth section (default to login)
+                    mainAppContainer.classList.add('hidden');
+                    authSection.classList.remove('hidden');
+                    signupForm.classList.add('hidden'); // Ensure signup is hidden
+                    loginForm.classList.remove('hidden'); // Show login form
+                    loginMessage.textContent = ''; // Clear any old messages
+                    signupMessage.textContent = '';
+
+                    // Reset app state
+                    currentSessionWords = [];
+                    currentWordIndex = 0;
+                     // Optionally hide specific elements like the fixed button when logged out
+                     if (gotoHardWordsBtn) gotoHardWordsBtn.classList.add('hidden');
+
+                }
+            });
+
+        }); // End DOMContentLoaded
+
     </script>
 </body>
 </html>
+

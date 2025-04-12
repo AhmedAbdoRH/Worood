@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مراجعة الكلمات (إضافة أسرع وتنسيق مرن)</title>
+    <title>مراجعة الكلمات (تحديثات 2025)</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        /* --- Base Styles (Same as before) --- */
+        /* --- Base Styles (Mostly Same) --- */
         :root {
             --bg-dark-primary: #0a0f1a;
             --bg-dark-secondary: #151c2a;
             --bg-dark-tertiary: #2a3447;
             --bg-dark-quaternary: #3e4859;
             --border-dark: #2a3447;
-            --border-dark-focus: #60a5fa;
+            --border-dark-focus: #60a5fa; /* Light Blue */
             --text-light-primary: #e5e7eb;
             --text-light-secondary: #d1d5db;
             --text-light-tertiary: #9ca3af;
@@ -28,23 +28,34 @@
             --danger-color-hover: #9b1717;
             --danger-outline-color: #e55e5e;
             --danger-outline-hover-bg: rgba(185, 28, 28, 0.1);
+            --info-color: #3b82f6; /* Blue - Added for Review Button */
+            --info-color-hover: #2563eb; /* Darker Blue */
             --font-family-base: 'Cairo', sans-serif;
             --border-radius-lg: 0.75rem;
             --border-radius-md: 0.5rem;
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             --blur: 8px;
+
+            /* --- NEW: Glass Effect Gradient Colors --- */
+            --gradient-navy-base: 210, 65%, 12%; /* HSL values for #0a192f */
+            --gradient-orange-base: 16, 100%, 50%; /* HSL values for #ff4500 */
+            --gradient-navy-alpha-40: hsla(var(--gradient-navy-base), 0.4);
+            --gradient-orange-alpha-15: hsla(var(--gradient-orange-base), 0.15);
+            --gradient-orange: hsl(var(--gradient-orange-base));
+
+            --white: hsl(0, 0%, 100%);
             --white0: hsla(0, 0%, 100%, 0);
-            --white50: hsla(0, 0%, 100%, 0.05);
+            --white50: hsla(0, 0%, 100%, 0.05); /* Keep for fallback or other uses */
             --white100: hsla(0, 0%, 50%, 0.3);
             --white200: hsla(0, 0%, 50%, 0.4);
             --white300: hsla(0, 0%, 80%, 0.5);
-            --white: hsl(0, 0%, 100%);
+
             font-size: clamp(0.95rem, 0.75rem + 0.6vw, 1.85rem);
         }
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; border: 0; }
         html, body { background-color: var(--bg-dark-primary); color: var(--text-light-primary); font-family: var(--font-family-base); line-height: 1.5; }
-        body { min-height: 100vh; display: grid; place-items: center; padding: 0.5rem; background: linear-gradient(90deg, var(--bg-dark-secondary), var(--bg-dark-primary)); }
+        body { min-height: 100vh; display: grid; place-items: center; padding: 0.5rem; background: linear-gradient(90deg, var(--bg-dark-secondary), var(--bg-dark-primary)); /* Add padding-top for fixed header */ padding-top: 4rem; }
         .hidden { display: none !important; }
         .container { width: 100%; max-width: 36rem; margin-left: auto; margin-right: auto; }
         @media (min-width: 768px) { .container { max-width: 42rem; } }
@@ -53,30 +64,47 @@
         @media (min-width: 768px) { .heading-1 { font-size: 2.25rem; margin-bottom: 1.5rem; } }
         .heading-2 { font-size: 1.125rem; font-weight: 600; color: var(--text-light-primary); margin-bottom: 0.75rem; }
         @media (min-width: 768px) { .heading-2 { font-size: 1.25rem; } }
-        .card { padding: 1.25rem; border-radius: var(--border-radius-lg); transition: all 0.3s ease-in-out; text-align: center; color: var(--text-light-primary); background-color: transparent; border: none; box-shadow: none; position: relative; backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur)); background-image: linear-gradient(90deg, var(--white200), var(--white50)); overflow: hidden; }
-        [dir="rtl"] .card { background-image: linear-gradient(-90deg, var(--white200), var(--white50)); }
+
+        /* --- Updated Card Glass Effect --- */
+        .card {
+            padding: 1.25rem; border-radius: var(--border-radius-lg); transition: all 0.3s ease-in-out; text-align: center; color: var(--text-light-primary); background-color: transparent; border: none; box-shadow: none; position: relative; backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur));
+            /* New Gradient */
+            background-image: linear-gradient(-90deg, var(--gradient-navy-alpha-40), var(--gradient-orange-alpha-15));
+            overflow: hidden;
+        }
+        /* RTL Gradient Direction (already correct, using -90deg) */
         .card:before, .card:after { content: ""; position: absolute; inset: 0; border-radius: inherit; z-index: -1; }
-        .card:before { border: 1px solid var(--white); mask-image: linear-gradient(135deg, var(--white), var(--white0) 50%); -webkit-mask-image: linear-gradient(135deg, var(--white), var(--white0) 50%); }
-        [dir="rtl"] .card:before { mask-image: linear-gradient(-135deg, var(--white), var(--white0) 50%); -webkit-mask-image: linear-gradient(-135deg, var(--white), var(--white0) 50%); }
-        .card:after { border: 1px solid var(--primary-color); mask-image: linear-gradient(135deg, var(--white0) 50%, var(--white)); -webkit-mask-image: linear-gradient(135deg, var(--white0) 50%, var(--white)); }
-        [dir="rtl"] .card:after { mask-image: linear-gradient(-135deg, var(--white0) 50%, var(--white)); -webkit-mask-image: linear-gradient(-135deg, var(--white0) 50%, var(--white)); }
+        .card:before {
+             border: 1px solid var(--white300); /* Use a subtle white/gray border */
+             mask-image: linear-gradient(-135deg, var(--white), var(--white0) 50%);
+             -webkit-mask-image: linear-gradient(-135deg, var(--white), var(--white0) 50%);
+        }
+        .card:after {
+            border: 1px solid var(--gradient-orange); /* New orange border */
+            mask-image: linear-gradient(-135deg, var(--white0) 50%, var(--white));
+            -webkit-mask-image: linear-gradient(-135deg, var(--white0) 50%, var(--white));
+         }
+        /* --- End Updated Card Styles --- */
+
         .card--add { text-align: right; margin-bottom: 1rem; }
         .card--word-display { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 2rem; padding: 1.5rem; }
         .card--auth { max-width: 28rem; margin: 2rem auto; text-align: right; }
         @media (min-width: 768px) { .card { padding: 1.5rem; } .card--word-display { padding: 1.5rem; } }
-        /* Ensure English words display LTR even in RTL page */
-        .word-display-large { font-size: clamp(2rem, 13vw, 6.5rem); font-weight: 700; color: white; text-align: center; word-break: break-word; overflow-wrap: break-word; line-height: 1.1; width: 100%; padding: 0.25rem 0; margin-bottom: 0.25rem; min-height: 1.2em; direction: ltr; /* Force LTR for English */ unicode-bidi: embed; /* Needed for direction override */ }
+        .word-display-large { font-size: clamp(2rem, 13vw, 6.5rem); font-weight: 700; color: white; text-align: center; word-break: break-word; overflow-wrap: break-word; line-height: 1.1; width: 100%; padding: 0.25rem 0; margin-bottom: 0.25rem; min-height: 1.2em; direction: ltr; unicode-bidi: embed; }
         #wordDisplayCard #translationDisplay { font-size: 1rem; color: var(--text-light-secondary); margin-top: 0; margin-bottom: 0; font-weight: 400; text-align: center; word-break: break-word; width: 100%; padding-bottom: 0.5rem; min-height: 1.2em; }
         @media (min-width: 768px) { #wordDisplayCard #translationDisplay { font-size: 1.125rem; } }
         .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.25rem; padding: 0.5rem 1rem; border-radius: var(--border-radius-md); font-weight: 600; color: white; transition: all 0.2s ease-in-out; box-shadow: var(--shadow-md); border: none; cursor: pointer; font-size: 0.75rem; line-height: 1.25; text-decoration: none; }
         @media (min-width: 768px) { .btn { font-size: 0.875rem; gap: 0.5rem; } }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; background-color: var(--secondary-color) !important; /* Ensure disabled state is clear */ box-shadow: none; }
         .btn:focus { outline: none; box-shadow: 0 0 0 3px var(--bg-dark-primary), 0 0 0 5px var(--border-dark-focus); }
         .btn--sm { padding: 0.375rem 0.75rem; font-size: 0.75rem; gap: 0.25rem; border-radius: 0.375rem; }
         .btn--primary { background-color: var(--primary-color); }
         .btn--primary:hover:not(:disabled) { background-color: var(--primary-color-hover); }
         .btn--secondary { background-color: var(--secondary-color); }
         .btn--secondary:hover:not(:disabled) { background-color: var(--secondary-color-hover); }
+        .btn--info { background-color: var(--info-color); } /* Added Info color */
+        .btn--info:hover:not(:disabled) { background-color: var(--info-color-hover); }
+        .btn--info:focus { box-shadow: 0 0 0 3px var(--bg-dark-primary), 0 0 0 5px var(--info-color); }
         .btn--action { padding: 0.625rem 1.25rem; font-size: 0.875rem; font-weight: 700; border-radius: var(--border-radius-md); gap: 0.25rem; }
         .btn--action:hover:not(:disabled) { transform: scale(1.05); }
         .btn--success { background-color: var(--success-color); }
@@ -95,7 +123,6 @@
         .input-field:focus, .textarea-field:focus { outline: none; border-color: var(--border-dark-focus); box-shadow: 0 0 0 1px var(--border-dark-focus); }
         .textarea-readonly { background-color: var(--bg-dark-tertiary); border-color: var(--border-dark); color: var(--text-light-secondary); cursor: default; }
         .textarea-readonly:focus { border-color: var(--border-dark); box-shadow: none; }
-        /* Ensure LTR for English words in readonly textarea */
         .textarea-readonly.output-list { direction: ltr; text-align: left; }
         .input-container { margin-bottom: 0.25rem; }
         .message { font-size: 0.75rem; margin-top: 0.5rem; text-align: center; min-height: 1rem; }
@@ -103,50 +130,126 @@
         .message--success { color: var(--success-color); }
         .message--error { color: var(--danger-color); }
         .message--info { color: var(--text-light-secondary); }
-        .message--warning { color: #facc15; /* Yellow */ }
+        .message--warning { color: #facc15; }
         .message--default { color: var(--text-light-tertiary); }
-        .button-group { display: flex; justify-content: center; gap: 0.5rem; margin-top: 1rem; }
+        .button-group { display: flex; justify-content: center; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap; /* Allow wrapping */ }
         .margin-top-1 { margin-top: 0.25rem; } .margin-top-2 { margin-top: 0.5rem; } .margin-top-3 { margin-top: 0.75rem; } .margin-top-4 { margin-top: 1rem; } .margin-top-5 { margin-top: 1.25rem; } .margin-top-7 { margin-top: 1.75rem; }
         .margin-bottom-3 { margin-bottom: 0.75rem; } .margin-bottom-4 { margin-bottom: 1rem; } .margin-bottom-6 { margin-bottom: 1.5rem; }
         .padding-top-3 { padding-top: 0.75rem; } .padding-top-4 { padding-top: 1rem; }
         .border-top { border-top: 1px solid var(--border-dark); }
         .loader { display: inline-block; animation: spin 1s linear infinite; border-radius: 50%; width: 1rem; height: 1rem; border-top: 2px solid white; border-bottom: 2px solid white; border-left: 2px solid transparent; border-right: 2px solid transparent; margin-left: 0.5rem; }
-        .btn .loader { margin-left: 0; margin-right: 0.5rem; /* Adjust for RTL */ }
+        .btn .loader { margin-left: 0; margin-right: 0.5rem; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .small-text { font-size: 0.625rem; color: var(--text-light-tertiary); }
         @media (min-width: 768px) { .small-text { font-size: 0.75rem; } }
         .icon { width: 1rem; height: 1rem; display: inline-block; vertical-align: middle; }
         .icon--sm { width: 0.75rem; height: 0.75rem; }
         .icon--lg { width: 1.25rem; height: 1.25rem; }
-        #authStatus { text-align: left; padding: 0.5rem 1rem; font-size: 0.8rem; color: var(--text-light-secondary); }
-        #authStatus span { font-weight: 600; color: var(--text-light-primary); }
-        #logoutBtn { margin-right: auto; /* Pushes button to the left in RTL */ }
+
+        /* --- Fixed Header Styles --- */
+        #fixedHeader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1001; /* Above other content */
+            background-color: var(--bg-dark-secondary);
+            padding: 0.5rem 1rem;
+            display: flex;
+            justify-content: space-between; /* Pushes items to ends */
+            align-items: center;
+            box-shadow: var(--shadow-md);
+        }
+        #fixedHeader #authStatus {
+            padding: 0; /* Remove default padding */
+            margin: 0; /* Remove default margin */
+            font-size: 0.8rem;
+            color: var(--text-light-secondary);
+            display: flex; /* Use flex for internal alignment if needed */
+            align-items: center;
+            gap: 0.5rem; /* Space between email and button */
+        }
+        #fixedHeader #authStatus span { font-weight: 600; color: var(--text-light-primary); }
+        #fixedHeader #logoutBtn {
+            /* float: none; Replaced by flexbox */
+            /* margin-right: auto; Not needed with justify-content: space-between */
+            margin-left: 0; /* Ensure no extra margin */
+        }
+        /* --- End Fixed Header Styles --- */
+
         #mainAppContainer { transition: opacity 0.3s ease-in-out; }
         .link-like { background: none; border: none; color: var(--border-dark-focus); text-decoration: underline; cursor: pointer; font-size: 0.75rem; padding: 0; margin-top: 0.5rem; }
-        .link-like:hover { color: #3b82f6; /* Lighter blue on hover */ }
-        #globalStatus { position: fixed; top: 1rem; left: 50%; transform: translateX(-50%); background: var(--bg-dark-tertiary); padding: 0.5rem 1rem; border-radius: var(--border-radius-md); z-index: 2000; display: none; box-shadow: var(--shadow-lg); text-align: center; color: var(--text-light-primary); }
+        .link-like:hover { color: #3b82f6; }
+        #globalStatus { position: fixed; top: 4rem; /* Adjust for fixed header */ left: 50%; transform: translateX(-50%); background: var(--bg-dark-tertiary); padding: 0.5rem 1rem; border-radius: var(--border-radius-md); z-index: 2000; display: none; box-shadow: var(--shadow-lg); text-align: center; color: var(--text-light-primary); }
         #globalStatus.message-error { background-color: var(--danger-color); color: white; }
         #globalStatus.message-success { background-color: var(--success-color); color: white; }
         #globalStatus.message-warning { background-color: #d97706; color: white; }
         #globalStatus.message-info { background-color: var(--bg-dark-tertiary); color: var(--text-light-primary); }
         .hard-words-button-group { display: flex; gap: 0.5rem; margin-top: 0.5rem; justify-content: flex-start; }
+
+        /* --- Specific Button Style Updates --- */
+        #gotoReviewBtn_FromAdd {
+            background-color: var(--info-color); /* Blue */
+            font-size: 1rem; /* Larger font */
+            padding: 0.75rem 1.5rem; /* More padding */
+        }
+        #gotoReviewBtn_FromAdd:hover:not(:disabled) {
+             background-color: var(--info-color-hover); /* Darker Blue on hover */
+        }
+        #gotoReviewBtn_FromAdd:focus {
+            box-shadow: 0 0 0 3px var(--bg-dark-primary), 0 0 0 5px var(--info-color);
+        }
+
+        /* Style for the new Previous button */
+        #prevWordBtn {
+            /* Style similar to showTranslationBtn but maybe slightly different */
+             padding: 0.5rem 0.75rem;
+             font-size: 1rem; /* Make arrow larger */
+             line-height: 1; /* Adjust line height for arrow */
+             background-color: var(--secondary-color);
+        }
+        #prevWordBtn:hover:not(:disabled) {
+             background-color: var(--secondary-color-hover);
+        }
+        #prevWordBtn .icon { width: 1.25rem; height: 1.25rem; } /* Larger icon if using SVG */
+
     </style>
 </head>
 <body>
+    <div id="fixedHeader" class="hidden"> <div id="authStatus">
+             مرحباً <span id="userEmailDisplay"></span>
+        </div>
+        <button type="button" id="logoutBtn" class="btn btn--secondary btn--sm">تسجيل الخروج</button>
+    </div>
+
     <div class="container">
 
         <div id="authSection" class="hidden">
             <div class="card card--auth">
-                <form id="loginForm"> <h2 class="heading-2">تسجيل الدخول</h2>
-                    <div class="input-container margin-bottom-3"> <label for="loginEmail" class="label">البريد الإلكتروني:</label> <input type="email" id="loginEmail" class="input-field" placeholder="email@example.com" required> </div>
-                    <div class="input-container margin-bottom-4"> <label for="loginPassword" class="label">كلمة المرور:</label> <input type="password" id="loginPassword" class="input-field" required> </div>
+                <form id="loginForm">
+                    <h2 class="heading-2">تسجيل الدخول</h2>
+                    <div class="input-container margin-bottom-3">
+                        <label for="loginEmail" class="label">البريد الإلكتروني:</label>
+                        <input type="email" id="loginEmail" class="input-field" placeholder="email@example.com" required>
+                    </div>
+                    <div class="input-container margin-bottom-4">
+                        <label for="loginPassword" class="label">كلمة المرور:</label>
+                        <input type="password" id="loginPassword" class="input-field" required>
+                    </div>
                     <button type="submit" id="loginBtn" class="btn btn--primary btn--full-width">تسجيل الدخول</button>
                     <p id="loginMessage" class="message message--default"></p>
                     <button type="button" id="showSignupBtn" class="link-like">ليس لديك حساب؟ إنشاء حساب جديد</button>
                 </form>
-                <form id="signupForm" class="hidden"> <h2 class="heading-2">إنشاء حساب جديد</h2>
-                    <div class="input-container margin-bottom-3"> <label for="signupEmail" class="label">البريد الإلكتروني:</label> <input type="email" id="signupEmail" class="input-field" placeholder="email@example.com" required> </div>
-                    <div class="input-container margin-bottom-4"> <label for="signupPassword" class="label">كلمة المرور:</label> <input type="password" id="signupPassword" class="input-field" required placeholder="6 أحرف على الأقل"> </div>
+                <form id="signupForm" class="hidden">
+                    <h2 class="heading-2">إنشاء حساب جديد</h2>
+                    <div class="input-container margin-bottom-3">
+                        <label for="signupEmail" class="label">البريد الإلكتروني:</label>
+                        <input type="email" id="signupEmail" class="input-field" placeholder="email@example.com" required>
+                    </div>
+                    <div class="input-container margin-bottom-4">
+                        <label for="signupPassword" class="label">كلمة المرور:</label>
+                        <input type="password" id="signupPassword" class="input-field" required placeholder="6 أحرف على الأقل">
+                    </div>
                     <button type="submit" id="signupBtn" class="btn btn--primary btn--full-width">إنشاء حساب</button>
                     <p id="signupMessage" class="message message--default"></p>
                     <button type="button" id="showLoginBtn" class="link-like">لديك حساب بالفعل؟ تسجيل الدخول</button>
@@ -155,11 +258,6 @@
         </div>
 
         <div id="mainAppContainer" class="hidden">
-            <div id="authStatus" class="margin-bottom-4">
-                 مرحباً <span id="userEmailDisplay"></span>
-                 <button type="button" id="logoutBtn" class="btn btn--secondary btn--sm" style="float: left;">تسجيل الخروج</button>
-            </div>
-
             <h1 class="heading-1"> أداة مراجعة الكلمات </h1>
 
             <div id="pageAddWords" class="page">
@@ -174,7 +272,7 @@ World	عالم
 سيارة Car"></textarea>
                      </div>
                       <p id="pasteMessage" class="message message--small message--default"></p>
-                     <button type="button" id="addBulkBtn" class="btn btn--primary btn--full-width margin-top-3">
+                     <button type="button" id="addBulkBtn" class="btn btn--primary btn--full-width margin-top-3" disabled>
                          <svg xmlns="http://www.w3.org/2000/svg" class="icon icon--lg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" /></svg>
                          <span id="addBtnText">إضافة الكلمات</span>
                          <span id="addBtnLoader" class="loader hidden"></span>
@@ -187,9 +285,9 @@ World	عالم
                          </button>
                      </div>
                      <div class="margin-top-5 border-top padding-top-4">
-                          <button type="button" id="gotoReviewBtn_FromAdd" class="btn btn--secondary btn--full-width margin-bottom-6">
+                          <button type="button" id="gotoReviewBtn_FromAdd" class="btn btn--info btn--full-width margin-bottom-6">
                               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="icon icon--lg"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.201 2.466l-.312-.311h2.03a.75.75 0 000-1.5H4.333a.75.75 0 00-.75.75v3.167a.75.75 0 001.5 0v-2.03l.31.312a7 7 0 0011.712-3.138.75.75 0 00-1.449-.39zm1.23-3.723a.75.75 0 00-1.449.389A7 7 0 003.028 10.07l-.31.311H4.75a.75.75 0 000-1.5H1.583a.75.75 0 00-.75.75v3.167a.75.75 0 001.5 0v-2.03l.312-.31a5.5 5.5 0 019.201-2.466.75.75 0 001.449-.39z" clip-rule="evenodd" /></svg>
-                              بدء المراجعة مباشرة
+                              بدء المراجعة
                           </button>
                      </div>
                  </div>
@@ -203,7 +301,11 @@ World	عالم
                 <div class="card">
                     <div id="flashcardContainer" class="hidden">
                         <p id="progressDisplay" class="small-text margin-bottom-3"></p>
-                        <button type="button" id="showTranslationBtn" class="btn btn--secondary btn--sm margin-top-2 margin-bottom-3">إظهار/إخفاء الترجمة</button>
+                        <div class="button-group margin-bottom-3" style="justify-content: center; gap: 0.75rem;">
+                           <button type="button" id="prevWordBtn" class="btn btn--sm" title="الكلمة السابقة" disabled>
+                               <svg xmlns="http://www.w3.org/2000/svg" class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"> <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /> </svg> </button>
+                           <button type="button" id="showTranslationBtn" class="btn btn--secondary btn--sm">إظهار/إخفاء الترجمة</button>
+                        </div>
                         <div id="difficultyButtonsContainer" class="button-group">
                              <button type="button" id="markEasyBtn" class="btn btn--action btn--success"> <svg xmlns="http://www.w3.org/2000/svg" class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"> <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /> </svg> أعرفها (سهلة) </button>
                              <button type="button" id="markHardBtn" class="btn btn--action btn--danger"> <svg xmlns="http://www.w3.org/2000/svg" class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"> <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /> </svg> لا أعرفها (صعبة) </button>
@@ -228,58 +330,199 @@ World	عالم
         <div id="globalStatus" class="message message-info"> جاري التحميل... </div>
 
     </div>
+
     <script type="module">
-        // --- Firebase SDK Imports (Same as before) ---
+        // --- Firebase SDK Imports ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
         import {
-            getFirestore, collection, addDoc, getDocs, updateDoc, query, where, doc, deleteDoc, serverTimestamp, writeBatch, limit // Added writeBatch, limit
+            getFirestore, collection, addDoc, getDocs, updateDoc, query, where, doc, deleteDoc, serverTimestamp, writeBatch, limit
         } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
         import {
             getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged
         } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 
-        // --- Firebase Configuration (User Provided - Same as before) ---
+        // --- Firebase Configuration (Replace with your actual config) ---
         const firebaseConfig = {
-             apiKey: "AIzaSyAunLxvASN6Cbsa_Nc6l78_5lMhe5fP2Qg",
-             authDomain: "momtn-ecab7.firebaseapp.com",
-             projectId: "momtn-ecab7",
-             storageBucket: "momtn-ecab7.appspot.com",
-             messagingSenderId: "98544311111",
-             appId: "1:98544311111:web:0158668f45ae34818fca62",
-             measurementId: "G-W164SZBMDP"
+             apiKey: "YOUR_API_KEY", // ADD YOUR FIREBASE API KEY HERE
+             authDomain: "YOUR_AUTH_DOMAIN", // ADD YOUR FIREBASE AUTH DOMAIN HERE
+             projectId: "YOUR_PROJECT_ID", // ADD YOUR FIREBASE PROJECT ID HERE
+             storageBucket: "YOUR_STORAGE_BUCKET", // ADD YOUR FIREBASE STORAGE BUCKET HERE
+             messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // ADD YOUR FIREBASE MESSAGING SENDER ID HERE
+             appId: "YOUR_APP_ID", // ADD YOUR FIREBASE APP ID HERE
+             measurementId: "YOUR_MEASUREMENT_ID" // Optional: ADD YOUR MEASUREMENT ID HERE
         };
 
-        // --- Firebase Initialization (Same as before) ---
-        let app; let db; let auth;
-        let firestoreInitialized = false; let authInitialized = false; let currentUserId = null;
+        // --- Firebase Initialization Variables ---
+        let app;
+        let db;
+        let auth;
+        let firestoreInitialized = false;
+        let authInitialized = false;
+        let currentUserId = null;
 
-        // --- DOM Element References (Same as before) ---
-        let authSection, loginForm, signupForm, loginEmailInput, loginPasswordInput, loginBtn, loginMessage, showSignupBtn, signupEmailInput, signupPasswordInput, signupBtn, signupMessage, showLoginBtn, authStatus, userEmailDisplay, logoutBtn, mainAppContainer, globalStatus, mainHeading, pageAddWords, pageReview, gotoAddBtn_FromReview, gotoReviewBtn_FromAdd, bulkInput, pasteBtn, pasteMessage, addBulkBtn, addBtnText, addBtnLoader, addMessage, wordDisplayCard, wordDisplayLarge, flashcardContainer, progressDisplay, translationDisplay, showTranslationBtn, difficultyButtonsContainer, markEasyBtn, markHardBtn, sessionMessage, hardWordsListContainer, hardWordsOutput, copyHardWordsBtn, copyMessage, gotoHardWordsBtn, deleteAllHardWordsBtn, deleteBtnText, deleteBtnLoader, deleteMessage;
+        // --- DOM Element References ---
+        let authSection, loginForm, signupForm, loginEmailInput, loginPasswordInput, loginBtn, loginMessage, showSignupBtn, signupEmailInput, signupPasswordInput, signupBtn, signupMessage, showLoginBtn, fixedHeader, authStatus, userEmailDisplay, logoutBtn, mainAppContainer, globalStatus, mainHeading, pageAddWords, pageReview, gotoAddBtn_FromReview, gotoReviewBtn_FromAdd, bulkInput, pasteBtn, pasteMessage, addBulkBtn, addBtnText, addBtnLoader, addMessage, wordDisplayCard, wordDisplayLarge, flashcardContainer, progressDisplay, translationDisplay, showTranslationBtn, prevWordBtn, difficultyButtonsContainer, markEasyBtn, markHardBtn, sessionMessage, hardWordsListContainer, hardWordsOutput, copyHardWordsBtn, copyMessage, gotoHardWordsBtn, deleteAllHardWordsBtn, deleteBtnText, deleteBtnLoader, deleteMessage;
 
         // --- Firestore Constants ---
-        const WORDS_COLLECTION = 'userWords';
-        const BATCH_LIMIT = 490; // Firestore batch limit (slightly less than 500 for safety)
+        const WORDS_COLLECTION = 'userWords'; // Collection name in Firestore
+        const BATCH_LIMIT = 490; // Firestore batch write limit (slightly less than 500)
 
-        // --- App State (Same as before) ---
-        let currentSessionWords = []; let currentWordIndex = 0;
+        // --- App State ---
+        let currentSessionWords = []; // Words currently being reviewed (might be re-ordered)
+        let currentWordIndex = 0; // Index of the word currently displayed
+        let originalSessionOrder = []; // Stores the initial shuffled order for "previous" button
 
         // --- Regular Expressions for Language Detection ---
         const arabicRegex = /[\u0600-\u06FF]/; // Basic Arabic character range
         const englishRegex = /[a-zA-Z]/;    // Basic English letters
 
-        // --- Utility Functions (Mostly same, added identifyEnglishArabic) ---
-        function showGlobalStatus(message, type = 'info', duration = 3000) { if (!globalStatus) return; console.log(`[Util][Status] ${type}: ${message}`); globalStatus.textContent = message; globalStatus.className = `message message-${type}`; globalStatus.style.display = 'block'; if (duration > 0) { setTimeout(() => { if (globalStatus.textContent === message) { globalStatus.style.display = 'none'; } }, duration); } }
-        function hideGlobalStatus() { if (globalStatus) globalStatus.style.display = 'none'; }
-        function showPage(pageId) { console.log(`[Util][UI] Showing page: ${pageId}`); if (pageAddWords) pageAddWords.classList.add('hidden'); if (pageReview) pageReview.classList.add('hidden'); const pageToShow = document.getElementById(pageId); if (pageToShow) { pageToShow.classList.remove('hidden'); pageToShow.style.opacity = '0'; setTimeout(() => { if(pageToShow) pageToShow.style.opacity = '1'; }, 50); } else { console.error(`[Util][UI] showPage: Page with ID "${pageId}" not found.`); } if (mainHeading) { if (pageId === 'pageReview') { const isReviewCardVisible = flashcardContainer && !flashcardContainer.classList.contains('hidden'); mainHeading.classList.toggle('hidden', isReviewCardVisible); if (flashcardContainer && flashcardContainer.parentElement && isReviewCardVisible) { flashcardContainer.parentElement.classList.remove('hidden'); } } else { mainHeading.classList.remove('hidden'); if(wordDisplayCard) wordDisplayCard.classList.add('hidden'); } } if (translationDisplay) translationDisplay.classList.add('hidden'); }
-        function toggleButtonLoading(button, textElement, loaderElement, isLoading, loadingText = '') { if (!button || !textElement || !loaderElement) { console.warn("[Util][UI] toggleButtonLoading: Missing element reference."); return; } if (!textElement.dataset.originalText) { textElement.dataset.originalText = textElement.textContent; } const originalText = textElement.dataset.originalText; button.disabled = isLoading; if (isLoading) { loaderElement.classList.remove('hidden'); textElement.textContent = loadingText || originalText; } else { loaderElement.classList.add('hidden'); textElement.textContent = originalText; } }
-        function setTemporaryMessage(element, message, cssClassSuffix, isSmall = false, duration = 3500) { if (!element) { console.warn(`[Util][UI] setTemporaryMessage: Target element not found for message: ${message}`); return; } console.log(`[Util][Message] ${cssClassSuffix}: ${message}`); element.textContent = message; element.className = 'message'; element.classList.add(`message--${cssClassSuffix}`); element.classList.toggle('message--small', isSmall); setTimeout(() => { if (element.textContent === message) { element.textContent = ''; element.className = 'message message--default'; element.classList.toggle('message--small', isSmall); } }, duration); }
-        function setSessionMessage(message, cssClassSuffix = 'info') { if (!sessionMessage) { console.warn("[Util][Message] setSessionMessage: sessionMessage element not found."); return; } console.log(`[Util][Session Message] ${cssClassSuffix}: ${message}`); sessionMessage.textContent = message; sessionMessage.className = 'message'; sessionMessage.classList.add(`message--${cssClassSuffix}`); }
+        // --- Utility Functions ---
 
         /**
-         * Identifies which string is English and which is Arabic.
+         * Shows a global status message at the top.
+         * @param {string} message - The message text.
+         * @param {string} [type='info'] - Message type ('info', 'success', 'error', 'warning').
+         * @param {number} [duration=3000] - How long to show the message (ms). 0 for permanent.
+         */
+        function showGlobalStatus(message, type = 'info', duration = 3000) {
+            if (!globalStatus) return;
+            console.log(`[Util][Status] ${type}: ${message}`);
+            globalStatus.textContent = message;
+            // Basic class reset + specific type class
+            globalStatus.className = `message message-${type}`;
+            globalStatus.style.display = 'block';
+            // Auto-hide after duration (if duration > 0)
+            if (duration > 0) {
+                setTimeout(() => {
+                    // Only hide if the message hasn't changed in the meantime
+                    if (globalStatus.textContent === message) {
+                        globalStatus.style.display = 'none';
+                    }
+                }, duration);
+            }
+        }
+
+        /** Hides the global status message. */
+        function hideGlobalStatus() {
+            if (globalStatus) globalStatus.style.display = 'none';
+        }
+
+        /**
+         * Shows a specific page container and hides others.
+         * @param {string} pageId - The ID of the page element to show ('pageAddWords' or 'pageReview').
+         */
+        function showPage(pageId) {
+            console.log(`[Util][UI] Showing page: ${pageId}`);
+            // Hide all pages first
+            if (pageAddWords) pageAddWords.classList.add('hidden');
+            if (pageReview) pageReview.classList.add('hidden');
+
+            // Show the requested page
+            const pageToShow = document.getElementById(pageId);
+            if (pageToShow) {
+                pageToShow.classList.remove('hidden');
+                // Fade-in effect
+                pageToShow.style.opacity = '0';
+                setTimeout(() => {
+                    if(pageToShow) pageToShow.style.opacity = '1';
+                }, 50); // Short delay before starting fade
+            } else {
+                console.error(`[Util][UI] showPage: Page with ID "${pageId}" not found.`);
+            }
+
+            // Toggle main heading visibility based on page and review state
+            if (mainHeading) {
+                const isReviewCardVisible = flashcardContainer && !flashcardContainer.classList.contains('hidden');
+                mainHeading.classList.toggle('hidden', pageId === 'pageReview' && isReviewCardVisible);
+            }
+
+            // Ensure translation is hidden when switching pages
+            if (translationDisplay) translationDisplay.classList.add('hidden');
+        }
+
+        /**
+         * Toggles the loading state of a button (shows/hides text/loader).
+         * @param {HTMLElement} button - The button element.
+         * @param {HTMLElement} textElement - The span element containing the button text.
+         * @param {HTMLElement} loaderElement - The span element containing the loader icon.
+         * @param {boolean} isLoading - True to show loader, false to show text.
+         * @param {string} [loadingText=''] - Optional text to show while loading.
+         */
+        function toggleButtonLoading(button, textElement, loaderElement, isLoading, loadingText = '') {
+            if (!button || !textElement || !loaderElement) {
+                console.warn("[Util][UI] toggleButtonLoading: Missing element reference.");
+                return;
+            }
+            // Store original text if not already stored
+            if (!textElement.dataset.originalText) {
+                textElement.dataset.originalText = textElement.textContent;
+            }
+            const originalText = textElement.dataset.originalText;
+
+            button.disabled = isLoading; // Disable button when loading
+
+            if (isLoading) {
+                loaderElement.classList.remove('hidden');
+                textElement.textContent = loadingText || originalText; // Show loading text or keep original
+            } else {
+                loaderElement.classList.add('hidden');
+                textElement.textContent = originalText; // Restore original text
+            }
+        }
+
+        /**
+         * Displays a temporary message in a specified element.
+         * @param {HTMLElement} element - The paragraph element to display the message in.
+         * @param {string} message - The message text.
+         * @param {string} cssClassSuffix - Suffix for the message class (e.g., 'success', 'error').
+         * @param {boolean} [isSmall=false] - Whether to apply the 'message--small' class.
+         * @param {number} [duration=3500] - Duration in ms before clearing the message.
+         */
+        function setTemporaryMessage(element, message, cssClassSuffix, isSmall = false, duration = 3500) {
+            if (!element) {
+                console.warn(`[Util][UI] setTemporaryMessage: Target element not found for message: ${message}`);
+                return;
+            }
+            console.log(`[Util][Message] ${cssClassSuffix}: ${message}`);
+            element.textContent = message;
+            // Reset classes and add specific ones
+            element.className = 'message'; // Base class
+            element.classList.add(`message--${cssClassSuffix}`);
+            element.classList.toggle('message--small', isSmall);
+
+            // Clear the message after the duration
+            setTimeout(() => {
+                // Only clear if the message is still the same one we set
+                if (element.textContent === message) {
+                    element.textContent = '';
+                    element.className = 'message message--default'; // Reset to default
+                    element.classList.toggle('message--small', isSmall);
+                }
+            }, duration);
+        }
+
+        /**
+         * Sets a persistent message in the session message area.
+         * @param {string} message - The message text.
+         * @param {string} [cssClassSuffix='info'] - Suffix for the message class.
+         */
+        function setSessionMessage(message, cssClassSuffix = 'info') {
+            if (!sessionMessage) {
+                console.warn("[Util][Message] setSessionMessage: sessionMessage element not found.");
+                return;
+            }
+            console.log(`[Util][Session Message] ${cssClassSuffix}: ${message}`);
+            sessionMessage.textContent = message;
+            sessionMessage.className = 'message'; // Reset base
+            sessionMessage.classList.add(`message--${cssClassSuffix}`);
+        }
+
+        /**
+         * Identifies which string is English and which is Arabic from two parts.
+         * Handles simple cases and makes guesses for mixed/ambiguous inputs.
          * @param {string} part1 - The first part of the split line.
          * @param {string} part2 - The second part of the split line.
-         * @returns {object|null} An object { englishWord, arabicTranslation } or null if identification fails.
+         * @returns {{englishWord: string, arabicTranslation: string}|null} Object with identified parts or null.
          */
         function identifyEnglishArabic(part1, part2) {
             const p1 = part1.trim();
@@ -300,42 +543,34 @@ World	عالم
             }
 
             // Case 2: Handle mixed scripts (prioritize Arabic detection)
-            // If one part contains Arabic and the other doesn't, assume the one with Arabic is the translation.
-            if (p1IsArabic && !p2IsArabic) {
-                 return { englishWord: p2, arabicTranslation: p1 };
-            }
-             if (p2IsArabic && !p1IsArabic) {
-                 return { englishWord: p1, arabicTranslation: p2 };
-            }
+            if (p1IsArabic && !p2IsArabic) return { englishWord: p2, arabicTranslation: p1 };
+            if (p2IsArabic && !p1IsArabic) return { englishWord: p1, arabicTranslation: p2 };
 
-            // Case 3: If both contain only English (or neither contains Arabic), assume first is English
-            // This is a fallback and might be incorrect for some inputs.
-             if (p1IsEnglish && p2IsEnglish && !p1IsArabic && !p2IsArabic) {
-                 console.warn(`[Util][Identify] Ambiguous English/English input: "${p1}" / "${p2}". Assuming first is English.`);
+            // Case 3: Both contain only English (or neither contains Arabic) -> Assume first is English
+            if (p1IsEnglish && p2IsEnglish && !p1IsArabic && !p2IsArabic) {
+                 console.warn(`[Util][Identify] Ambiguous English/English: "${p1}" / "${p2}". Assuming first is English.`);
                  return { englishWord: p1, arabicTranslation: p2 };
+            }
+             // Case 4: Both contain only Arabic (or neither contains English) -> Assume second is English (less likely)
+             if (p1IsArabic && p2IsArabic && !p1IsEnglish && !p2IsEnglish) {
+                 console.warn(`[Util][Identify] Ambiguous Arabic/Arabic: "${p1}" / "${p2}". Assuming second is English (fallback).`);
+                 return { englishWord: p2, arabicTranslation: p1 };
              }
 
-            // Case 4: If both contain Arabic (or neither contains English), assume first is English (less likely scenario)
-            if (p1IsArabic && p2IsArabic && !p1IsEnglish && !p2IsEnglish) {
-                console.warn(`[Util][Identify] Ambiguous Arabic/Arabic input: "${p1}" / "${p2}". Assuming second is English (fallback).`);
-                return { englishWord: p2, arabicTranslation: p1 }; // Less likely, maybe user pasted Arabic synonyms?
-            }
-
-            // Case 5: Both contain mixed scripts or other complex cases - make a best guess based on presence of letters
+            // Case 5: Both contain mixed scripts or other complex cases -> Best guess based on letter presence
              if (p1IsEnglish && p2IsArabic) return { englishWord: p1, arabicTranslation: p2 };
              if (p1IsArabic && p2IsEnglish) return { englishWord: p2, arabicTranslation: p1 };
-
 
             console.warn(`[Util][Identify] Could not reliably identify English/Arabic for: "${p1}" / "${p2}"`);
             return null; // Cannot determine
         }
 
 
-        // --- Firestore Functions (User-Specific - Updated for new fields and batching) ---
+        // --- Firestore Functions ---
 
         /**
-         * Fetches existing English words for the current user.
-         * @returns {Promise<Set<string>>} A Set containing existing English words.
+         * Fetches existing English words for the current user to prevent duplicates.
+         * @returns {Promise<Set<string>>} A Set containing lowercase existing English words.
          */
         async function getExistingEnglishWords() {
             const existingWords = new Set();
@@ -344,10 +579,9 @@ World	عالم
                 return existingWords; // Return empty set on error
             }
             console.log(`[Firestore] Fetching existing english words for user ${currentUserId}`);
-            const q = query(collection(db, WORDS_COLLECTION), where("userId", "==", currentUserId)); // No need to fetch all data, just check existence later? No, fetch words to avoid duplicates.
+            const q = query(collection(db, WORDS_COLLECTION), where("userId", "==", currentUserId));
 
             try {
-                // Fetch in chunks if necessary, although unlikely for just checking existence
                 const querySnapshot = await getDocs(q);
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
@@ -359,120 +593,280 @@ World	عالم
             } catch (error) {
                 console.error("[Firestore] Error fetching existing words:", error);
                 setTemporaryMessage(addMessage, 'خطأ في جلب الكلمات الموجودة.', 'error', false);
-                // Return potentially incomplete set on error
             }
             return existingWords;
         }
 
-        // Note: addWordFirestore is no longer used directly for bulk add, but kept for potential single adds later.
-        // It's updated to use new field names.
-        async function addWordFirestore(wordObject) {
-            if (!firestoreInitialized || !currentUserId) { return null; }
-            console.log(`[Firestore] Attempting to add single word "${wordObject.englishWord}" for user ${currentUserId}`);
-            try {
-                 // Use new field names
-                 const docPayload = {
-                    englishWord: wordObject.englishWord,
-                    arabicTranslation: wordObject.arabicTranslation,
-                    userId: currentUserId,
-                    status: 'hard',
-                    createdAt: serverTimestamp()
-                 };
-                 console.log("[Firestore] Add Single Payload:", docPayload);
-                 const docRef = await addDoc(collection(db, WORDS_COLLECTION), docPayload);
-                 console.log("[Firestore] Single Word added successfully with ID:", docRef.id);
-                return docRef;
-            } catch (error) {
-                 console.error("[Firestore] Error adding single word:", error);
-                 setTemporaryMessage(addMessage, `خطأ عند إضافة كلمة "${wordObject.englishWord}".`, 'error', false, 7000);
-                 return null;
-            }
-        }
-
-        // Updated to use new field names
+        /**
+         * Fetches all words marked as 'hard' for the current user.
+         * @returns {Promise<Array<object>|null>} An array of word objects or null on error.
+         */
         async function getHardWordsFirestore() {
-            if (!firestoreInitialized || !currentUserId) { setSessionMessage('خطأ: لا يمكن جلب الكلمات (مشكلة اتصال أو تسجيل دخول).', 'error'); return null; }
+            if (!firestoreInitialized || !currentUserId) {
+                setSessionMessage('خطأ: لا يمكن جلب الكلمات (مشكلة اتصال أو تسجيل دخول).', 'error');
+                return null;
+            }
             console.log(`[Firestore] Fetching 'hard' words for user ${currentUserId}`);
             const q = query(collection(db, WORDS_COLLECTION), where("userId", "==", currentUserId), where("status", "==", "hard"));
             try {
                 const querySnapshot = await getDocs(q);
                 const words = [];
                 querySnapshot.forEach((doc) => {
-                    // Map to consistent object structure with new field names
                     const data = doc.data();
+                    // Ensure consistent object structure
                     words.push({
                         id: doc.id,
-                        englishWord: data.englishWord || data.word || '', // Handle potential old data
-                        arabicTranslation: data.arabicTranslation || data.translation || '', // Handle potential old data
+                        englishWord: data.englishWord || '', // Fallback for safety
+                        arabicTranslation: data.arabicTranslation || '', // Fallback for safety
                         status: data.status
-                        // Include other fields if needed
                     });
                 });
                 console.log(`[Firestore] Fetched ${words.length} hard words.`);
-                return words.sort(() => Math.random() - 0.5); // Shuffle
+                // Shuffle the words for the review session
+                return words.sort(() => Math.random() - 0.5);
             } catch (error) {
                  console.error("[Firestore] Error fetching hard words:", error);
-                 if (error.code === 'permission-denied') { setSessionMessage(`خطأ صلاحية Firestore: ليس لديك الإذن لقراءة الكلمات.`, 'error'); }
-                 else { setSessionMessage(`خطأ عند جلب الكلمات: ${error.message}`, 'error'); }
+                 const message = error.code === 'permission-denied'
+                    ? 'خطأ صلاحية Firestore: ليس لديك الإذن لقراءة الكلمات.'
+                    : `خطأ عند جلب الكلمات: ${error.message}`;
+                 setSessionMessage(message, 'error');
                 return null;
             }
         }
 
-        // No changes needed for updateWordStatusFirestore logic, field name is correct
+        /**
+         * Updates the status ('easy' or 'hard') of a specific word document in Firestore.
+         * @param {string} docId - The Firestore document ID of the word.
+         * @param {string} newStatus - The new status ('easy' or 'hard').
+         * @returns {Promise<void>}
+         * @throws {Error} If Firestore is not ready or the update fails.
+         */
         async function updateWordStatusFirestore(docId, newStatus) {
-             if (!firestoreInitialized || !currentUserId) { setSessionMessage('خطأ: لا يمكن تحديث حالة الكلمة.', 'error'); throw new Error("Firestore not ready or user not logged in."); }
+             if (!firestoreInitialized || !currentUserId) {
+                 setSessionMessage('خطأ: لا يمكن تحديث حالة الكلمة.', 'error');
+                 throw new Error("Firestore not ready or user not logged in.");
+             }
              console.log(`[Firestore] Updating word ${docId} to status "${newStatus}"`);
              const wordDocRef = doc(db, WORDS_COLLECTION, docId);
-             try { await updateDoc(wordDocRef, { status: newStatus }); console.log(`[Firestore] Word ${docId} status updated.`); }
-             catch (error) { console.error(`[Firestore] Error updating word ${docId} status:`, error); setSessionMessage(`خطأ في تحديث حالة الكلمة (ID: ${docId}).`, 'error'); throw error; }
+             try {
+                 await updateDoc(wordDocRef, { status: newStatus });
+                 console.log(`[Firestore] Word ${docId} status updated.`);
+             }
+             catch (error) {
+                 console.error(`[Firestore] Error updating word ${docId} status:`, error);
+                 setSessionMessage(`خطأ في تحديث حالة الكلمة (ID: ${docId}).`, 'error');
+                 throw error; // Re-throw to be caught by calling function
+             }
         }
 
-        // Updated to use new field names for query
+        /**
+         * Deletes all words marked as 'hard' for the current user using a batch write.
+         * @returns {Promise<{success: boolean, deletedCount: number, errorCount: number, message: string}>} Result object.
+         */
         async function deleteAllHardWordsFirestore() {
-            if (!firestoreInitialized || !currentUserId) { return { success: false, deletedCount: 0, errorCount: 0, message: 'Firestore not ready or user not logged in.' }; }
-            console.log(`[Firestore] Deleting all 'hard' words for user ${currentUserId}`);
-            // Query uses the correct 'status' field
+            if (!firestoreInitialized || !currentUserId) {
+                return { success: false, deletedCount: 0, errorCount: 0, message: 'Firestore not ready or user not logged in.' };
+            }
+            console.log(`[Firestore] Attempting to delete all 'hard' words for user ${currentUserId}`);
             const q = query(collection(db, WORDS_COLLECTION), where("userId", "==", currentUserId), where("status", "==", "hard"));
             let deletedCount = 0;
+            let docsToDelete = 0; // Keep track of how many we intended to delete
+
             try {
                 const querySnapshot = await getDocs(q);
-                if (querySnapshot.empty) { return { success: true, deletedCount: 0, errorCount: 0, message: 'No hard words found.' }; }
+                docsToDelete = querySnapshot.size; // Get count before trying to delete
+                if (querySnapshot.empty) {
+                    console.log("[Firestore] No hard words found to delete.");
+                    return { success: true, deletedCount: 0, errorCount: 0, message: 'No hard words found.' };
+                }
+
+                // Use batch delete for efficiency
                 const batch = writeBatch(db);
-                querySnapshot.forEach((doc) => { batch.delete(doc.ref); });
+                querySnapshot.forEach((doc) => {
+                    batch.delete(doc.ref);
+                });
                 await batch.commit();
-                deletedCount = querySnapshot.size;
+
+                deletedCount = querySnapshot.size; // Actual deleted count
                 console.log(`[Firestore] Successfully deleted ${deletedCount} hard words using batch.`);
                 return { success: true, deletedCount: deletedCount, errorCount: 0, message: `Deleted ${deletedCount} words.` };
             } catch (error) {
                 console.error("[Firestore] Error deleting hard words:", error);
                 let userMessage = 'An error occurred while deleting words.';
-                if (error.code === 'permission-denied') { userMessage = 'Permission denied.'; }
-                return { success: false, deletedCount: 0, errorCount: querySnapshot ? querySnapshot.size : 'unknown', message: userMessage };
+                if (error.code === 'permission-denied') {
+                    userMessage = 'Permission denied.';
+                }
+                // Return the count we *intended* to delete as the error count if the batch failed
+                return { success: false, deletedCount: 0, errorCount: docsToDelete, message: userMessage };
             }
         }
 
-        // --- Authentication Functions (Same as before) ---
-        function handleLogin(event) { const email = loginEmailInput?.value.trim(); const password = loginPasswordInput?.value; if(loginMessage) loginMessage.textContent = ''; if (!email || !password) { setTemporaryMessage(loginMessage, 'الرجاء إدخال البريد الإلكتروني وكلمة المرور.', 'warning', false); return; } if (!authInitialized) { setTemporaryMessage(loginMessage, 'خدمة المصادقة غير جاهزة.', 'error', false); return; } showGlobalStatus('جاري تسجيل الدخول...', 'info', 0); signInWithEmailAndPassword(auth, email, password).then((userCredential) => {}).catch((error) => { hideGlobalStatus(); console.error("[Auth] handleLogin Error:", error.code, error.message); let msg = 'فشل تسجيل الدخول. '; switch (error.code) { case 'auth/user-not-found': case 'auth/wrong-password': case 'auth/invalid-credential': msg += 'البريد الإلكتروني أو كلمة المرور غير صحيحة.'; break; default: msg += `خطأ (${error.code}).`; } setTemporaryMessage(loginMessage, msg, 'error', false, 5000); }); }
-        function handleSignup(event) { const email = signupEmailInput?.value.trim(); const password = signupPasswordInput?.value; if(signupMessage) signupMessage.textContent = ''; if (!email || !password) { setTemporaryMessage(signupMessage, 'الرجاء إدخال البريد الإلكتروني وكلمة المرور.', 'warning', false); return; } if (password.length < 6) { setTemporaryMessage(signupMessage, 'يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.', 'warning', false); return; } if (!authInitialized) { setTemporaryMessage(signupMessage, 'خدمة المصادقة غير جاهزة.', 'error', false); return; } showGlobalStatus('جاري إنشاء الحساب...', 'info', 0); createUserWithEmailAndPassword(auth, email, password).then((userCredential) => {}).catch((error) => { hideGlobalStatus(); console.error("[Auth] handleSignup Error:", error.code, error.message); let msg = 'فشل إنشاء الحساب. '; switch (error.code) { case 'auth/email-already-in-use': msg += 'البريد الإلكتروني مستخدم بالفعل.'; break; case 'auth/invalid-email': msg += 'صيغة البريد الإلكتروني غير صالحة.'; break; case 'auth/weak-password': msg += 'كلمة المرور ضعيفة.'; break; default: msg += `خطأ (${error.code}).`; } setTemporaryMessage(signupMessage, msg, 'error', false, 5000); }); }
-        function handleLogout() { if (!authInitialized) { showGlobalStatus('خدمة المصادقة غير جاهزة.', 'error', 3000); return; } showGlobalStatus('جاري تسجيل الخروج...', 'info', 0); signOut(auth).then(() => {}).catch((error) => { hideGlobalStatus(); console.error("[Auth] Logout Error:", error); showGlobalStatus('فشل تسجيل الخروج.', 'error', 3000); }); }
+        // --- Authentication Functions ---
 
-        // --- Word Management Functions (Updated for Batching and Flexible Parsing) ---
-        async function handlePaste() { console.log("[UI] Paste button clicked."); if (!pasteMessage || !bulkInput) return; pasteMessage.textContent = ''; if (!navigator.clipboard || !navigator.clipboard.readText) { setTemporaryMessage(pasteMessage, 'المتصفح لا يدعم اللصق التلقائي.', 'warning', true, 5000); return; } try { const text = await navigator.clipboard.readText(); if (text) { bulkInput.value += (bulkInput.value ? '\n' : '') + text; setTemporaryMessage(pasteMessage, 'تم اللصق بنجاح.', 'success', true); bulkInput.scrollTop = bulkInput.scrollHeight; } else { setTemporaryMessage(pasteMessage, 'الحافظة فارغة.', 'info', true); } } catch (err) { console.error("[UI] Clipboard paste error:", err); setTemporaryMessage(pasteMessage, 'فشل اللصق.', 'error', true, 5000); } }
+        /** Handles the login form submission. */
+        function handleLogin(event) {
+            // event.preventDefault(); // Handled by form listener setup
+            const email = loginEmailInput?.value.trim();
+            const password = loginPasswordInput?.value;
+            if(loginMessage) loginMessage.textContent = ''; // Clear previous messages
+
+            if (!email || !password) {
+                setTemporaryMessage(loginMessage, 'الرجاء إدخال البريد الإلكتروني وكلمة المرور.', 'warning', false);
+                return;
+            }
+            if (!authInitialized) {
+                setTemporaryMessage(loginMessage, 'خدمة المصادقة غير جاهزة.', 'error', false);
+                return;
+            }
+
+            showGlobalStatus('جاري تسجيل الدخول...', 'info', 0); // Show loading, no auto-hide
+            signInWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    // Login successful, onAuthStateChanged will handle UI updates
+                    // hideGlobalStatus(); // onAuthStateChanged will hide it
+                    console.log("[Auth] Login successful for:", userCredential.user.uid);
+                })
+                .catch((error) => {
+                    hideGlobalStatus(); // Hide loading on error
+                    console.error("[Auth] handleLogin Error:", error.code, error.message);
+                    let msg = 'فشل تسجيل الدخول. ';
+                    switch (error.code) {
+                        case 'auth/user-not-found':
+                        case 'auth/wrong-password':
+                        case 'auth/invalid-credential': // Covers invalid email format too in newer SDKs
+                            msg += 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
+                            break;
+                        default:
+                            msg += `خطأ (${error.code}).`;
+                    }
+                    setTemporaryMessage(loginMessage, msg, 'error', false, 5000);
+                });
+        }
+
+        /** Handles the signup form submission. */
+        function handleSignup(event) {
+            // event.preventDefault(); // Handled by form listener setup
+            const email = signupEmailInput?.value.trim();
+            const password = signupPasswordInput?.value;
+            if(signupMessage) signupMessage.textContent = ''; // Clear previous messages
+
+            if (!email || !password) {
+                setTemporaryMessage(signupMessage, 'الرجاء إدخال البريد الإلكتروني وكلمة المرور.', 'warning', false);
+                return;
+            }
+            if (password.length < 6) {
+                setTemporaryMessage(signupMessage, 'يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.', 'warning', false);
+                return;
+            }
+            if (!authInitialized) {
+                setTemporaryMessage(signupMessage, 'خدمة المصادقة غير جاهزة.', 'error', false);
+                return;
+            }
+
+            showGlobalStatus('جاري إنشاء الحساب...', 'info', 0); // Show loading
+            createUserWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    // Signup successful, onAuthStateChanged will handle UI updates
+                    // hideGlobalStatus(); // onAuthStateChanged will hide it
+                    console.log("[Auth] Signup successful for:", userCredential.user.uid);
+                })
+                .catch((error) => {
+                    hideGlobalStatus(); // Hide loading on error
+                    console.error("[Auth] handleSignup Error:", error.code, error.message);
+                    let msg = 'فشل إنشاء الحساب. ';
+                    switch (error.code) {
+                        case 'auth/email-already-in-use':
+                            msg += 'البريد الإلكتروني مستخدم بالفعل.';
+                            break;
+                        case 'auth/invalid-email':
+                            msg += 'صيغة البريد الإلكتروني غير صالحة.';
+                            break;
+                        case 'auth/weak-password':
+                            msg += 'كلمة المرور ضعيفة.';
+                            break;
+                        default:
+                            msg += `خطأ (${error.code}).`;
+                    }
+                    setTemporaryMessage(signupMessage, msg, 'error', false, 5000);
+                });
+        }
+
+        /** Handles the logout button click. */
+        function handleLogout() {
+            if (!authInitialized) {
+                showGlobalStatus('خدمة المصادقة غير جاهزة.', 'error', 3000);
+                return;
+            }
+            showGlobalStatus('جاري تسجيل الخروج...', 'info', 0); // Show loading
+            signOut(auth)
+                .then(() => {
+                    // Logout successful, onAuthStateChanged will handle UI updates
+                    // hideGlobalStatus(); // onAuthStateChanged will hide it
+                    console.log("[Auth] Logout successful.");
+                })
+                .catch((error) => {
+                    hideGlobalStatus(); // Hide loading on error
+                    console.error("[Auth] Logout Error:", error);
+                    showGlobalStatus('فشل تسجيل الخروج.', 'error', 3000);
+                });
+        }
+
+        // --- Word Management Functions ---
+
+        /** Handles pasting text into the bulk input area. */
+        async function handlePaste() {
+            console.log("[UI] Paste button clicked.");
+            if (!pasteMessage || !bulkInput) return;
+            pasteMessage.textContent = ''; // Clear previous paste messages
+
+            // Check for clipboard API support
+            if (!navigator.clipboard || !navigator.clipboard.readText) {
+                setTemporaryMessage(pasteMessage, 'المتصفح لا يدعم اللصق التلقائي.', 'warning', true, 5000);
+                return;
+            }
+
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text) {
+                    // Append text, adding a newline if needed
+                    bulkInput.value += (bulkInput.value ? '\n' : '') + text;
+                    setTemporaryMessage(pasteMessage, 'تم اللصق بنجاح.', 'success', true);
+                    bulkInput.scrollTop = bulkInput.scrollHeight; // Scroll to bottom
+                    checkAddButtonState(); // Enable add button if text was pasted
+                } else {
+                    setTemporaryMessage(pasteMessage, 'الحافظة فارغة.', 'info', true);
+                }
+            } catch (err) {
+                console.error("[UI] Clipboard paste error:", err);
+                setTemporaryMessage(pasteMessage, 'فشل اللصق من الحافظة.', 'error', true, 5000);
+            }
+        }
 
         /**
-         * Parses text input, identifies languages, checks against existing words,
-         * and adds new words in batches to Firestore.
+         * Parses text from bulk input, identifies languages, checks duplicates,
+         * and adds new words to Firestore in batches.
          */
         async function addWordsFromText() {
             console.log("[WordMgmt] addWordsFromText called.");
-            if (!firestoreInitialized || !currentUserId) { setTemporaryMessage(addMessage, 'يجب تسجيل الدخول أولاً لإضافة الكلمات.', 'warning', false); return; }
-            if (!bulkInput || !addBulkBtn || !addBtnText || !addBtnLoader || !addMessage) { setTemporaryMessage(addMessage,"خطأ في واجهة المستخدم.", 'error', false); return; }
+            if (!firestoreInitialized || !currentUserId) {
+                setTemporaryMessage(addMessage, 'يجب تسجيل الدخول أولاً لإضافة الكلمات.', 'warning', false);
+                return;
+            }
+            // Ensure all required UI elements are available
+            if (!bulkInput || !addBulkBtn || !addBtnText || !addBtnLoader || !addMessage) {
+                 setTemporaryMessage(addMessage,"خطأ في واجهة المستخدم.", 'error', false); // Generic UI error
+                 return;
+            }
 
             const text = bulkInput.value.trim();
-            if (!text) { setTemporaryMessage(addMessage, "الرجاء إدخال أو لصق النص أولاً.", "warning", false); return; }
+            // Button should be disabled if text is empty, but double-check
+            if (!text) {
+                 setTemporaryMessage(addMessage, "الرجاء إدخال أو لصق النص أولاً.", "warning", false);
+                 return;
+            }
 
             toggleButtonLoading(addBulkBtn, addBtnText, addBtnLoader, true, 'جاري المعالجة...');
-            setTemporaryMessage(addMessage, '1/4 جاري تحليل النص...', 'info', false);
+            setTemporaryMessage(addMessage, '1/4 جاري تحليل النص...', 'info', false); // Step 1 message
 
             const lines = text.split('\n');
             const parsedPairs = [];
@@ -481,12 +875,13 @@ World	عالم
             // 1. Parse lines and identify languages
             for (const line of lines) {
                 const trimmedLine = line.trim();
+                // Skip empty lines or lines starting with comment markers
                 if (!trimmedLine || trimmedLine.startsWith('#') || trimmedLine.startsWith('//')) {
                     skippedLines++;
                     continue;
                 }
 
-                // Try splitting by common separators (colon, equals, tab)
+                // Try splitting by common separators (colon, equals, tab) allowing whitespace around them
                 const parts = trimmedLine.split(/\s*[:=\t]+\s*/, 2);
                 if (parts.length === 2) {
                     const identified = identifyEnglishArabic(parts[0], parts[1]);
@@ -497,22 +892,24 @@ World	عالم
                         skippedLines++;
                     }
                 } else {
-                     console.warn(`[WordMgmt] Skipping line due to invalid format: "${trimmedLine}"`);
+                     // Log lines that don't split into two parts using the separators
+                     console.warn(`[WordMgmt] Skipping line due to invalid format (no clear separator): "${trimmedLine}"`);
                     skippedLines++;
                 }
             }
             console.log(`[WordMgmt] Parsed ${parsedPairs.length} potential pairs. Skipped ${skippedLines} lines initially.`);
             if (parsedPairs.length === 0) {
+                 // If no valid pairs found after parsing
                  setTemporaryMessage(addMessage, `لم يتم العثور على أزواج كلمات صالحة. تم تخطي ${skippedLines} سطراً.`, 'warning', false);
-                 toggleButtonLoading(addBulkBtn, addBtnText, addBtnLoader, false);
+                 toggleButtonLoading(addBulkBtn, addBtnText, addBtnLoader, false); // Re-enable button
                  return;
             }
 
-            // 2. Fetch existing words
-            setTemporaryMessage(addMessage, '2/4 جاري التحقق من الكلمات الموجودة...', 'info', false);
+            // 2. Fetch existing words to check for duplicates
+            setTemporaryMessage(addMessage, '2/4 جاري التحقق من الكلمات الموجودة...', 'info', false); // Step 2 message
             const existingWordsSet = await getExistingEnglishWords();
 
-            // 3. Filter out existing words
+            // 3. Filter out words that already exist (case-insensitive check)
             const wordsToAdd = parsedPairs.filter(pair => {
                 const exists = existingWordsSet.has(pair.englishWord.toLowerCase().trim());
                 if (exists) {
@@ -524,18 +921,24 @@ World	عالم
             const duplicateCount = parsedPairs.length - wordsToAdd.length;
             console.log(`[WordMgmt] Found ${duplicateCount} duplicates. Preparing to add ${wordsToAdd.length} new words.`);
 
+            // If all parsed words were duplicates or skipped
             if (wordsToAdd.length === 0) {
-                setTemporaryMessage(addMessage, `كل الكلمات موجودة بالفعل أو تم تخطيها (${parsedPairs.length + skippedLines} سطراً).`, 'info', false);
+                let finalMsg = `كل الكلمات موجودة بالفعل أو تم تخطيها (${parsedPairs.length + skippedLines} سطراً معالجاً).`;
+                setTemporaryMessage(addMessage, finalMsg, 'info', false);
                 toggleButtonLoading(addBulkBtn, addBtnText, addBtnLoader, false);
-                if (duplicateCount > 0 || skippedLines > 0) bulkInput.value = ''; // Clear if some were processed
+                // Clear input only if some lines were actually processed (duplicates or skipped valid format)
+                if (duplicateCount > 0 || skippedLines > 0) {
+                    bulkInput.value = '';
+                    checkAddButtonState(); // Disable button after clearing
+                }
                 return;
             }
 
-            // 4. Add new words in batches
-            setTemporaryMessage(addMessage, `3/4 جاري إضافة ${wordsToAdd.length} كلمة جديدة...`, 'info', false);
+            // 4. Add new words in batches to Firestore
+            setTemporaryMessage(addMessage, `3/4 جاري إضافة ${wordsToAdd.length} كلمة جديدة...`, 'info', false); // Step 3 message
             let addedCount = 0;
             let errorCount = 0;
-            let batchPromises = [];
+            let batchPromises = []; // Store promises for all batch commits
 
             for (let i = 0; i < wordsToAdd.length; i += BATCH_LIMIT) {
                 const batch = writeBatch(db);
@@ -544,215 +947,711 @@ World	عالم
 
                 chunk.forEach(wordData => {
                     const newWordRef = doc(collection(db, WORDS_COLLECTION)); // Auto-generate ID
+                    // Set data for the new document in the batch
                     batch.set(newWordRef, {
-                        // Use new field names
                         englishWord: wordData.englishWord.trim(),
                         arabicTranslation: wordData.arabicTranslation.trim(),
                         userId: currentUserId,
-                        status: 'hard',
-                        createdAt: serverTimestamp()
+                        status: 'hard', // New words start as 'hard'
+                        createdAt: serverTimestamp() // Track creation time
                     });
                 });
 
-                // Add the commit promise to the list
-                 batchPromises.push(batch.commit().then(() => {
-                     addedCount += chunk.length; // Increment count for this successful batch
-                     console.log(`[WordMgmt] Batch ${Math.floor(i / BATCH_LIMIT) + 1} committed successfully.`);
-                 }).catch(err => {
-                     console.error(`[WordMgmt] Batch ${Math.floor(i / BATCH_LIMIT) + 1} failed:`, err);
-                     errorCount += chunk.length; // Assume all in failed batch are errors
-                 }));
+                // Add the commit promise of this batch to the list
+                 batchPromises.push(
+                     batch.commit()
+                         .then(() => {
+                             addedCount += chunk.length; // Increment count for this successful batch
+                             console.log(`[WordMgmt] Batch ${Math.floor(i / BATCH_LIMIT) + 1} committed successfully.`);
+                         })
+                         .catch(err => {
+                             console.error(`[WordMgmt] Batch ${Math.floor(i / BATCH_LIMIT) + 1} failed:`, err);
+                             errorCount += chunk.length; // Assume all in failed batch are errors
+                         })
+                 );
             }
 
             // Wait for all batch commits to finish
             await Promise.all(batchPromises);
             console.log(`[WordMgmt] Batch processing complete. Added: ${addedCount}, Errors: ${errorCount}`);
-            setTemporaryMessage(addMessage, '4/4 اكتملت العملية.', 'info', false, 1000); // Short final message before summary
+            setTemporaryMessage(addMessage, '4/4 اكتملت العملية.', 'info', false, 1000); // Short final step message
 
 
-            // Final summary message
-            let messageText = ''; let messageClass = 'default';
-            if (errorCount > 0) { messageText += `فشل إضافة ${errorCount} كلمة. `; messageClass = 'error'; }
-            if (addedCount > 0) { messageText += `تمت إضافة ${addedCount} كلمة جديدة. `; if (messageClass !== 'error') messageClass = 'success'; }
-            if (duplicateCount > 0) { messageText += `تم تخطي ${duplicateCount} كلمة مكررة. `; if (messageClass === 'default') messageClass = 'warning'; }
-             if (skippedLines > 0) { messageText += `تم تجاهل ${skippedLines} سطراً غير صالح. `; if (messageClass === 'default') messageClass = 'warning'; }
+            // Final summary message after all batches are processed
+            let messageText = '';
+            let messageClass = 'default';
+            if (errorCount > 0) {
+                messageText += `فشل إضافة ${errorCount} كلمة. `;
+                messageClass = 'error';
+            }
+            if (addedCount > 0) {
+                messageText += `تمت إضافة ${addedCount} كلمة جديدة. `;
+                if (messageClass !== 'error') messageClass = 'success'; // Success if no errors, even with skips/duplicates
+            }
+            if (duplicateCount > 0) {
+                messageText += `تم تخطي ${duplicateCount} كلمة مكررة. `;
+                if (messageClass === 'default') messageClass = 'warning'; // Warning if only skips/duplicates
+            }
+             if (skippedLines > 0) {
+                 messageText += `تم تجاهل ${skippedLines} سطراً غير صالح. `;
+                 if (messageClass === 'default') messageClass = 'warning';
+             }
 
             setTemporaryMessage(addMessage, messageText.trim() || "لم تتم إضافة أي كلمات.", messageClass || 'info', false, 6000);
 
-            if (addedCount > 0) bulkInput.value = ''; // Clear input only if words were successfully added
-            toggleButtonLoading(addBulkBtn, addBtnText, addBtnLoader, false);
+            // Clear input only if words were successfully added
+            if (addedCount > 0) {
+                bulkInput.value = '';
+            }
+            checkAddButtonState(); // Disable button again after processing (input might be empty now)
+            toggleButtonLoading(addBulkBtn, addBtnText, addBtnLoader, false); // Ensure button is re-enabled
+        }
+
+        /** Enables/disables the 'Add Words' button based on textarea content. */
+        function checkAddButtonState() {
+            if (!bulkInput || !addBulkBtn) return;
+            // Disable if input is empty or only whitespace
+            addBulkBtn.disabled = bulkInput.value.trim() === '';
         }
 
 
-        // --- Review Session Functions (Updated for new field names) ---
+        // --- Review Session Functions ---
+
+        /** Starts a new review session: fetches hard words and displays the first one. */
         async function startSession() {
             console.log("[Review] startSession called.");
-            if (!firestoreInitialized || !currentUserId) { setSessionMessage('يجب تسجيل الدخول أولاً لبدء المراجعة.', 'warning'); if(flashcardContainer) flashcardContainer.classList.add('hidden'); if(wordDisplayCard) wordDisplayCard.classList.add('hidden'); return; }
-            if(hardWordsListContainer) hardWordsListContainer.classList.add('hidden'); if(copyMessage) copyMessage.textContent = ''; if(deleteMessage) deleteMessage.textContent = '';
+            // Ensure user is logged in and Firestore is ready
+            if (!firestoreInitialized || !currentUserId) {
+                setSessionMessage('يجب تسجيل الدخول أولاً لبدء المراجعة.', 'warning');
+                if(flashcardContainer) flashcardContainer.classList.add('hidden'); // Hide review UI if not logged in
+                if(wordDisplayCard) wordDisplayCard.classList.add('hidden');
+                return;
+            }
+
+            // Reset UI elements for a new session
+            if(hardWordsListContainer) hardWordsListContainer.classList.add('hidden');
+            if(copyMessage) copyMessage.textContent = '';
+            if(deleteMessage) deleteMessage.textContent = '';
             setSessionMessage('جاري تحميل الكلمات للمراجعة...', 'info');
-            if(flashcardContainer) flashcardContainer.classList.add('hidden'); if(wordDisplayCard) wordDisplayCard.classList.add('hidden');
+            if(flashcardContainer) flashcardContainer.classList.add('hidden'); // Hide card until words load
+            if(wordDisplayCard) wordDisplayCard.classList.add('hidden');
+
             try {
-                currentSessionWords = await getHardWordsFirestore(); // Fetches objects with englishWord, arabicTranslation
-                if (currentSessionWords === null) return;
-                if (currentSessionWords.length === 0) { setSessionMessage('لا توجد كلمات للمراجعة حالياً.', 'success'); if (mainHeading) mainHeading.classList.remove('hidden'); return; }
+                currentSessionWords = await getHardWordsFirestore(); // Fetches and shuffles hard words
+                if (currentSessionWords === null) return; // Error handled within getHardWordsFirestore
+
+                if (currentSessionWords.length === 0) {
+                    setSessionMessage('لا توجد كلمات للمراجعة حالياً. أضف كلمات جديدة!', 'success');
+                    if (mainHeading) mainHeading.classList.remove('hidden'); // Show main heading if no words
+                    return; // Exit if no words to review
+                }
+
                 console.log(`[Review] startSession: Starting with ${currentSessionWords.length} words.`);
-                currentWordIndex = 0; setSessionMessage('', 'default');
-                displayCurrentWord(); showPage('pageReview');
-            } catch (error) { console.error("[Review] Error starting session:", error); setSessionMessage('خطأ غير متوقع أثناء بدء المراجعة.', 'error'); }
+                // Store the initial shuffled order for the "previous" button functionality
+                originalSessionOrder = [...currentSessionWords];
+                currentWordIndex = 0; // Start at the first word
+                setSessionMessage('', 'default'); // Clear loading message
+                displayCurrentWord(); // Display the first word
+                showPage('pageReview'); // Switch to the review page
+            } catch (error) {
+                console.error("[Review] Error starting session:", error);
+                setSessionMessage('خطأ غير متوقع أثناء بدء المراجعة.', 'error');
+            }
         }
 
+        /** Displays the word at the currentWordIndex from the originalSessionOrder. */
         function displayCurrentWord() {
              console.log(`[Review] displayCurrentWord: Index ${currentWordIndex}`);
-            if (currentWordIndex >= currentSessionWords.length) { endSession(); return; }
-            const currentWord = currentSessionWords[currentWordIndex];
-            // Use the new field names
-            if (!currentWord?.id || !currentWord.englishWord) { console.error("[Review] displayCurrentWord: Invalid word data.", currentWord); setSessionMessage("خطأ: بيانات كلمة غير صالحة.", "error"); setTimeout(goToNextWord, 500); return; }
+             // Check if the index is valid within the original session length
+            if (currentWordIndex >= originalSessionOrder.length || currentWordIndex < 0) {
+                 console.log("[Review] Index out of bounds, ending session potentially.");
+                 // Only end session if we went past the end. If index is < 0 (shouldn't happen), reset.
+                 if (currentWordIndex >= originalSessionOrder.length) {
+                    endSession();
+                 } else {
+                    currentWordIndex = 0; // Reset if somehow index < 0
+                    // Potentially show an error or just display the first word again
+                    if (originalSessionOrder.length > 0) displayCurrentWord(); else endSession();
+                 }
+                 return;
+            }
+
+            // Get word from the original order based on current index
+             const currentWord = originalSessionOrder[currentWordIndex];
+
+            // Validate word data
+            if (!currentWord?.id || typeof currentWord.englishWord !== 'string' || typeof currentWord.arabicTranslation !== 'string') {
+                console.error("[Review] displayCurrentWord: Invalid word data at index.", currentWordIndex, currentWord);
+                setSessionMessage("خطأ: بيانات كلمة غير صالحة.", "error");
+                // Attempt to skip to the next word after a short delay
+                setTimeout(goToNextWordInternal, 500);
+                return;
+            }
 
              console.log(`[Review] Displaying English: "${currentWord.englishWord}", Arabic: "${currentWord.arabicTranslation}"`);
-            if (wordDisplayLarge) wordDisplayLarge.textContent = currentWord.englishWord; // Always English here
-            if (translationDisplay) { translationDisplay.textContent = currentWord.arabicTranslation; translationDisplay.classList.add('hidden'); } // Arabic here
-            if (progressDisplay) progressDisplay.textContent = `الكلمة ${currentWordIndex + 1} / ${currentSessionWords.length}`;
+             // Update UI elements
+            if (wordDisplayLarge) wordDisplayLarge.textContent = currentWord.englishWord; // Always show English word
+            if (translationDisplay) {
+                translationDisplay.textContent = currentWord.arabicTranslation; // Set translation text
+                translationDisplay.classList.add('hidden'); // Hide translation initially
+            }
+            if (progressDisplay) progressDisplay.textContent = `الكلمة ${currentWordIndex + 1} / ${originalSessionOrder.length}`;
+
+            // Show the word display card and flashcard controls
             if (wordDisplayCard) wordDisplayCard.classList.remove('hidden');
             if (flashcardContainer) flashcardContainer.classList.remove('hidden');
-            if (flashcardContainer?.parentElement) flashcardContainer.parentElement.classList.remove('hidden');
-            if (mainHeading) mainHeading.classList.add('hidden');
-            if (markEasyBtn) markEasyBtn.disabled = false; if (markHardBtn) markHardBtn.disabled = false;
-            if (showTranslationBtn) showTranslationBtn.classList.remove('hidden');
+            // Ensure parent card is visible if flashcard container is inside it
+            if (flashcardContainer?.parentElement && flashcardContainer.parentElement.classList.contains('card')) {
+                flashcardContainer.parentElement.classList.remove('hidden');
+            }
+            if (mainHeading) mainHeading.classList.add('hidden'); // Hide main heading during review card display
+
+            // Enable/disable action buttons
+            if (markEasyBtn) markEasyBtn.disabled = false;
+            if (markHardBtn) markHardBtn.disabled = false;
+            if (prevWordBtn) prevWordBtn.disabled = (currentWordIndex === 0); // Disable 'previous' if it's the first word
+            if (showTranslationBtn) showTranslationBtn.classList.remove('hidden'); // Ensure show/hide button is visible
+
+            // Fade-in effect for the word display card (optional)
+            if (wordDisplayCard && wordDisplayCard.style.opacity === '0') {
+                 // Use timeout to apply transition after display: block/flex takes effect
+                 setTimeout(() => {
+                     // Check again in case state changed rapidly (e.g., user clicked fast)
+                     if (wordDisplayCard && currentWordIndex < originalSessionOrder.length && !wordDisplayCard.classList.contains('hidden')) {
+                        wordDisplayCard.style.transition = 'opacity 0.25s ease-in';
+                        wordDisplayCard.style.opacity = '1';
+                    }
+                 }, 50); // Short delay seems sufficient
+            } else if (wordDisplayCard) {
+                // Ensure card is fully visible if not currently fading
+                wordDisplayCard.style.opacity = '1';
+                wordDisplayCard.style.transition = ''; // Remove transition if applied previously
+            }
         }
-        function handleShowTranslation() { if (translationDisplay) translationDisplay.classList.toggle('hidden'); }
-        async function markWordAsEasy() { const wordObj = currentSessionWords?.[currentWordIndex]; if (!firestoreInitialized || !currentUserId || !wordObj?.id) { setSessionMessage('خطأ اتصال أو بيانات.', 'error'); return; } if (markEasyBtn) markEasyBtn.disabled = true; if (markHardBtn) markHardBtn.disabled = true; try { await updateWordStatusFirestore(wordObj.id, 'easy'); goToNextWord(); } catch(error) { if (markEasyBtn) markEasyBtn.disabled = false; if (markHardBtn) markHardBtn.disabled = false; } }
-        function markWordAsHard() { const wordObj = currentSessionWords?.[currentWordIndex]; if (currentWordIndex >= currentSessionWords.length || !wordObj?.englishWord) { if(!wordObj?.englishWord) setSessionMessage("خطأ بيانات.", "error"); goToNextWord(); return; } if (markEasyBtn) markEasyBtn.disabled = true; if (markHardBtn) markHardBtn.disabled = true; if (translationDisplay?.classList.contains('hidden')) { translationDisplay.classList.remove('hidden'); } setTimeout(goToNextWord, 1000); }
-        function goToNextWord() { currentWordIndex++; if (wordDisplayCard) { wordDisplayCard.style.opacity = '0'; wordDisplayCard.style.transition = 'opacity 0.15s ease-out'; } setTimeout(() => { displayCurrentWord(); if (wordDisplayCard && !wordDisplayCard.classList.contains('hidden')) { wordDisplayCard.style.transition = 'opacity 0.25s ease-in'; wordDisplayCard.style.opacity = '1'; } }, 150); }
+
+        /** Toggles the visibility of the translation text. */
+        function handleShowTranslation() {
+            if (translationDisplay) {
+                translationDisplay.classList.toggle('hidden');
+            }
+        }
+
+        /** Marks the current word as 'easy' in Firestore and moves to the next word. */
+        async function markWordAsEasy() {
+            const wordObj = originalSessionOrder?.[currentWordIndex];
+            // Validate state and word object
+            if (!firestoreInitialized || !currentUserId || !wordObj?.id) {
+                setSessionMessage('خطأ اتصال أو بيانات كلمة.', 'error');
+                return;
+            }
+
+            // Disable buttons during async operation
+            if (markEasyBtn) markEasyBtn.disabled = true;
+            if (markHardBtn) markHardBtn.disabled = true;
+            if (prevWordBtn) prevWordBtn.disabled = true; // Disable prev button too
+
+            try {
+                 await updateWordStatusFirestore(wordObj.id, 'easy'); // Update status in DB
+                 goToNextWordInternal(); // Move to the next word after successful update
+            } catch(error) {
+                 // Re-enable buttons if update failed, respecting prev button state
+                 if (markEasyBtn) markEasyBtn.disabled = false;
+                 if (markHardBtn) markHardBtn.disabled = false;
+                 if (prevWordBtn) prevWordBtn.disabled = (currentWordIndex === 0);
+                 // Error message already set by updateWordStatusFirestore
+            }
+        }
+
+        /** Marks the current word as 'hard' (no DB update needed) and moves to the next word after a delay. */
+        function markWordAsHard() {
+            const wordObj = originalSessionOrder?.[currentWordIndex];
+            // Validate index and word data
+            if (currentWordIndex >= originalSessionOrder.length || !wordObj?.englishWord) {
+                if(!wordObj?.englishWord) setSessionMessage("خطأ بيانات كلمة.", "error");
+                // If invalid data, just try to move to the next word
+                goToNextWordInternal();
+                return;
+            }
+
+            // Disable buttons during the transition delay
+            if (markEasyBtn) markEasyBtn.disabled = true;
+            if (markHardBtn) markHardBtn.disabled = true;
+            if (prevWordBtn) prevWordBtn.disabled = true;
+
+            // Show translation if hidden
+            if (translationDisplay?.classList.contains('hidden')) {
+                translationDisplay.classList.remove('hidden');
+            }
+
+            // No DB update needed as the word is already 'hard' or stays 'hard'
+            // Move to the next word after a short delay to allow user to see translation/feedback
+            setTimeout(goToNextWordInternal, 800); // Delay in milliseconds
+        }
+
+        /** Internal function to advance to the next word index and trigger display update. */
+        function goToNextWordInternal() {
+             currentWordIndex++; // Increment index first
+             // Fade out the current word card (optional visual effect)
+             if (wordDisplayCard) {
+                 wordDisplayCard.style.transition = 'opacity 0.15s ease-out';
+                 wordDisplayCard.style.opacity = '0';
+             }
+             // After the fade-out duration, display the next word (or end session)
+             setTimeout(() => {
+                displayCurrentWord(); // displayCurrentWord handles index checking and endSession call
+             }, 150); // Match fade-out duration
+        }
+
+        /** Handles the 'Previous' button click: decrements index and displays the previous word. */
+        function goToPreviousWord() {
+             // Check if we are not already at the first word
+             if (currentWordIndex > 0) {
+                 currentWordIndex--; // Decrement index
+                 // Fade out the current word card (optional visual effect)
+                 if (wordDisplayCard) {
+                     wordDisplayCard.style.transition = 'opacity 0.15s ease-out';
+                     wordDisplayCard.style.opacity = '0';
+                 }
+                // After the fade-out duration, display the previous word
+                setTimeout(() => {
+                    displayCurrentWord();
+                 }, 150); // Match fade-out duration
+             } else {
+                 console.log("[Review] Already at the first word.");
+                 // Optionally provide feedback, though button should be disabled
+                 if(prevWordBtn) prevWordBtn.disabled = true; // Ensure it's disabled
+             }
+        }
+
+        /** Ends the current review session, fetches remaining hard words, and updates the UI. */
         async function endSession() {
              console.log("[Review] endSession called.");
-             if (flashcardContainer) flashcardContainer.classList.add('hidden'); if (wordDisplayCard) wordDisplayCard.classList.add('hidden'); if (mainHeading) mainHeading.classList.remove('hidden');
-             setSessionMessage('اكتملت الجلسة!', 'success');
-             if (!firestoreInitialized || !currentUserId) { setSessionMessage('اكتملت الجلسة (لا يمكن عرض القائمة المتبقية).', 'warning'); return; }
+             // Clear session state
+             originalSessionOrder = []; // Clear the stored order
+             currentSessionWords = []; // Clear current words (though likely empty)
+             currentWordIndex = 0; // Reset index
+
+             // Hide review UI elements
+             if (flashcardContainer) flashcardContainer.classList.add('hidden');
+             if (wordDisplayCard) wordDisplayCard.classList.add('hidden');
+             if (mainHeading) mainHeading.classList.remove('hidden'); // Show main heading again
+
+             setSessionMessage('اكتملت الجلسة!', 'success'); // Initial end message
+
+             // Check login status before fetching remaining words
+             if (!firestoreInitialized || !currentUserId) {
+                 setSessionMessage('اكتملت الجلسة (لا يمكن عرض القائمة المتبقية - تحقق من تسجيل الدخول).', 'warning');
+                 return;
+             }
+
+             // Fetch and display remaining hard words
              setSessionMessage('جاري تحديث قائمة الكلمات الصعبة...', 'info');
              try {
-                 const remainingHardWords = await getHardWordsFirestore(); // Gets objects with new field names
-                 if (remainingHardWords === null) return;
+                 // Fetch the *current* list of hard words from Firestore
+                 const remainingHardWords = await getHardWordsFirestore(); // This fetches *currently* hard words
+                 if (remainingHardWords === null) {
+                    // Error handled in getHardWordsFirestore, message already shown
+                    if (hardWordsListContainer) hardWordsListContainer.classList.add('hidden');
+                    return;
+                 };
+
                  console.log(`[Review] endSession: ${remainingHardWords.length} hard words remaining.`);
                  if (remainingHardWords.length > 0) {
-                     // Format output consistently: English : Arabic
-                     const formattedList = remainingHardWords.map(item => `${item.englishWord} : ${item.arabicTranslation}`).join('\n');
+                     // Format the list: English : Arabic
+                     const formattedList = remainingHardWords
+                        .map(item => `${item.englishWord} : ${item.arabicTranslation}`)
+                        .join('\n');
                      if (hardWordsOutput) hardWordsOutput.value = formattedList;
-                     if (hardWordsListContainer) hardWordsListContainer.classList.remove('hidden');
-                     if (deleteAllHardWordsBtn) deleteAllHardWordsBtn.disabled = false;
-                     setSessionMessage(`اكتملت الجلسة. المتبقي للمراجعة (${remainingHardWords.length}):`, 'info');
+                     if (hardWordsListContainer) hardWordsListContainer.classList.remove('hidden'); // Show the list container
+                     if (deleteAllHardWordsBtn) deleteAllHardWordsBtn.disabled = false; // Enable delete button
+                     setSessionMessage(`اكتملت الجلسة. المتبقي للمراجعة (${remainingHardWords.length}):`, 'info'); // Update message with count
                  } else {
-                     if (hardWordsOutput) hardWordsOutput.value = '';
-                     if (hardWordsListContainer) hardWordsListContainer.classList.add('hidden');
-                     setSessionMessage('ممتاز! أتقنت كل الكلمات.', 'success');
+                     // No hard words left
+                     if (hardWordsOutput) hardWordsOutput.value = ''; // Clear textarea
+                     if (hardWordsListContainer) hardWordsListContainer.classList.add('hidden'); // Hide list container
+                     setSessionMessage('ممتاز! أتقنت كل الكلمات.', 'success'); // Final success message
                  }
-             } catch (error) { console.error("[Review] Error fetching remaining words after session:", error); if (hardWordsListContainer) hardWordsListContainer.classList.add('hidden'); setSessionMessage('اكتملت الجلسة (خطأ في عرض المتبقي).', 'warning'); }
+             } catch (error) {
+                 // Catch unexpected errors during the fetch/display process
+                 console.error("[Review] Error fetching/displaying remaining words after session:", error);
+                 if (hardWordsListContainer) hardWordsListContainer.classList.add('hidden');
+                 setSessionMessage('اكتملت الجلسة (حدث خطأ أثناء عرض الكلمات المتبقية).', 'warning');
+             }
         }
 
-        // --- Hard Words List Functions (Updated for new field names) ---
-        async function handleCopyHardWords() { if (!hardWordsOutput || !copyMessage) return; copyMessage.textContent = ''; const textToCopy = hardWordsOutput.value; if (!textToCopy) { setTemporaryMessage(copyMessage, 'لا توجد كلمات لنسخها.', 'warning', true); return; } if (navigator.clipboard && navigator.clipboard.writeText) { try { await navigator.clipboard.writeText(textToCopy); setTemporaryMessage(copyMessage, 'تم النسخ!', 'success', true); } catch (err) { console.error("Copy failed:", err); setTemporaryMessage(copyMessage, 'فشل النسخ.', 'error', true); trySelectText(hardWordsOutput); } } else { setTemporaryMessage(copyMessage, 'النسخ غير مدعوم.', 'warning', true); trySelectText(hardWordsOutput); } }
-        function trySelectText(element) { try { element.select(); element.setSelectionRange(0, 99999); } catch (e) { console.warn("Fallback select failed:", e); setTemporaryMessage(copyMessage, 'فشل تحديد النص.', 'error', true); } }
-        async function showHardWordsList() {
-             if (!firestoreInitialized || !currentUserId) { showGlobalStatus('يجب تسجيل الدخول أولاً.', 'warning', 3000); return; }
-            showPage('pageReview'); if (flashcardContainer) flashcardContainer.classList.add('hidden'); if (wordDisplayCard) wordDisplayCard.classList.add('hidden'); if (mainHeading) mainHeading.classList.remove('hidden'); if (copyMessage) copyMessage.textContent = ''; if (deleteMessage) deleteMessage.textContent = '';
-            setSessionMessage('جاري تحميل الكلمات الصعبة...', 'info'); if (hardWordsListContainer) hardWordsListContainer.classList.add('hidden');
+        // --- Hard Words List Functions ---
+
+        /** Copies the content of the hard words textarea to the clipboard. */
+        async function handleCopyHardWords() {
+            if (!hardWordsOutput || !copyMessage) return;
+            copyMessage.textContent = ''; // Clear previous copy messages
+            const textToCopy = hardWordsOutput.value;
+
+            if (!textToCopy) {
+                setTemporaryMessage(copyMessage, 'لا توجد كلمات لنسخها.', 'warning', true);
+                return;
+            }
+
+            // Use modern Clipboard API if available
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                try {
+                    await navigator.clipboard.writeText(textToCopy);
+                    setTemporaryMessage(copyMessage, 'تم النسخ إلى الحافظة!', 'success', true);
+                } catch (err) {
+                    console.error("Clipboard API copy failed:", err);
+                    setTemporaryMessage(copyMessage, 'فشل النسخ التلقائي.', 'error', true);
+                    // Fallback: Try selecting the text
+                    trySelectText(hardWordsOutput);
+                }
+            } else {
+                // Fallback for older browsers or insecure contexts
+                setTemporaryMessage(copyMessage, 'النسخ التلقائي غير مدعوم. حاول تحديد النص يدوياً.', 'warning', true);
+                trySelectText(hardWordsOutput);
+            }
+        }
+
+        /** Fallback function to select text in an element. */
+        function trySelectText(element) {
             try {
-                const hardWords = await getHardWordsFirestore(); // Gets objects with new field names
-                if (hardWords === null) return;
+                element.select(); // Select the text
+                element.setSelectionRange(0, 99999); // For mobile devices
+                // Optionally inform user text is selected
+                setTemporaryMessage(copyMessage, 'تم تحديد النص للنسخ اليدوي.', 'info', true, 4000);
+            } catch (e) {
+                console.warn("Fallback select text failed:", e);
+                // Update message if selection also fails
+                setTemporaryMessage(copyMessage, 'فشل تحديد النص للنسخ.', 'error', true);
+            }
+        }
+
+        /** Fetches and displays the list of hard words without starting a review session. */
+        async function showHardWordsList() {
+             if (!firestoreInitialized || !currentUserId) {
+                 showGlobalStatus('يجب تسجيل الدخول أولاً لعرض القائمة.', 'warning', 3000);
+                 return;
+             }
+
+            // Switch to review page but hide the flashcard part
+            showPage('pageReview');
+            if (flashcardContainer) flashcardContainer.classList.add('hidden');
+            if (wordDisplayCard) wordDisplayCard.classList.add('hidden');
+            if (mainHeading) mainHeading.classList.remove('hidden'); // Show heading when just viewing list
+            if (copyMessage) copyMessage.textContent = ''; // Clear messages
+            if (deleteMessage) deleteMessage.textContent = '';
+
+            setSessionMessage('جاري تحميل قائمة الكلمات الصعبة...', 'info');
+            if (hardWordsListContainer) hardWordsListContainer.classList.add('hidden'); // Hide until loaded
+
+            try {
+                // Fetch *currently* hard words (don't shuffle here)
+                const hardWords = await getHardWordsFirestore(); // Note: This returns shuffled words by default
+                // If specific order is needed here, fetch without shuffling or re-sort
+                 if (hardWords === null) return; // Error handled in fetch
+
                 if (hardWords.length > 0) {
-                     // Format output consistently: English : Arabic
-                    const formattedList = hardWords.map(item => `${item.englishWord} : ${item.arabicTranslation}`).join('\n');
+                     // Format list: English : Arabic
+                    const formattedList = hardWords
+                        .sort((a, b) => a.englishWord.localeCompare(b.englishWord)) // Optional: Sort alphabetically
+                        .map(item => `${item.englishWord} : ${item.arabicTranslation}`)
+                        .join('\n');
                     if (hardWordsOutput) hardWordsOutput.value = formattedList;
-                    if (hardWordsListContainer) hardWordsListContainer.classList.remove('hidden');
-                    if (deleteAllHardWordsBtn) deleteAllHardWordsBtn.disabled = false;
-                    setSessionMessage(`الكلمات الصعبة (${hardWords.length}):`, 'info');
+                    if (hardWordsListContainer) hardWordsListContainer.classList.remove('hidden'); // Show list
+                    if (deleteAllHardWordsBtn) deleteAllHardWordsBtn.disabled = false; // Enable delete
+                    setSessionMessage(`قائمة الكلمات الصعبة (${hardWords.length}):`, 'info');
                 } else {
+                    // No hard words found
                     if (hardWordsOutput) hardWordsOutput.value = '';
                     if (hardWordsListContainer) hardWordsListContainer.classList.add('hidden');
-                    setSessionMessage('لا توجد كلمات صعبة حالياً.', 'success');
+                    setSessionMessage('لا توجد كلمات صعبة حالياً في قائمتك.', 'success');
                 }
-            } catch (error) { console.error("[UI] Error showing hard words list:", error); if (hardWordsListContainer) hardWordsListContainer.classList.add('hidden'); setSessionMessage('خطأ في عرض الكلمات الصعبة.', 'error'); }
-        }
-        async function handleDeleteAllHardWords() {
-            if (!firestoreInitialized || !currentUserId) { setTemporaryMessage(deleteMessage, 'يجب تسجيل الدخول أولاً.', 'error', true); return; }
-            if (!hardWordsOutput || hardWordsOutput.value.trim() === '') { setTemporaryMessage(deleteMessage, 'لا توجد كلمات لحذفها.', 'info', true); return; }
-            const confirmation = confirm("هل أنت متأكد من رغبتك في حذف جميع الكلمات الصعبة؟ لا يمكن التراجع عن هذا الإجراء.");
-            if (!confirmation) { setTemporaryMessage(deleteMessage, 'تم إلغاء الحذف.', 'info', true); return; }
-            toggleButtonLoading(deleteAllHardWordsBtn, deleteBtnText, deleteBtnLoader, true, 'جار الحذف...');
-            setTemporaryMessage(deleteMessage, 'جاري حذف الكلمات...', 'info', true);
-            try {
-                const result = await deleteAllHardWordsFirestore();
-                if (result.success) { setTemporaryMessage(deleteMessage, `تم حذف ${result.deletedCount} كلمة بنجاح.`, 'success', true, 5000); if (hardWordsOutput) hardWordsOutput.value = ''; if (hardWordsListContainer) hardWordsListContainer.classList.add('hidden'); setSessionMessage('تم حذف جميع الكلمات الصعبة.', 'success'); }
-                else { setTemporaryMessage(deleteMessage, `فشل الحذف: ${result.message}`, 'error', true, 7000); }
-            } catch (error) { console.error("[UI] Unexpected error during deletion process:", error); setTemporaryMessage(deleteMessage, 'حدث خطأ غير متوقع أثناء الحذف.', 'error', true, 7000); }
-            finally { toggleButtonLoading(deleteAllHardWordsBtn, deleteBtnText, deleteBtnLoader, false); }
+            } catch (error) {
+                console.error("[UI] Error showing hard words list:", error);
+                if (hardWordsListContainer) hardWordsListContainer.classList.add('hidden');
+                setSessionMessage('حدث خطأ أثناء عرض قائمة الكلمات الصعبة.', 'error');
+            }
         }
 
-        // --- Initialization and Event Listeners ---
+        /** Handles the click on the 'Delete All Hard Words' button. */
+        async function handleDeleteAllHardWords() {
+            if (!firestoreInitialized || !currentUserId) {
+                setTemporaryMessage(deleteMessage, 'يجب تسجيل الدخول أولاً للحذف.', 'error', true);
+                return;
+            }
+            // Check if there's actually text in the output area (as a proxy for words existing)
+            if (!hardWordsOutput || hardWordsOutput.value.trim() === '') {
+                setTemporaryMessage(deleteMessage, 'لا توجد كلمات لحذفها في القائمة المعروضة.', 'info', true);
+                return;
+            }
+
+            // Confirmation dialog
+            const confirmation = confirm("تنبيه: هل أنت متأكد من رغبتك في حذف جميع الكلمات الصعبة؟ لا يمكن التراجع عن هذا الإجراء.");
+            if (!confirmation) {
+                setTemporaryMessage(deleteMessage, 'تم إلغاء عملية الحذف.', 'info', true);
+                return;
+            }
+
+            // Show loading state
+            toggleButtonLoading(deleteAllHardWordsBtn, deleteBtnText, deleteBtnLoader, true, 'جار الحذف...');
+            setTemporaryMessage(deleteMessage, 'جاري حذف الكلمات...', 'info', true);
+
+            try {
+                const result = await deleteAllHardWordsFirestore(); // Call the Firestore delete function
+                if (result.success) {
+                    setTemporaryMessage(deleteMessage, `تم حذف ${result.deletedCount} كلمة بنجاح.`, 'success', true, 5000);
+                    if (hardWordsOutput) hardWordsOutput.value = ''; // Clear the list display
+                    if (hardWordsListContainer) hardWordsListContainer.classList.add('hidden'); // Hide the container
+                    setSessionMessage('تم حذف جميع الكلمات الصعبة بنجاح.', 'success'); // Update main session message
+                } else {
+                    // Deletion failed, show error message from result
+                    setTemporaryMessage(deleteMessage, `فشل الحذف: ${result.message} (محاولة حذف ${result.errorCount} كلمة)`, 'error', true, 7000);
+                }
+            } catch (error) {
+                // Catch unexpected errors during the process
+                console.error("[UI] Unexpected error during deletion process:", error);
+                setTemporaryMessage(deleteMessage, 'حدث خطأ غير متوقع أثناء الحذف.', 'error', true, 7000);
+            }
+            finally {
+                // Always reset button loading state
+                toggleButtonLoading(deleteAllHardWordsBtn, deleteBtnText, deleteBtnLoader, false);
+            }
+        }
+
+        // --- Initialization and Event Listeners Setup ---
+
+        /** Assigns references to all needed DOM elements. */
         function assignElementRefs() {
             console.log("[Init] Assigning DOM element references...");
-            authSection=document.getElementById('authSection');loginForm=document.getElementById('loginForm');signupForm=document.getElementById('signupForm');loginEmailInput=document.getElementById('loginEmail');loginPasswordInput=document.getElementById('loginPassword');loginBtn=document.getElementById('loginBtn');loginMessage=document.getElementById('loginMessage');showSignupBtn=document.getElementById('showSignupBtn');signupEmailInput=document.getElementById('signupEmail');signupPasswordInput=document.getElementById('signupPassword');signupBtn=document.getElementById('signupBtn');signupMessage=document.getElementById('signupMessage');showLoginBtn=document.getElementById('showLoginBtn');authStatus=document.getElementById('authStatus');userEmailDisplay=document.getElementById('userEmailDisplay');logoutBtn=document.getElementById('logoutBtn');mainAppContainer=document.getElementById('mainAppContainer');globalStatus=document.getElementById('globalStatus');mainHeading=document.querySelector('.heading-1');pageAddWords=document.getElementById('pageAddWords');pageReview=document.getElementById('pageReview');gotoAddBtn_FromReview=document.getElementById('gotoAddBtn_FromReview');gotoReviewBtn_FromAdd=document.getElementById('gotoReviewBtn_FromAdd');bulkInput=document.getElementById('bulkInput');pasteBtn=document.getElementById('pasteBtn');pasteMessage=document.getElementById('pasteMessage');addBulkBtn=document.getElementById('addBulkBtn');addBtnText=document.getElementById('addBtnText');addBtnLoader=document.getElementById('addBtnLoader');addMessage=document.getElementById('addMessage');wordDisplayCard=document.getElementById('wordDisplayCard');wordDisplayLarge=document.getElementById('wordDisplayLarge');flashcardContainer=document.getElementById('flashcardContainer');progressDisplay=document.getElementById('progressDisplay');translationDisplay=document.getElementById('translationDisplay');showTranslationBtn=document.getElementById('showTranslationBtn');difficultyButtonsContainer=document.getElementById('difficultyButtonsContainer');markEasyBtn=document.getElementById('markEasyBtn');markHardBtn=document.getElementById('markHardBtn');sessionMessage=document.getElementById('sessionMessage');hardWordsListContainer=document.getElementById('hardWordsListContainer');hardWordsOutput=document.getElementById('hardWordsOutput');copyHardWordsBtn=document.getElementById('copyHardWordsBtn');copyMessage=document.getElementById('copyMessage');gotoHardWordsBtn=document.getElementById('gotoHardWordsBtn');deleteAllHardWordsBtn=document.getElementById('deleteAllHardWordsBtn');deleteBtnText=document.getElementById('deleteBtnText');deleteBtnLoader=document.getElementById('deleteBtnLoader');deleteMessage=document.getElementById('deleteMessage');
-            console.log("[Init] Element assignment complete.");
+            try {
+                authSection=document.getElementById('authSection');
+                loginForm=document.getElementById('loginForm');
+                signupForm=document.getElementById('signupForm');
+                loginEmailInput=document.getElementById('loginEmail');
+                loginPasswordInput=document.getElementById('loginPassword');
+                loginBtn=document.getElementById('loginBtn');
+                loginMessage=document.getElementById('loginMessage');
+                showSignupBtn=document.getElementById('showSignupBtn');
+                signupEmailInput=document.getElementById('signupEmail');
+                signupPasswordInput=document.getElementById('signupPassword');
+                signupBtn=document.getElementById('signupBtn');
+                signupMessage=document.getElementById('signupMessage');
+                showLoginBtn=document.getElementById('showLoginBtn');
+                fixedHeader=document.getElementById('fixedHeader'); // New Ref
+                authStatus=document.getElementById('authStatus');
+                userEmailDisplay=document.getElementById('userEmailDisplay');
+                logoutBtn=document.getElementById('logoutBtn');
+                mainAppContainer=document.getElementById('mainAppContainer');
+                globalStatus=document.getElementById('globalStatus');
+                mainHeading=document.querySelector('.heading-1'); // Use querySelector for class
+                pageAddWords=document.getElementById('pageAddWords');
+                pageReview=document.getElementById('pageReview');
+                gotoAddBtn_FromReview=document.getElementById('gotoAddBtn_FromReview');
+                gotoReviewBtn_FromAdd=document.getElementById('gotoReviewBtn_FromAdd');
+                bulkInput=document.getElementById('bulkInput');
+                pasteBtn=document.getElementById('pasteBtn');
+                pasteMessage=document.getElementById('pasteMessage');
+                addBulkBtn=document.getElementById('addBulkBtn');
+                addBtnText=document.getElementById('addBtnText');
+                addBtnLoader=document.getElementById('addBtnLoader');
+                addMessage=document.getElementById('addMessage');
+                wordDisplayCard=document.getElementById('wordDisplayCard');
+                wordDisplayLarge=document.getElementById('wordDisplayLarge');
+                flashcardContainer=document.getElementById('flashcardContainer');
+                progressDisplay=document.getElementById('progressDisplay');
+                translationDisplay=document.getElementById('translationDisplay');
+                showTranslationBtn=document.getElementById('showTranslationBtn');
+                prevWordBtn=document.getElementById('prevWordBtn'); // New Ref
+                difficultyButtonsContainer=document.getElementById('difficultyButtonsContainer');
+                markEasyBtn=document.getElementById('markEasyBtn');
+                markHardBtn=document.getElementById('markHardBtn');
+                sessionMessage=document.getElementById('sessionMessage');
+                hardWordsListContainer=document.getElementById('hardWordsListContainer');
+                hardWordsOutput=document.getElementById('hardWordsOutput');
+                copyHardWordsBtn=document.getElementById('copyHardWordsBtn');
+                copyMessage=document.getElementById('copyMessage');
+                gotoHardWordsBtn=document.getElementById('gotoHardWordsBtn');
+                deleteAllHardWordsBtn=document.getElementById('deleteAllHardWordsBtn');
+                deleteBtnText=document.getElementById('deleteBtnText');
+                deleteBtnLoader=document.getElementById('deleteBtnLoader');
+                deleteMessage=document.getElementById('deleteMessage');
+                console.log("[Init] Element assignment complete.");
+            } catch (error) {
+                console.error("[Init] Error assigning element references:", error);
+                showGlobalStatus("خطأ فادح: فشل تحميل عناصر الواجهة.", "error", 0);
+                // Optionally disable interactions if critical elements are missing
+            }
         }
+
+        /** Sets up event listeners for authentication UI elements. */
         function setupAuthUI() {
              console.log("[Init] Setting up Auth UI listeners...");
-            if (showSignupBtn) showSignupBtn.addEventListener('click', (e) => { e.preventDefault(); if(loginForm) loginForm.classList.add('hidden'); if(signupForm) signupForm.classList.remove('hidden'); if(loginMessage) loginMessage.textContent = ''; });
-            if (showLoginBtn) showLoginBtn.addEventListener('click', (e) => { e.preventDefault(); if(signupForm) signupForm.classList.add('hidden'); if(loginForm) loginForm.classList.remove('hidden'); if(signupMessage) signupMessage.textContent = ''; });
-             if (loginForm) loginForm.addEventListener('submit', (e) => { e.preventDefault(); handleLogin(e); });
-             if (signupForm) signupForm.addEventListener('submit', (e) => { e.preventDefault(); handleSignup(e); });
+             // Toggle between Login and Signup forms
+            if (showSignupBtn) showSignupBtn.addEventListener('click', (e) => {
+                e.preventDefault(); // Prevent default link behavior
+                if(loginForm) loginForm.classList.add('hidden');
+                if(signupForm) signupForm.classList.remove('hidden');
+                if(loginMessage) loginMessage.textContent = ''; // Clear messages when switching
+            });
+            if (showLoginBtn) showLoginBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if(signupForm) signupForm.classList.add('hidden');
+                if(loginForm) loginForm.classList.remove('hidden');
+                if(signupMessage) signupMessage.textContent = ''; // Clear messages
+            });
+             // Form submission listeners
+             if (loginForm) loginForm.addEventListener('submit', (e) => {
+                 e.preventDefault(); // Prevent page reload
+                 handleLogin(e);
+             });
+             if (signupForm) signupForm.addEventListener('submit', (e) => {
+                 e.preventDefault();
+                 handleSignup(e);
+             });
+             // Logout button listener
             if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
             console.log("[Init] Auth UI listeners setup complete.");
         }
+
+        /** Sets up event listeners for the main application UI elements. */
         function setupAppUI() {
             console.log("[Init] Setting up App UI listeners...");
+             // Navigation buttons
              if (gotoAddBtn_FromReview) gotoAddBtn_FromReview.addEventListener('click', () => showPage('pageAddWords'));
              if (gotoReviewBtn_FromAdd) gotoReviewBtn_FromAdd.addEventListener('click', startSession);
+
+             // Word adding controls
              if (pasteBtn) pasteBtn.addEventListener('click', handlePaste);
              if (addBulkBtn) addBulkBtn.addEventListener('click', addWordsFromText); // Main add function
+             if (bulkInput) bulkInput.addEventListener('input', checkAddButtonState); // Enable/disable add button on input
+
+             // Review controls
              if (showTranslationBtn) showTranslationBtn.addEventListener('click', handleShowTranslation);
              if (markEasyBtn) markEasyBtn.addEventListener('click', markWordAsEasy);
              if (markHardBtn) markHardBtn.addEventListener('click', markWordAsHard);
+             if (prevWordBtn) prevWordBtn.addEventListener('click', goToPreviousWord); // Previous word button
+
+             // Hard words list controls
              if (copyHardWordsBtn) copyHardWordsBtn.addEventListener('click', handleCopyHardWords);
-             if (gotoHardWordsBtn) gotoHardWordsBtn.addEventListener('click', showHardWordsList);
+             if (gotoHardWordsBtn) gotoHardWordsBtn.addEventListener('click', showHardWordsList); // Button to show the list
              if (deleteAllHardWordsBtn) deleteAllHardWordsBtn.addEventListener('click', handleDeleteAllHardWords);
+
              console.log("[Init] App UI listeners setup complete.");
         }
 
-        // --- Main Execution Flow ---
+        // --- Main Execution Flow (Runs on DOMContentLoaded) ---
         document.addEventListener('DOMContentLoaded', () => {
             console.log("[Init] DOMContentLoaded event fired.");
-            assignElementRefs();
+            assignElementRefs(); // Get references to all elements first
+
+            // --- Initialize Firebase ---
             try {
                 console.log("[Init] Initializing Firebase...");
-                if (!firebaseConfig.apiKey || !firebaseConfig.projectId || !firebaseConfig.authDomain) { throw new Error("Firebase config is missing required fields."); }
-                app = initializeApp(firebaseConfig); db = getFirestore(app); auth = getAuth(app);
-                firestoreInitialized = true; authInitialized = true;
+                // Basic check for essential config keys
+                if (!firebaseConfig.apiKey || !firebaseConfig.projectId || !firebaseConfig.authDomain) {
+                    throw new Error("Firebase config is missing required fields (apiKey, projectId, authDomain).");
+                }
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                firestoreInitialized = true;
+                authInitialized = true;
                 console.log("[Init] Firebase initialized successfully.");
-                showGlobalStatus('Firebase جاهز.', 'success', 2000);
+                // Show temporary success message only if init succeeds
+                showGlobalStatus('Firebase جاهز للاتصال.', 'success', 2000);
             } catch (error) {
                 console.error("[Init] FATAL: Firebase Initialization Error:", error);
-                firestoreInitialized = false; authInitialized = false;
-                showGlobalStatus(`فشل تهيئة Firebase: ${error.message}.`, 'error', 0);
-                try { document.querySelectorAll('button, input, textarea').forEach(el => el.disabled = true); } catch (e) {} return;
+                firestoreInitialized = false;
+                authInitialized = false;
+                // Show permanent error message if Firebase fails to initialize
+                showGlobalStatus(`فشل تهيئة Firebase: ${error.message}. يرجى التحقق من الإعدادات.`, 'error', 0);
+                // Optionally disable all interactions if Firebase is crucial
+                try {
+                    document.querySelectorAll('button, input, textarea').forEach(el => el.disabled = true);
+                } catch (e) {
+                    console.error("Error disabling elements after Firebase init failure:", e);
+                }
+                return; // Stop further execution if Firebase init fails
             }
-            setupAuthUI(); setupAppUI();
+
+            // --- Setup UI Listeners ---
+            setupAuthUI();
+            setupAppUI();
+            checkAddButtonState(); // Set initial state for the Add button (should be disabled)
+
+            // --- Firebase Auth State Listener ---
             console.log("[Init] Setting up onAuthStateChanged listener.");
             onAuthStateChanged(auth, (user) => {
-                console.log("[Auth] onAuthStateChanged triggered."); hideGlobalStatus();
+                console.log("[Auth] onAuthStateChanged triggered.");
+                hideGlobalStatus(); // Hide any persistent status messages on auth change
+
                 if (user) {
-                    console.log("[Auth] State Change: User IS signed in -", user.uid); currentUserId = user.uid;
-                    if (userEmailDisplay) userEmailDisplay.textContent = user.email || 'المستخدم';
-                    if (authSection) authSection.classList.add('hidden'); if (mainAppContainer) { mainAppContainer.classList.remove('hidden'); mainAppContainer.style.opacity = '1';} if (gotoHardWordsBtn) gotoHardWordsBtn.classList.remove('hidden');
-                    currentSessionWords = []; currentWordIndex = 0; if (hardWordsListContainer) hardWordsListContainer.classList.add('hidden'); if (sessionMessage) sessionMessage.textContent = ''; if (addMessage) addMessage.textContent = ''; if (bulkInput) bulkInput.value = ''; if (copyMessage) copyMessage.textContent = ''; if (deleteMessage) deleteMessage.textContent = '';
-                    showPage('pageAddWords');
+                    // --- User is signed in ---
+                    console.log("[Auth] State Change: User IS signed in -", user.uid);
+                    currentUserId = user.uid; // Store user ID
+
+                    // Update UI for logged-in state
+                    if (userEmailDisplay) userEmailDisplay.textContent = user.email || 'المستخدم'; // Display email
+                    if (fixedHeader) fixedHeader.classList.remove('hidden'); // Show fixed header
+                    if (authSection) authSection.classList.add('hidden'); // Hide auth forms
+                    if (mainAppContainer) {
+                        mainAppContainer.classList.remove('hidden'); // Show main app
+                        mainAppContainer.style.opacity = '1'; // Ensure visible
+                    }
+                    if (gotoHardWordsBtn) gotoHardWordsBtn.classList.remove('hidden'); // Show floating button
+
+                    // Reset application state for the logged-in user
+                    currentSessionWords = [];
+                    originalSessionOrder = [];
+                    currentWordIndex = 0;
+                    if (hardWordsListContainer) hardWordsListContainer.classList.add('hidden'); // Hide list initially
+                    // Clear messages
+                    if (sessionMessage) sessionMessage.textContent = '';
+                    if (addMessage) addMessage.textContent = '';
+                    if (bulkInput) bulkInput.value = ''; // Clear input area
+                    if (copyMessage) copyMessage.textContent = '';
+                    if (deleteMessage) deleteMessage.textContent = '';
+                    checkAddButtonState(); // Ensure add button is disabled after clearing input
+                    showPage('pageAddWords'); // Start on the add words page
+
                 } else {
-                    console.log("[Auth] State Change: User IS signed out."); currentUserId = null;
-                    if (mainAppContainer) mainAppContainer.classList.add('hidden'); if (authSection) authSection.classList.remove('hidden'); if (signupForm) signupForm.classList.add('hidden'); if (loginForm) loginForm.classList.remove('hidden'); if (loginMessage) loginMessage.textContent = ''; if (signupMessage) signupMessage.textContent = '';
-                    currentSessionWords = []; currentWordIndex = 0; if (gotoHardWordsBtn) gotoHardWordsBtn.classList.add('hidden'); if (hardWordsListContainer) hardWordsListContainer.classList.add('hidden'); if (sessionMessage) sessionMessage.textContent = ''; if (addMessage) addMessage.textContent = ''; if (bulkInput) bulkInput.value = ''; if (copyMessage) copyMessage.textContent = ''; if (deleteMessage) deleteMessage.textContent = '';
+                    // --- User is signed out ---
+                    console.log("[Auth] State Change: User IS signed out.");
+                    currentUserId = null; // Clear user ID
+
+                    // Update UI for logged-out state
+                    if (fixedHeader) fixedHeader.classList.add('hidden'); // Hide fixed header
+                    if (mainAppContainer) mainAppContainer.classList.add('hidden'); // Hide main app
+                    if (authSection) authSection.classList.remove('hidden'); // Show auth forms
+                    // Reset forms to login view
+                    if (signupForm) signupForm.classList.add('hidden');
+                    if (loginForm) loginForm.classList.remove('hidden');
+                    if (loginMessage) loginMessage.textContent = ''; // Clear auth messages
+                    if (signupMessage) signupMessage.textContent = '';
+
+                    // Reset application state
+                    currentSessionWords = [];
+                    originalSessionOrder = [];
+                    currentWordIndex = 0;
+                    if (gotoHardWordsBtn) gotoHardWordsBtn.classList.add('hidden'); // Hide floating button
+                    if (hardWordsListContainer) hardWordsListContainer.classList.add('hidden');
+                    // Clear messages and input
+                    if (sessionMessage) sessionMessage.textContent = '';
+                    if (addMessage) addMessage.textContent = '';
+                    if (bulkInput) bulkInput.value = '';
+                    if (copyMessage) copyMessage.textContent = '';
+                    if (deleteMessage) deleteMessage.textContent = '';
+                    checkAddButtonState(); // Ensure add button is disabled
                 }
-            }, (error) => { console.error("[Auth] Error in onAuthStateChanged listener:", error); showGlobalStatus('خطأ في مراقبة حالة المصادقة.', 'error', 0); });
-            console.log("[Init] Initialization script complete. Waiting for events...");
+            }, (error) => {
+                // Handle errors in the auth state listener itself
+                console.error("[Auth] Error in onAuthStateChanged listener:", error);
+                showGlobalStatus('خطأ في مراقبة حالة المصادقة.', 'error', 0); // Show persistent error
+            });
+
+            console.log("[Init] Initialization script complete. Waiting for user interactions...");
         }); // End DOMContentLoaded
     </script>
 </body>
 </html>
 
+هذا هو الكود الكامل للتطبيق كما تم تعديله بناءً على طلباتك السابقة. يمكنك نسخ هذا المحتوى بالكامل ولصقه في ملف نصي جديد، ثم حفظه بامتداد .html (مثل word_review.html). بعد ذلك، يمكنك فتح هذا الملف في متصفح الويب الخاص بك لاستخدام الأداة.
+ملاحظة هامة: تأكد من استبدال قيم YOUR_API_KEY, YOUR_AUTH_DOMAIN, إلخ، في قسم firebaseConfig داخل الكود بمعلومات مشروع Firebase الخاص بك لكي يعمل الاتصال بقاعدة البيانات والمصادقة بشكل صحيح.

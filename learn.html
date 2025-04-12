@@ -185,7 +185,14 @@
         #globalStatus.message-success { background-color: var(--success-color); color: white; }
         #globalStatus.message-warning { background-color: #d97706; color: white; }
         #globalStatus.message-info { background-color: var(--bg-dark-tertiary); color: var(--text-light-primary); }
-        .hard-words-button-group { display: flex; gap: 0.5rem; margin-top: 0.5rem; justify-content: flex-start; }
+
+        /* --- MODIFIED: Center buttons --- */
+        .hard-words-button-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            justify-content: center; /* Changed from flex-start */
+        }
 
         /* --- Specific Button Style Updates --- */
         #gotoReviewBtn_FromAdd {
@@ -341,15 +348,15 @@ World	عالم
             getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged
         } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 
-        // --- Firebase Configuration (Replace with your actual config) ---
+        // --- Firebase Configuration (UPDATED) ---
         const firebaseConfig = {
-             apiKey: "YOUR_API_KEY", // ADD YOUR FIREBASE API KEY HERE
-             authDomain: "YOUR_AUTH_DOMAIN", // ADD YOUR FIREBASE AUTH DOMAIN HERE
-             projectId: "YOUR_PROJECT_ID", // ADD YOUR FIREBASE PROJECT ID HERE
-             storageBucket: "YOUR_STORAGE_BUCKET", // ADD YOUR FIREBASE STORAGE BUCKET HERE
-             messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // ADD YOUR FIREBASE MESSAGING SENDER ID HERE
-             appId: "YOUR_APP_ID", // ADD YOUR FIREBASE APP ID HERE
-             measurementId: "YOUR_MEASUREMENT_ID" // Optional: ADD YOUR MEASUREMENT ID HERE
+             apiKey: "AIzaSyAunLxvASN6Cbsa_Nc6l78_5lMhe5fP2Qg",
+             authDomain: "momtn-ecab7.firebaseapp.com",
+             projectId: "momtn-ecab7",
+             storageBucket: "momtn-ecab7.appspot.com",
+             messagingSenderId: "98544311111",
+             appId: "1:98544311111:web:0158668f45ae34818fca62",
+             measurementId: "G-W164SZBMDP"
         };
 
         // --- Firebase Initialization Variables ---
@@ -1652,6 +1659,3 @@ World	عالم
     </script>
 </body>
 </html>
-
-هذا هو الكود الكامل للتطبيق كما تم تعديله بناءً على طلباتك السابقة. يمكنك نسخ هذا المحتوى بالكامل ولصقه في ملف نصي جديد، ثم حفظه بامتداد .html (مثل word_review.html). بعد ذلك، يمكنك فتح هذا الملف في متصفح الويب الخاص بك لاستخدام الأداة.
-ملاحظة هامة: تأكد من استبدال قيم YOUR_API_KEY, YOUR_AUTH_DOMAIN, إلخ، في قسم firebaseConfig داخل الكود بمعلومات مشروع Firebase الخاص بك لكي يعمل الاتصال بقاعدة البيانات والمصادقة بشكل صحيح.

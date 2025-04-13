@@ -333,8 +333,7 @@
     });
 
   </script>
-  <style>
-    /* --- جميع تنسيقات CSS تبقى كما هي تماماً --- */
+   <style>
     body {
       font-family: Arial, sans-serif;
       text-align: center;
@@ -384,7 +383,6 @@
       transition: all 0.3s ease;
       border: 2px solid #cfcfcf88; /* إطار أسود فراني */
       animation: bounce 2s infinite;
-      z-index: 100; /* التأكد من أنه فوق العناصر الأخرى */
     }
 
     .upload-btn:hover {
@@ -467,17 +465,8 @@
     }
 
     .delete-button:hover {
-      opacity: 1; /* جعل الزر مرئياً عند التمرير */
-      background-color: rgba(255, 0, 0, 0.5); /* لون أحمر شفاف عند التمرير */
-      color: white;
-      content: "حذف"; /* يمكن إظهار النص عند التمرير إذا أردت */
-      height: auto; /* إعادة الارتفاع */
-      padding: 5px; /* إضافة padding */
-      border-radius: 5px;
-      bottom: -35px; /* تعديل الموضع قليلاً */
-      transform: translateX(150%); /* تعديل الموضع */
+      opacity: 100; /* زيادة الشفافية عند التمرير */
     }
-
 
     /* تصميم زر التحميل */
     .download-button {
@@ -502,45 +491,26 @@
     .move-button {
       position: absolute;
       top: 10px;
-      background-color: rgba(255, 255, 255, 0.3); /* شفافية أقل ليكون مرئياً */
+      background-color: rgba(255, 255, 255, 0); /* شفافية */
       border: none;
       padding: 5px;
       cursor: pointer;
       border-radius: 50%;
-      font-size: 18px; /* حجم أصغر للأيقونة */
-      line-height: 1;
-      width: 28px; /* تحديد عرض */
-      height: 28px; /* تحديد ارتفاع */
+      font-size: 29px;
       opacity: 0.7;
-      transition: opacity 0.3s ease, background-color 0.3s ease;
-      color: white; /* لون الأيقونة */
-      display: flex; /* لتوسيط المحتوى */
-      justify-content: center; /* توسيط أفقي */
-      align-items: center; /* توسيط عمودي */
+      transition: opacity 0.3s ease;
     }
-
 
     .move-up-button {
-      right: 10px; /* زر الرفع في أعلى يمين */
-      content: ""; /* استخدام رمز سهم لأعلى */
-    }
-     /* تغيير الرمز باستخدام ::before لعدم التأثير على المساحة الفارغة */
-    .move-up-button::before {
-        content: "";
+      right: 10px; /* زر الرفع في أعلى يسار */
     }
 
     .move-down-button {
-      left: 10px; /* زر الإنزال في أعلى يسار */
-      content: "🔽"; /* استخدام رمز سهم لأسفل */
+      left: 10px; /* زر الإنزال في أعلى يمين */
     }
-    .move-down-button::before {
-        content: "";
-    }
-
 
     .move-button:hover {
       opacity: 1;
-      background-color: rgba(255, 165, 0, 0.5); /* تغيير الخلفية عند التمرير */
     }
 
     .image-item {
@@ -548,8 +518,6 @@
       display: inline-block;
       margin: 30px; /* زيادة المسافة بين الصور */
       animation: slideIn 0.5s ease-in-out;
-      vertical-align: top; /* محاذاة العناصر من الأعلى */
-      padding-bottom: 40px; /* إضافة مساحة أسفل الصورة للأزرار */
     }
 
     .image {
@@ -557,19 +525,15 @@
       width: 100%;
       max-width: 200px;
       height: auto;
-      display: block; /* منع مسافات إضافية أسفل الصورة */
     }
 
     #imageContainer {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      align-items: flex-start; /* محاذاة العناصر في بداية المحور المتقاطع */
       padding: 10px;
       width: 100%;
-      max-width: 1200px; /* تحديد عرض أقصى للحاوية */
-      margin: 0 auto; /* توسيط الحاوية */
-      padding-bottom: 80px; /* زيادة المساحة السفلية لتجنب التداخل مع زر الرفع */
+      padding-bottom: 60px;
     }
 
     /* تحسين التوافق مع الأجهزة المحمولة */
@@ -579,90 +543,29 @@
       }
 
       .upload-btn {
-        bottom: 30px; /* رفع الزر قليلاً */
-        left: 50%; /* توسيط الزر */
-        transform: translateX(-50%); /* ضبط التوسيط */
+        bottom: 50px;
+        left: 50px;
         width: 50px;
         height: 50px;
-        font-size: 24px;
+        font-size: 30px;
       }
 
       .image-item {
-        margin: 20px 10px; /* تقليل الهامش الجانبي */
-        width: calc(100% - 20px); /* جعل الصورة تأخذ عرض الشاشة تقريباً */
-        max-width: 330px; /* الحفاظ على حد أقصى للعرض */
-        padding-bottom: 45px; /* زيادة المساحة للأزرار في الجوال */
+        margin: 20px;
       }
 
-       .image-item img { /* التأكد من أن الصورة داخل العنصر تتمدد بشكل صحيح */
-            width: 100%;
-            height: auto;
-       }
-
       #imageContainer {
-        /* flex-direction: column; /* عرض الصور عمودياً في الجوال */
-        /* align-items: center; */
-        padding-bottom: 100px; /* زيادة المساحة أكثر للجوال */
+        flex-direction: column;
+        align-items: center;
       }
 
       .image {
-        max-width: 100%; /* جعل الصورة تتسع لعرض الحاوية */
+        max-width: 330px;
       }
 
       button {
-        /* يمكن تعديل حجم الخط للأزرار هنا إذا لزم الأمر */
-        /* font-size: 14px; */
+        font-size: 15px;
       }
-
-       /* تعديل مواضع الأزرار تحت الصورة في الجوال */
-      .heart-button {
-        bottom: 10px; /* أقرب للصورة */
-        left: 10px;
-      }
-      .count-button {
-        bottom: 10px;
-        left: 100px; /* تعديل الموضع ليلائم زر الحمد لله */
-      }
-       .download-button {
-        bottom: 10px;
-        right: 10px;
-      }
-      .delete-button {
-           /* يمكن إخفاء زر الحذف الصغير تمامًا في الجوال أو تعديل موضعه */
-           bottom: 15px;
-           right: 50%; /* محاولة توسيطه */
-           transform: translateX(50%);
-           opacity: 0.5; /* جعله مرئياً بشكل طفيف */
-           background-color: rgba(255, 0, 0, 0.3);
-           color: white;
-           padding: 2px 5px;
-           font-size: 10px;
-           content:"X"; /* تغيير النص */
-           height: auto;
-           width: auto;
-      }
-       .delete-button:hover {
-           opacity: 1;
-       }
-
-       /* تعديل حجم وموضع أزرار الترتيب */
-        .move-button {
-            top: 5px;
-            width: 24px;
-            height: 24px;
-            font-size: 16px;
-        }
-        .move-up-button {
-            right: 5px;
-        }
-        .move-down-button {
-            left: 5px;
-        }
-
-        /* تعديل تنسيق النص القابل للتعديل */
-        #editableTextContainer {
-            max-width: 90%; /* استخدام نسبة مئوية */
-        }
     }
 
     /* النص في أسفل الصفحة */
@@ -670,13 +573,12 @@
       position: fixed;
       bottom: 0;
       left: 0;
-      width: 100%; /* تعديل العرض ليشمل 100% */
+      width: 00%;
       background-color: #052720; /* أخضر داكن جدًا ليتناسب مع الخلفية */
       color: white;
       font-size: 12px;
       text-align: center;
-      padding: 5px 0; /* تقليل الحشو قليلاً */
-      z-index: 100; /* لضمان ظهوره فوق المحتوى */
+      padding: 10px;
     }
 
     /* أنيميشن ظهور العناصر */
@@ -691,22 +593,15 @@
     }
 
     @keyframes bounce {
-      0%, 100% { transform: translateY(0) translateX(-50%); } /* تعديل ليشمل التوسيط */
-      50% { transform: translateY(-5px) translateX(-50%); } /* تعديل ليشمل التوسيط */
-       /* تعديل للهوفر في الجوال */
-      @media (max-width: 600px) {
-        0%, 100% { transform: translateY(0) translateX(-50%); }
-        50% { transform: translateY(-3px) translateX(-50%); }
-      }
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-1px); }
     }
-
 
     /* أنيميشن للوجو */
     .logo {
-      width: 100px; /* تصغير اللوجو قليلاً */
+      width: 120px;
       height: auto;
-      margin-top: 15px; /* تقليل المسافة العلوية */
-      margin-bottom: 0; /* إزالة الهامش السفلي إذا كان يسبب مسافة */
+      margin-top: 40px; /* مسافة بسيطة بين اللوجو وأعلى الصفحة */
       animation: float 4s ease-in-out infinite;
     }
 
@@ -714,13 +609,13 @@
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-3px); }
     }
-
-    /* --- تنسيقات إضافية للنص القابل للتعديل --- */
+     
+      /* --- تنسيقات إضافية للنص القابل للتعديل --- */
     #editableTextContainer { /* حاوية للنص للمزيد من التحكم */
-        padding: 10px; /* تقليل الحشو الداخلي */
-        border-radius: 12px;
+        padding: 7px; /* تقليل الحشو الداخلي */
+        border-radius: 7px;
         box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* تخفيف الظل */
-        max-width: 90%; /* عرض أقصى بنسبة مئوية */
+        max-width: 40%; /* عرض أقصى بنسبة مئوية */
         width: 600px; /* الحفاظ على عرض محدد للشاشات الكبيرة */
         margin: 10px auto; /* تقليل الهامش العلوي */
         font-family: Arial, sans-serif;
@@ -730,13 +625,13 @@
        
 
      #editableText { /* العنصر القابل للتعديل نفسه */
-        padding: 10px;
+        padding: 70px;
         min-height: 20px; /* ارتفاع أدنى أصغر */
         outline: none; /* إزالة الإطار عند التركيز */
         border-radius: 8px;
         color: #E0E0E0; /* لون نص أفتح قليلاً */
         line-height: 1.6; /* تحسين قابلية القراءة */
-        text-align: right; /* محاذاة النص لليمين */
+        text-align: center; /* محاذاة النص لليمين */
         background: transparent; /* جعل الخلفية الداخلية شفافة */
      }
 
@@ -748,8 +643,7 @@
      #editableText[contenteditable="true"] {
          cursor: text;
      }
-
-
+      
   </style>
 </head>
 <body>

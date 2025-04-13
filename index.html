@@ -612,8 +612,8 @@
      
       /* --- تنسيقات إضافية للنص القابل للتعديل --- */
     #editableTextContainer { /* حاوية للنص للمزيد من التحكم */
-        padding: 7px; /* تقليل الحشو الداخلي */
-        border-radius: 7px;
+        padding: 4px; /* تقليل الحشو الداخلي */
+        border-radius: 4px;
         box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* تخفيف الظل */
         max-width: 40%; /* عرض أقصى بنسبة مئوية */
         width: 600px; /* الحفاظ على عرض محدد للشاشات الكبيرة */
@@ -625,8 +625,8 @@
        
 
      #editableText { /* العنصر القابل للتعديل نفسه */
-        padding: 70px;
-        min-height: 20px; /* ارتفاع أدنى أصغر */
+        padding: 40px;
+        min-height: 10px; /* ارتفاع أدنى أصغر */
         outline: none; /* إزالة الإطار عند التركيز */
         border-radius: 8px;
         color: #E0E0E0; /* لون نص أفتح قليلاً */
@@ -653,10 +653,10 @@
   <div id="editableTextContainer">
       <div id="editableText" contenteditable="true" style="
           /* يمكن إزالة الأنماط المباشرة إذا تم تضمينها في CSS أعلاه */
-          padding: 10px;
-          min-height: 10px;
+          padding: 5px;
+          min-height: 5px;
           outline: none;
-          border-radius: 8px;
+          border-radius: 4px;
           color: white;
       ">
           اكتب هنا...
@@ -667,10 +667,6 @@
   <label for="fileInput" class="upload-btn">+</label>
 
   <div id="imageContainer"></div>
-
-  <div class="footer-text">
-    تطبيق ورود - نسخة تجريبية
-  </div>
 
 </body>
 </html>

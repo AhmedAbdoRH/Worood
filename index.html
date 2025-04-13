@@ -9,7 +9,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
     import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
 
-// 🟢 2. إعداد Firebase
+    // 🟢 2. إعداد Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyBt33Ut9nw0WX-DDRi46pB4klvXB8eNe90",
       authDomain: "rhm-banking.firebaseapp.com",
@@ -18,7 +18,6 @@
       messagingSenderId: "441668952624",
       appId: "1:441668952624:web:f45150dcdc42c6c48203f5",
     };
-
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
@@ -128,18 +127,34 @@
     }
 
     // 🟢 6. تحميل الصورة الأصلية
-    function downloadImage(imageUrl) {
-      // إنشاء عنصر <a> خفي للتحميل
-      const a = document.createElement('a');
-      a.href = imageUrl;
-      
-      // الحصول على اسم الملف من الرابط
-      const filename = imageUrl.split('/').pop().split('?')[0] || 'download.jpg';
-      a.download = filename;
-      
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+    async function downloadImage(imageUrl) {
+      try {
+        // جلب الصورة كـ Blob
+        const response = await fetch(imageUrl, {
+          mode: 'cors', // التعامل مع CORS
+        });
+        const blob = await response.blob();
+
+        // إنشاء رابط تحميل
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+
+        // استخراج اسم الملف أو استخدام اسم افتراضي
+        const filename = imageUrl.split('/').pop().split('?')[0] || 'image.jpg';
+        a.download = filename;
+
+        // محاكاة النقر للتنزيل
+        document.body.appendChild(a);
+        a.click();
+
+        // تنظيف
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error("خطأ أثناء تحميل الصورة:", error);
+        alert("حدث خطأ أثناء تحميل الصورة. حاول مرة أخرى.");
+      }
     }
 
     // 🟢 7. تحريك الصورة لأعلى وتحديث الترتيب في Firestore
@@ -226,7 +241,9 @@
       }
     });
   </script>
-  <style>
+  ව
+
+<style>
     body {
       font-family: Arial, sans-serif;
       text-align: center;

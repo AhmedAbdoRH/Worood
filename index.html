@@ -450,31 +450,23 @@
     }
 
     /* تصميم زر الحذف */
-   .delete-button {
-   position: absolute;
-     bottom: -30px;
-     top: 10px; /* تحديد الموضع من الأعلى */
-     right: 5px; /* تقليل القيمة لتحريكه يمينًا (أقرب للحافة اليمنى) */
-     background-color: rgba(211, 47, 47, 0.5); /* لون أحمر شبه شفاف لجعله مرئيًا */
-     border: none;
-     width: 25px; /* حجم مرئي */
-     height: 25px;
-     border-radius: 50%;
-     color: white;
-     font-size: 14px;
-     line-height: 25px; /* لتوسيط المحتوى عموديًا */
-     text-align: center;
-     cursor: pointer;
-     opacity: 0.7; /* شفافية طفيفة */
-     transition: all 0.3s ease;
-     z-index: 2; /* للتأكد من أنه فوق العناصر الأخرى */
-   }
+    .delete-button {
+      position: absolute;
+      bottom: -20px;
+      transform: translateX(250%);
+      left: 11px;
+      background-color: rgba(255, 255, 255, 0); /* شفافية كاملة */
+      border: none;
+      width: 1px;
+      height: 1px;
+      cursor: pointer;
+      opacity: 0.01; /* الزر غير مرئي */
+      transition: opacity 9s ease;
+    }
 
-   .delete-button:hover {
-     opacity: 1; /* شفافية كاملة عند التمرير */
-     background-color: rgba(211, 47, 47, 0.8); /* أحمر أغمق عند التمرير */
-     transform: scale(1.1); /* تكبير طفيف عند التمرير */
-   }
+    .delete-button:hover {
+      opacity: 100; /* زيادة الشفافية عند التمرير */
+    }
 
     /* تصميم زر التحميل */
     .download-button {

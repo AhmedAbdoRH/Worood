@@ -48,33 +48,19 @@
 
         const img = document.createElement("img");
         img.src = imageUrl;
-        img.style.width = "200px"; // Note: This might be overridden by CSS class .image if you apply it
-        img.style.margin = "10px"; // Note: This might be overridden by CSS class .image-item
-        img.style.borderRadius = "15px"; // Note: This might be overridden by CSS class .image
-        // Consider applying a class instead: img.classList.add("image");
+        img.style.width = "200px";
+        img.style.margin = "10px";
+        img.style.borderRadius = "15px"; // حواف دائرية
         imgDiv.appendChild(img);
-
 
         // زر "الحمد لله" مع التفاعل
         const heartButton = document.createElement("button");
         heartButton.classList.add("heart-button");
         heartButton.innerHTML = "الحمد لله ❤️"; // نص الزر
         heartButton.onclick = function() {
-          // Find the corresponding count button within the same imgDiv
-          const countButton = imgDiv.querySelector('.count-button');
-          if (countButton) {
-            const currentHearts = parseInt(countButton.innerHTML, 10) || 0; // Get current count from button
-            const newHeartCount = currentHearts + 1;
-            updateHeartCount(docId, newHeartCount); // تحديث عدد القلوب في Firestore
-            countButton.innerHTML = newHeartCount; // تحديث العداد في الواجهة فورًا
-          } else {
-             // Fallback or initial load scenario
-            const newHeartCount = heartsCount + 1;
-            updateHeartCount(docId, newHeartCount);
-             // Try updating the button if it exists, otherwise it'll update on next load
-             const maybeCountButton = imgDiv.querySelector('.count-button');
-             if (maybeCountButton) maybeCountButton.innerHTML = newHeartCount;
-          }
+          const newHeartCount = heartsCount + 1;
+          updateHeartCount(docId, newHeartCount); // تحديث عدد القلوب في Firestore
+          countButton.innerHTML = newHeartCount; // تحديث العداد في الواجهة
           heartButton.classList.add("clicked"); // إضافة كلاس للتفاعل
           setTimeout(() => heartButton.classList.remove("clicked"), 300); // إزالة الكلاس بعد 300ms
         };
@@ -105,19 +91,19 @@
         };
         imgDiv.appendChild(downloadButton);
 
-        // زر رفع الصورة لأعلى (أعلى يسار -> CSS now places it right)
+        // زر رفع الصورة لأعلى (أعلى يسار)
         const moveUpButton = document.createElement("button");
         moveUpButton.classList.add("move-button", "move-up-button");
-        moveUpButton.innerHTML = "↑"; // Changed icon for clarity
+        moveUpButton.innerHTML = "  ";
         moveUpButton.onclick = function() {
           moveImageUp(imgDiv);
         };
         imgDiv.appendChild(moveUpButton);
 
-        // زر إنزال الصورة لأسفل (أعلى يمين -> CSS now places it left)
+        // زر إنزال الصورة لأسفل (أعلى يمين)
         const moveDownButton = document.createElement("button");
         moveDownButton.classList.add("move-button", "move-down-button");
-        moveDownButton.innerHTML = "↓"; // Changed icon for clarity
+        moveDownButton.innerHTML = "  ";
         moveDownButton.onclick = function() {
           moveImageDown(imgDiv);
         };
@@ -133,7 +119,6 @@
         try {
             const imageRef = doc(db, "images", docId);
             await updateDoc(imageRef, { hearts: newHeartCount });
-            // No need to reload all images, UI updated instantly
         } catch (error) {
             console.error("Error updating heart count: ", error);
             alert("حدث خطأ أثناء تحديث عدد القلوب.");
@@ -145,13 +130,7 @@
         try {
             const imageRef = doc(db, "images", docId);
             await deleteDoc(imageRef);
-            // Find the image element in the DOM and remove it
-            const imageItemToRemove = document.querySelector(`.image-item[data-doc-id="${docId}"]`);
-            if (imageItemToRemove) {
-                imageItemToRemove.remove();
-            }
-            // No need to call loadImages() anymore, just update order
-            await updateImageOrder();
+            loadImages(); // إعادة تحميل الصور بعد الحذف
         } catch (error) {
             console.error("Error deleting image: ", error);
             alert("حدث خطأ أثناء حذف الصورة.");
@@ -219,20 +198,12 @@
             const updates = []; // مصفوفة لتجميع عمليات التحديث
             for (let i = 0; i < images.length; i++) {
                 const docId = images[i].getAttribute("data-doc-id"); // الحصول على معرف الوثيقة
-                if (docId) { // Ensure docId exists
-                  const imageRef = doc(db, "images", docId);
-                  // إضافة الوعد الخاص بالتحديث إلى المصفوفة
-                  updates.push(updateDoc(imageRef, { order: i }));
-                  images[i].dataset.order = i; // Update data attribute in DOM
-                } else {
-                    console.warn("Image item missing data-doc-id:", images[i]);
-                }
+                const imageRef = doc(db, "images", docId);
+                // إضافة الوعد الخاص بالتحديث إلى المصفوفة
+                updates.push(updateDoc(imageRef, { order: i }));
             }
             // تنفيذ جميع عمليات التحديث معًا
-            if (updates.length > 0) {
-              await Promise.all(updates);
-              console.log("Image order updated in Firestore.");
-            }
+            await Promise.all(updates);
         } catch (error) {
             console.error("Error updating image order: ", error);
             alert("حدث خطأ أثناء تحديث ترتيب الصور.");
@@ -243,7 +214,7 @@
     document.getElementById("fileInput").addEventListener("change", async () => {
       const fileInput = document.getElementById("fileInput");
       if (!fileInput.files.length) {
-        // alert("يرجى اختيار صورة."); // Maybe remove alert, as button click implies intent
+        alert("يرجى اختيار صورة.");
         return;
       }
 
@@ -252,13 +223,6 @@
       formData.append("image", file);
 
       const clientId = "0a4e691f4781a44"; // استبدل بـ Client-ID الصحيح لـ Imgur
-
-       // Show some loading indicator maybe?
-       const uploadButton = document.querySelector('.upload-btn');
-       const originalButtonText = uploadButton.innerHTML;
-       uploadButton.innerHTML = '...'; // Indicate loading
-       uploadButton.disabled = true;
-
 
       try {
         // --- رفع الصورة إلى Imgur ---
@@ -275,83 +239,25 @@
 
         const imageUrl = data.data.link;
 
-        // --- تحديث ترتيب الصور الحالية في Firestore (Optional but good practice)---
-        // If not done here, updateImageOrder after adding the new one handles it
-        // await updateImageOrder(); // Ensure current order is saved before adding new
+        // --- تحديث ترتيب الصور الحالية في Firestore ---
+        const imageContainer = document.getElementById("imageContainer");
+        const images = imageContainer.querySelectorAll(".image-item");
+        const updates = [];
+
+        // زيادة ترتيب الصور الحالية بمقدار 1
+        for (let i = 0; i < images.length; i++) {
+          const docId = images[i].getAttribute("data-doc-id");
+          const imageRef = doc(db, "images", docId);
+          const currentOrder = parseInt(images[i].dataset.order || i, 10); // اقرأ الترتيب الحالي إذا كان متاحاً
+          updates.push(updateDoc(imageRef, { order: currentOrder + 1 }));
+        }
+        // انتظر اكتمال تحديث الترتيب قبل إضافة الجديد
+        await Promise.all(updates);
 
         // --- إضافة الصورة الجديدة بترتيب 0 إلى Firestore ---
-        const newDocRef = await addDoc(collection(db, "images"), { url: imageUrl, hearts: 0, order: -1 }); // Add with temporary order
-        console.log("Image added to Firestore with temp order", newDocRef.id);
+        await addDoc(collection(db, "images"), { url: imageUrl, hearts: 0, order: 0 });
 
-        // --- إضافة الصورة الجديدة إلى الواجهة فورًا في البداية ---
-         const imageContainer = document.getElementById("imageContainer");
-         const imgDiv = document.createElement("div");
-         imgDiv.classList.add("image-item");
-         imgDiv.setAttribute("data-doc-id", newDocRef.id); // Set the new doc ID
-
-         const img = document.createElement("img");
-         img.src = imageUrl;
-         img.style.width = "200px";
-         img.style.margin = "10px";
-         img.style.borderRadius = "15px";
-         // img.classList.add("image"); // Apply class if needed
-         imgDiv.appendChild(img);
-
-         // Add buttons (similar structure as in loadImages)
-         const heartButton = document.createElement("button");
-         heartButton.classList.add("heart-button");
-         heartButton.innerHTML = "الحمد لله ❤️";
-         heartButton.onclick = function() { /* ... same onclick logic ... */
-             const countButton = imgDiv.querySelector('.count-button');
-             if (countButton) {
-                const currentHearts = parseInt(countButton.innerHTML, 10) || 0;
-                const newHeartCount = currentHearts + 1;
-                updateHeartCount(newDocRef.id, newHeartCount);
-                countButton.innerHTML = newHeartCount;
-             }
-             heartButton.classList.add("clicked");
-             setTimeout(() => heartButton.classList.remove("clicked"), 300);
-         };
-         imgDiv.appendChild(heartButton);
-
-         const countButton = document.createElement("button");
-         countButton.classList.add("count-button");
-         countButton.innerHTML = 0; // Initial hearts
-         countButton.disabled = true;
-         imgDiv.appendChild(countButton);
-
-         const deleteButton = document.createElement("button");
-         deleteButton.classList.add("delete-button");
-         deleteButton.innerHTML = "حذف";
-         deleteButton.onclick = function() { deleteImage(newDocRef.id); };
-         imgDiv.appendChild(deleteButton);
-
-         const downloadButton = document.createElement("button");
-         downloadButton.classList.add("download-button");
-         downloadButton.innerHTML = "تنزيل";
-         downloadButton.onclick = function() { downloadImage(imageUrl); };
-         imgDiv.appendChild(downloadButton);
-
-         const moveUpButton = document.createElement("button");
-         moveUpButton.classList.add("move-button", "move-up-button");
-         moveUpButton.innerHTML = "↑";
-         moveUpButton.onclick = function() { moveImageUp(imgDiv); };
-         imgDiv.appendChild(moveUpButton);
-
-         const moveDownButton = document.createElement("button");
-         moveDownButton.classList.add("move-button", "move-down-button");
-         moveDownButton.innerHTML = "↓";
-         moveDownButton.onclick = function() { moveImageDown(imgDiv); };
-         imgDiv.appendChild(moveDownButton);
-
-         // Add the new image div to the beginning of the container
-         imageContainer.insertBefore(imgDiv, imageContainer.firstChild);
-
-        // --- تحديث ترتيب جميع الصور الآن بما في ذلك الصورة الجديدة ---
-        await updateImageOrder();
-
-
-        // loadImages(); // No longer necessary, UI updated directly
+        loadImages(); // إعادة تحميل الصور بعد الرفع والتحديث
 
       } catch (error) {
         console.error("خطأ أثناء رفع الصورة:", error);
@@ -359,11 +265,6 @@
       } finally {
         // إعادة تعيين حقل الإدخال للسماح برفع نفس الملف مرة أخرى إذا لزم الأمر
         fileInput.value = '';
-        // Restore upload button
-        if(uploadButton) {
-          uploadButton.innerHTML = originalButtonText;
-          uploadButton.disabled = false;
-        }
       }
     });
 
@@ -376,22 +277,16 @@
     const textCollectionName = "userText"; // اسم المجموعة للنص
 
     // 🟢 11. حفظ النص في Firestore
-    let saveTimeout;
     async function saveText(text) {
-      // Debounce saving: wait 1 second after last edit before saving
-      clearTimeout(saveTimeout);
-      saveTimeout = setTimeout(async () => {
-        try {
-          const textRef = doc(db, textCollectionName, textDocId);
-          await setDoc(textRef, { content: text }, { merge: true }); // Use merge to avoid overwriting other fields if any
-          console.log("Text saved successfully!");
-        } catch (error) {
-          console.error("Error saving text: ", error);
-          // Don't alert on save error, might be annoying
-        }
-      }, 1000); // Wait 1 second (1000ms)
+      try {
+        const textRef = doc(db, textCollectionName, textDocId);
+        await setDoc(textRef, { content: text }); // استخدام setDoc لإنشاء أو استبدال المستند
+        console.log("Text saved successfully!");
+      } catch (error) {
+        console.error("Error saving text: ", error);
+        alert("حدث خطأ أثناء حفظ النص.");
+      }
     }
-
 
     // 🟢 12. تحميل النص من Firestore
     async function loadText() {
@@ -405,45 +300,40 @@
         } else {
           // النص الافتراضي إذا لم يتم العثور على مستند
           editableDiv.innerHTML = "اكتب هنا...";
-          console.log("No text document found! Displaying default text.");
+          console.log("No such document! Displaying default text.");
         }
       } catch (error) {
         console.error("Error loading text: ", error);
         // الحفاظ على النص الافتراضي في حالة حدوث خطأ
         editableDiv.innerHTML = "اكتب هنا...";
-        // alert("حدث خطأ أثناء تحميل النص."); // Avoid alert on load
+        alert("حدث خطأ أثناء تحميل النص.");
       }
     }
 
-    // 🟢 13. إضافة مستمع حدث لحفظ النص عند تغيير المحتوى (input)
+    // 🟢 13. إضافة مستمع حدث لحفظ النص عند فقدان التركيز (blur)
     function setupTextSaving() {
         const editableDiv = document.getElementById("editableText");
         if (editableDiv) {
-            editableDiv.addEventListener("input", () => { // Use 'input' for immediate reaction
+            editableDiv.addEventListener("blur", () => {
                 saveText(editableDiv.innerHTML); // حفظ محتوى HTML
             });
-            // Remove blur listener if it existed
-            // editableDiv.removeEventListener("blur", saveOnBlur);
         } else {
             console.error("Editable text element not found!");
         }
     }
-    // Helper function if blur listener was used
-    // function saveOnBlur() { saveText(this.innerHTML); }
 
 
     // --------------------------------------------------
     // --- تحميل البيانات عند بدء تشغيل الصفحة ---
     // --------------------------------------------------
     document.addEventListener("DOMContentLoaded", () => {
-      loadText();   // تحميل النص المحفوظ أولاً
       loadImages(); // تحميل الصور
+      loadText();   // تحميل النص المحفوظ
       setupTextSaving(); // إعداد الحفظ التلقائي للنص
     });
 
   </script>
-  <!-- Removed link to style.css -->
-  <style>
+   <style>
     body {
       font-family: Arial, sans-serif;
       text-align: center;
@@ -458,12 +348,6 @@
       align-items: center;
       background-size: cover; /* تغطية كاملة للصفحة */
     }
-
-    /* Apply background to html as well for full coverage */
-    html {
-        background-color: #192705; /* Match darkest color */
-    }
-
 
     h1 {
       color: #FFA500; /* اللون الأصفر البرتقالي */
@@ -484,7 +368,7 @@
     .upload-btn {
       position: fixed;
       bottom: 50px;
-      left: 150px; /* Consider moving this if it overlaps elements on smaller screens */
+      left: 150px;
       width: 60px;
       height: 60px;
       border-radius: 50%;
@@ -499,7 +383,6 @@
       transition: all 0.3s ease;
       border: 2px solid #cfcfcf88; /* إطار أسود فراني */
       animation: bounce 2s infinite;
-      z-index: 10; /* Ensure it's above other elements */
     }
 
     .upload-btn:hover {
@@ -507,24 +390,16 @@
       transform: scale(1.1);
     }
 
-    .upload-btn:disabled {
-        cursor: not-allowed;
-        opacity: 0.6;
-        animation: none; /* Stop bounce when loading */
-    }
-
-
     button {
       margin: 5px;
       padding: 10px;
       cursor: pointer;
-      /* Base button styles can go here if needed */
     }
 
     /* تصميم زر الحمد لله */
     .heart-button {
       position: absolute;
-      bottom: 10px; /* Adjusted position */
+      bottom: -30px;
       left: 10px; /* زر الحمد لله على اليسار */
       background: rgba(255, 255, 255, 0.2);
       border: none;
@@ -539,7 +414,6 @@
       align-items: center;
       gap: 3px;
       height: 30px; /* نفس ارتفاع زر العداد */
-      z-index: 1; /* Ensure above image */
     }
 
     .heart-button:hover {
@@ -559,10 +433,8 @@
     /* تصميم زر العداد */
     .count-button {
       position: absolute;
-      bottom: 10px; /* Adjusted position */
-      /* Calculate position relative to heart button width + gap */
-      /* Assuming heart button text + padding is roughly 82px */
-      left: calc(10px + 82px); /* Position next to heart button */
+      bottom: -30px;
+      left: 92px; /* ملتصق بجانب زر الحمد لله من اليمين */
       background: rgba(255, 255, 255, 0.2); /* نفس خلفية زر الحمد لله */
       border: none;
       padding: 4px 10px;
@@ -574,46 +446,40 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      min-width: 30px; /* Ensure it has some width */
       height: 30px; /* نفس ارتفاع زر الحمد لله */
-      z-index: 1; /* Ensure above image */
     }
 
     /* تصميم زر الحذف */
-    .delete-button {
-      position: absolute;
-      top: 10px; /* Move to top right */
-      right: 10px;
-      background-color: rgba(211, 47, 47, 0.5); /* Semi-transparent red */
-      border: none;
-      width: 25px; /* Make it visible */
-      height: 25px;
-      border-radius: 50%;
-      color: white;
-      font-size: 14px;
-      line-height: 25px; /* Center 'X' vertically */
-      text-align: center;
-      cursor: pointer;
-      opacity: 0.7; /* Slightly transparent */
-      transition: all 0.3s ease;
-      z-index: 2; /* Above move buttons */
-    }
+   .delete-button {
+   position: absolute;
+     bottom: -30px;
+     top: 10px; /* تحديد الموضع من الأعلى */
+     right: 5px; /* تقليل القيمة لتحريكه يمينًا (أقرب للحافة اليمنى) */
+     background-color: rgba(211, 47, 47, 0.5); /* لون أحمر شبه شفاف لجعله مرئيًا */
+     border: none;
+     width: 25px; /* حجم مرئي */
+     height: 25px;
+     border-radius: 50%;
+     color: white;
+     font-size: 14px;
+     line-height: 25px; /* لتوسيط المحتوى عموديًا */
+     text-align: center;
+     cursor: pointer;
+     opacity: 0.7; /* شفافية طفيفة */
+     transition: all 0.3s ease;
+     z-index: 2; /* للتأكد من أنه فوق العناصر الأخرى */
+   }
 
-    .delete-button::before {
-        content: '✕'; /* Use a cross icon */
-    }
-
-    .delete-button:hover {
-      opacity: 1; /* Full opacity on hover */
-      background-color: rgba(211, 47, 47, 0.8); /* Darker red */
-      transform: scale(1.1);
-    }
-
+   .delete-button:hover {
+     opacity: 1; /* شفافية كاملة عند التمرير */
+     background-color: rgba(211, 47, 47, 0.8); /* أحمر أغمق عند التمرير */
+     transform: scale(1.1); /* تكبير طفيف عند التمرير */
+   }
 
     /* تصميم زر التحميل */
     .download-button {
       position: absolute;
-      bottom: 10px; /* Adjusted position */
+      bottom: -30px;
       right: 10px; /* وضع الزر في أسفل اليمين */
       background: rgba(255, 255, 255, 0.2);
       border: none;
@@ -624,9 +490,6 @@
       cursor: pointer;
       transition: all 0.2s ease;
       height: 30px;
-      z-index: 1; /* Ensure above image */
-      /* Ensure it doesn't overlap with count button */
-      margin-left: 5px; /* Add space if count button is wide */
     }
 
     .download-button:hover {
@@ -635,136 +498,183 @@
 
     .move-button {
       position: absolute;
-      top: 40px; /* Adjust vertical position */
-      background-color: rgba(255, 255, 255, 0.3); /* Slightly more visible */
+      top: 10px;
+      background-color: rgba(255, 255, 255, 0); /* شفافية */
       border: none;
-      padding: 0;
-      width: 25px; /* Smaller size */
-      height: 25px;
-      line-height: 25px; /* Center icon vertically */
-      text-align: center;
+      padding: 5px;
       cursor: pointer;
       border-radius: 50%;
-      font-size: 18px; /* Adjust icon size */
-      color: white;
+      font-size: 29px;
       opacity: 0.7;
-      transition: all 0.3s ease;
-      z-index: 1; /* Below delete button */
+      transition: opacity 0.3s ease;
     }
 
     .move-up-button {
-      right: 10px; /* زر الرفع في أعلى يمين (CSS logic) */
+      right: 10px; /* زر الرفع في أعلى يسار */
     }
 
     .move-down-button {
-      left: 10px; /* زر الإنزال في أعلى يسار (CSS logic) */
-      /* Adjust top position if needed to avoid overlap */
-       top: 70px;
+      left: 10px; /* زر الإنزال في أعلى يمين */
     }
-
 
     .move-button:hover {
       opacity: 1;
-      background-color: rgba(255, 255, 255, 0.5);
-      transform: scale(1.1);
     }
-
 
     .image-item {
       position: relative;
-      display: inline-block; /* Changed to inline-block for side-by-side */
+      display: inline-block;
       margin: 30px; /* زيادة المسافة بين الصور */
       animation: slideIn 0.5s ease-in-out;
-      vertical-align: top; /* Align items nicely */
-      background: rgba(255, 255, 255, 0.05); /* Subtle background */
-      border-radius: 15px; /* Match image border-radius */
-      padding-bottom: 50px; /* Add space for buttons below */
-      overflow: hidden; /* Hide button parts sticking out initially */
     }
 
-    /* Apply .image class to img elements via JS for consistency */
     .image {
-      display: block; /* Prevent extra space below image */
       border-radius: 15px; /* حواف دائرية */
-      width: 100%; /* Take full width of container */
-      max-width: 200px; /* Controlled via JS style for now */
+      width: 100%;
+      max-width: 200px;
       height: auto;
-      /* Consider removing fixed width/margin from JS and controlling here */
-       width: 200px; /* Example: control size here */
-       margin: 0; /* Remove JS margin */
     }
-
 
     #imageContainer {
-      display: flex; /* Use flexbox for alignment */
+      display: flex;
       flex-wrap: wrap;
-      justify-content: center; /* Center items horizontally */
-      align-items: flex-start; /* Align items to the top */
-      padding: 20px; /* More padding */
+      justify-content: center;
+      padding: 10px;
       width: 100%;
-      max-width: 1200px; /* Limit max width on large screens */
-      margin: 0 auto; /* Center container */
-      padding-bottom: 120px; /* Ensure space below for upload button */
+      padding-bottom: 60px;
     }
-
 
     /* تحسين التوافق مع الأجهزة المحمولة */
-    @media (max-width: 768px) { /* Adjust breakpoint */
-        .upload-btn {
-            left: 20px; /* Adjust position */
-            bottom: 20px;
-        }
-         .image-item {
-            margin: 15px; /* Reduce margin */
-            padding-bottom: 45px; /* Adjust padding */
-         }
-         .image {
-             /* Let images take more width on smaller screens */
-             /* max-width: 90%; Remove fixed width */
-         }
-         #imageContainer {
-             padding: 10px;
-             padding-bottom: 100px; /* Space for upload button */
-         }
-         /* Adjust button positions if needed */
-         .heart-button, .count-button, .download-button, .delete-button, .move-button {
-             font-size: 11px; /* Smaller font on buttons */
-             padding: 3px 8px;
-         }
-         .delete-button, .move-button {
-             width: 22px;
-             height: 22px;
-             line-height: 22px;
-             font-size: 12px;
-         }
-         .move-down-button {
-             top: 65px; /* Adjust spacing */
-         }
-
-    }
-
-
     @media (max-width: 600px) {
       h1 {
         font-size: 2rem;
       }
 
       .upload-btn {
-        bottom: 20px; /* Adjust position */
-        left: 20px;
+        bottom: 50px;
+        left: 50px;
         width: 50px;
         height: 50px;
-        font-size: 24px; /* Adjust icon size */
+        font-size: 30px;
       }
 
       .image-item {
-        margin: 10px; /* Further reduce margin */
-         /* Take full width minus margins */
-         width: calc(100% - 20px);
-         max-width: 350px; /* Max width on small screens */
-         padding-bottom: 40px;
+        margin: 20px;
       }
 
-       .image {
-         /* width: 100%; Let it fill the container */
-         max-width: 100%; /* Ensure it doesn't overflow */
+      #imageContainer {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .image {
+        max-width: 330px;
+      }
+
+      button {
+        font-size: 15px;
+      }
+    }
+
+    /* النص في أسفل الصفحة */
+    .footer-text {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 00%;
+      background-color: #052720; /* أخضر داكن جدًا ليتناسب مع الخلفية */
+      color: white;
+      font-size: 12px;
+      text-align: center;
+      padding: 10px;
+    }
+
+    /* أنيميشن ظهور العناصر */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideIn {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-1px); }
+    }
+
+    /* أنيميشن للوجو */
+    .logo {
+      width: 120px;
+      height: auto;
+      margin-top: 40px; /* مسافة بسيطة بين اللوجو وأعلى الصفحة */
+      animation: float 4s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+     
+      /* --- تنسيقات إضافية للنص القابل للتعديل --- */
+    #editableTextContainer { /* حاوية للنص للمزيد من التحكم */
+        padding: 4px; /* تقليل الحشو الداخلي */
+        border-radius: 4px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* تخفيف الظل */
+        max-width: 40%; /* عرض أقصى بنسبة مئوية */
+        width: 600px; /* الحفاظ على عرض محدد للشاشات الكبيرة */
+        margin: 10px auto; /* تقليل الهامش العلوي */
+        font-family: Arial, sans-serif;
+        direction: rtl;
+        color: white;
+        background-color: rgba(255, 255, 255, 0.01); /* خلفية شفافة قليلاً */
+       
+
+     #editableText { /* العنصر القابل للتعديل نفسه */
+        padding: 40px;
+        min-height: 10px; /* ارتفاع أدنى أصغر */
+        outline: none; /* إزالة الإطار عند التركيز */
+        border-radius: 8px;
+        color: #E0E0E0; /* لون نص أفتح قليلاً */
+        line-height: 1.6; /* تحسين قابلية القراءة */
+        text-align: center; /* محاذاة النص لليمين */
+        background: transparent; /* جعل الخلفية الداخلية شفافة */
+     }
+
+     /* تغيير مؤشر الماوس للإشارة إلى قابلية التعديل */
+     #editableText:focus {
+         box-shadow: 0 0 5px rgba(255, 165, 0, 0.5); /* ظل برتقالي خفيف عند التركيز */
+     }
+      /* مؤشر الكتابة */
+     #editableText[contenteditable="true"] {
+         cursor: text;
+     }
+      
+  </style>
+</head>
+<body>
+
+  <img src="logo.png" alt="شعار تطبيق ممتن" class="logo">
+
+  <div id="editableTextContainer">
+      <div id="editableText" contenteditable="true" style="
+          /* يمكن إزالة الأنماط المباشرة إذا تم تضمينها في CSS أعلاه */
+          padding: 5px;
+          min-height: 5px;
+          outline: none;
+          border-radius: 4px;
+          color: white;
+      ">
+          
+      </div>
+  </div>
+
+  <input type="file" id="fileInput" accept="image/*">
+  <label for="fileInput" class="upload-btn">+</label>
+
+  <div id="imageContainer"></div>
+
+</body>
+</html>

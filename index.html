@@ -45,9 +45,6 @@
         const imgDiv = document.createElement("div");
         imgDiv.classList.add("image-item");
         imgDiv.setAttribute("data-doc-id", docId); // إضافة معرف الوثيقة كخاصية
-         // إضافة بيانات الترتيب كخاصية بيانات
-        imgDiv.setAttribute("data-order", image.order || 0);
-
 
         const img = document.createElement("img");
         img.src = imageUrl;
@@ -63,8 +60,9 @@
         heartButton.onclick = function() {
           const newHeartCount = heartsCount + 1;
           updateHeartCount(docId, newHeartCount); // تحديث عدد القلوب في Firestore
-          // يتم تحديث العداد في الواجهة عند إعادة تحميل الصور بعد التحديث في loadImages
-           loadImages(); // إعادة تحميل الصور لتحديث العداد والتأثير البصري
+          countButton.innerHTML = newHeartCount; // تحديث العداد في الواجهة
+          heartButton.classList.add("clicked"); // إضافة كلاس للتفاعل
+          setTimeout(() => heartButton.classList.remove("clicked"), 300); // إزالة الكلاس بعد 300ms
         };
         imgDiv.appendChild(heartButton);
 
@@ -96,7 +94,7 @@
         // زر رفع الصورة لأعلى (أعلى يسار)
         const moveUpButton = document.createElement("button");
         moveUpButton.classList.add("move-button", "move-up-button");
-        moveUpButton.innerHTML = "⬆️";
+        moveUpButton.innerHTML = "  ";
         moveUpButton.onclick = function() {
           moveImageUp(imgDiv);
         };
@@ -105,7 +103,7 @@
         // زر إنزال الصورة لأسفل (أعلى يمين)
         const moveDownButton = document.createElement("button");
         moveDownButton.classList.add("move-button", "move-down-button");
-        moveDownButton.innerHTML = "⬇️";
+        moveDownButton.innerHTML = "  ";
         moveDownButton.onclick = function() {
           moveImageDown(imgDiv);
         };
@@ -121,7 +119,6 @@
         try {
             const imageRef = doc(db, "images", docId);
             await updateDoc(imageRef, { hearts: newHeartCount });
-             loadImages(); // إعادة تحميل الصور بعد التحديث
         } catch (error) {
             console.error("Error updating heart count: ", error);
             alert("حدث خطأ أثناء تحديث عدد القلوب.");
@@ -133,7 +130,6 @@
         try {
             const imageRef = doc(db, "images", docId);
             await deleteDoc(imageRef);
-            await updateImageOrder(); // إعادة ترتيب بعد الحذف
             loadImages(); // إعادة تحميل الصور بعد الحذف
         } catch (error) {
             console.error("Error deleting image: ", error);
@@ -178,7 +174,7 @@
     // 🟢 7. تحريك الصورة لأعلى وتحديث الترتيب في Firestore
     async function moveImageUp(imgDiv) {
       const prevElement = imgDiv.previousElementSibling;
-      if (prevElement && prevElement.classList.contains('image-item')) { // تأكد أنه عنصر صورة
+      if (prevElement) {
         imgDiv.parentNode.insertBefore(imgDiv, prevElement);
         await updateImageOrder(); // تحديث الترتيب في Firestore
       }
@@ -187,7 +183,7 @@
     // 🟢 8. تحريك الصورة لأسفل وتحديث الترتيب في Firestore
     async function moveImageDown(imgDiv) {
       const nextElement = imgDiv.nextElementSibling;
-       if (nextElement && nextElement.classList.contains('image-item')) { // تأكد أنه عنصر صورة
+      if (nextElement) {
         imgDiv.parentNode.insertBefore(nextElement, imgDiv);
         await updateImageOrder(); // تحديث الترتيب في Firestore
       }
@@ -205,8 +201,6 @@
                 const imageRef = doc(db, "images", docId);
                 // إضافة الوعد الخاص بالتحديث إلى المصفوفة
                 updates.push(updateDoc(imageRef, { order: i }));
-                // تحديث الخاصية data-order في العنصر DOM
-                images[i].setAttribute("data-order", i);
             }
             // تنفيذ جميع عمليات التحديث معًا
             await Promise.all(updates);
@@ -254,7 +248,7 @@
         for (let i = 0; i < images.length; i++) {
           const docId = images[i].getAttribute("data-doc-id");
           const imageRef = doc(db, "images", docId);
-          const currentOrder = parseInt(images[i].getAttribute("data-order") || i, 10); // اقرأ الترتيب الحالي من الخاصية
+          const currentOrder = parseInt(images[i].dataset.order || i, 10); // اقرأ الترتيب الحالي إذا كان متاحاً
           updates.push(updateDoc(imageRef, { order: currentOrder + 1 }));
         }
         // انتظر اكتمال تحديث الترتيب قبل إضافة الجديد
@@ -455,28 +449,29 @@
       height: 30px; /* نفس ارتفاع زر الحمد لله */
     }
 
-    /* تصميم زر الحذف - تم تعديله هنا */
-    .delete-button {
-      position: absolute;
-      bottom: -30px; /* نفس مستوى الأزرار الأخرى */
-      left: 150px; /* ضبط الموضع الأفقي ليكون بين العداد والتنزيل */
-      background-color: rgba(255, 255, 255, 0.05); /* خلفية بيضاء شفافة للغاية */
-      border: none;
-      padding: 4px 10px;
-      border-radius: 10px;
-      color: rgba(255, 255, 255, 0.2); /* لون نص أبيض شفاف للغاية */
-      font-size: 12px;
-      cursor: pointer;
-      opacity: 1; /* إظهار الزر */
-      transition: opacity 0.3s ease, background-color 0.3s ease, color 0.3s ease;
-      height: 30px;
-    }
+    /* تعديل تنسيقات زر الحذف */
+.delete-button {
+  position: absolute;
+  bottom: -30px; /* محاذاة مع الأزرار الأخرى */
+  /* تم إزالة transform: translateX(250%); وتغيير left */
+  right: 80px; /* وضع الزر بين زر العداد وزر التنزيل (قيمة تقديرية) */
+  background-color: rgba(255, 255, 255, 0.2); /* خلفية شفافة قليلاً باللون الأبيض */
+  border: none;
+  padding: 4px 10px; /* إضافة حشو ليكون الزر مرئياً */
+  border-radius: 10px; /* حواف دائرية */
+  color: rgba(255, 255, 255, 0.7); /* لون النص أبيض شفاف قليلاً */
+  font-size: 12px; /* حجم خط مطابق للأزرار الأخرى */
+  cursor: pointer;
+  width: auto; /* السماح للعرض بالتكيف مع المحتوى */
+  height: auto; /* السماح للارتفاع بالتكيف مع المحتوى */
+  opacity: 0.4; /* إظهار الزر قليلاً بشكل دائم */
+  transition: opacity 0.3s ease; /* جعل الانتقال أسرع */
+}
 
-    .delete-button:hover {
-      background-color: rgba(255, 0, 0, 0.3); /* خلفية حمراء شفافة عند التمرير */
-      color: rgba(255, 255, 255, 0.8); /* لون نص أبيض أكثر وضوحًا عند التمرير */
-      opacity: 1; /* التأكد من أنه مرئي تمامًا عند التمرير */
-    }
+.delete-button:hover {
+  opacity: 0.8; /* زيادة الشفافية عند التمرير ليصبح أكثر وضوحًا */
+}
+
 
     /* تصميم زر التحميل */
     .download-button {
@@ -501,20 +496,14 @@
     .move-button {
       position: absolute;
       top: 10px;
-      background-color: rgba(255, 255, 255, 0.1); /* خلفية شفافة قليلاً */
+      background-color: rgba(255, 255, 255, 0); /* شفافية */
       border: none;
       padding: 5px;
       cursor: pointer;
       border-radius: 50%;
-      font-size: 18px; /* حجم أصغر للأيقونات */
-      color: rgba(255, 255, 255, 0.7); /* لون أبيض شفاف */
+      font-size: 29px;
       opacity: 0.7;
-      transition: opacity 0.3s ease, background-color 0.3s ease, color 0.3s ease;
-      width: 30px; /* حجم ثابت للزر */
-      height: 30px; /* حجم ثابت للزر */
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      transition: opacity 0.3s ease;
     }
 
     .move-up-button {
@@ -527,8 +516,6 @@
 
     .move-button:hover {
       opacity: 1;
-      background-color: rgba(255, 255, 255, 0.3); /* خلفية أكثر وضوحًا عند التمرير */
-      color: rgba(255, 255, 255, 1); /* لون أبيض خالص عند التمرير */
     }
 
     .image-item {
@@ -538,14 +525,12 @@
       animation: slideIn 0.5s ease-in-out;
     }
 
-    .image-item img { /* تطبيق الأنماط على عنصر الصورة داخل الـ item */
+    .image {
       border-radius: 15px; /* حواف دائرية */
       width: 100%;
       max-width: 200px;
       height: auto;
-      display: block; /* يمنع أي مسافة إضافية أسفل الصورة */
     }
-
 
     #imageContainer {
       display: flex;
@@ -579,34 +564,12 @@
         align-items: center;
       }
 
-      .image-item img { /* تطبيق الأنماط على عنصر الصورة داخل الـ item */
+      .image {
         max-width: 330px;
       }
 
-
       button {
         font-size: 15px;
-      }
-
-       /* تعديل موضع الأزرار السفلية للأجهزة الصغيرة */
-      .heart-button, .count-button, .delete-button, .download-button {
-        position: static; /* إزالة الوضع المطلق */
-        margin: 5px; /* إضافة هوامش */
-        border-radius: 5px; /* حواف دائرية موحدة */
-        height: auto; /* ارتفاع تلقائي */
-        width: auto; /* عرض تلقائي */
-        display: inline-block; /* عرض كعناصر داخل السطر */
-        transform: none; /* إزالة أي تحويلات */
-        left: auto; /* إزالة تحديد الموضع من اليسار */
-        right: auto; /* إزالة تحديد الموضع من اليمين */
-        bottom: auto; /* إزالة تحديد الموضع من الأسفل */
-      }
-
-      .image-item {
-         /* إعادة ترتيب العناصر لتظهر الأزرار أسفل الصورة */
-         display: flex;
-         flex-direction: column;
-         align-items: center;
       }
     }
 
@@ -615,13 +578,12 @@
       position: fixed;
       bottom: 0;
       left: 0;
-      width: 100%;
+      width: 00%;
       background-color: #052720; /* أخضر داكن جدًا ليتناسب مع الخلفية */
       color: white;
       font-size: 12px;
       text-align: center;
       padding: 10px;
-      z-index: 1000; /* التأكد من ظهوره فوق العناصر الأخرى */
     }
 
     /* أنيميشن ظهور العناصر */
@@ -652,20 +614,20 @@
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-3px); }
     }
-
+     
       /* --- تنسيقات إضافية للنص القابل للتعديل --- */
     #editableTextContainer { /* حاوية للنص للمزيد من التحكم */
         padding: 4px; /* تقليل الحشو الداخلي */
         border-radius: 4px;
         box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* تخفيف الظل */
-        max-width: 80%; /* عرض أقصى بنسبة مئوية */
+        max-width: 40%; /* عرض أقصى بنسبة مئوية */
         width: 600px; /* الحفاظ على عرض محدد للشاشات الكبيرة */
         margin: 10px auto; /* تقليل الهامش العلوي */
         font-family: Arial, sans-serif;
         direction: rtl;
         color: white;
         background-color: rgba(255, 255, 255, 0.01); /* خلفية شفافة قليلاً */
-
+       
 
      #editableText { /* العنصر القابل للتعديل نفسه */
         padding: 40px;
@@ -686,7 +648,7 @@
      #editableText[contenteditable="true"] {
          cursor: text;
      }
-
+      
   </style>
 </head>
 <body>
@@ -702,7 +664,7 @@
           border-radius: 4px;
           color: white;
       ">
-
+          
       </div>
   </div>
 
@@ -713,3 +675,4 @@
 
 </body>
 </html>
+

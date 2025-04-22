@@ -60,7 +60,12 @@
         heartButton.onclick = function() {
           const newHeartCount = heartsCount + 1;
           updateHeartCount(docId, newHeartCount); // تحديث عدد القلوب في Firestore
-          countButton.innerHTML = newHeartCount; // تحديث العداد في الواجهة
+          // Find the count button within this image-item and update its text
+          const currentImageItem = heartButton.closest('.image-item');
+          const countButton = currentImageItem.querySelector('.count-button');
+          if (countButton) {
+              countButton.innerHTML = newHeartCount; // تحديث العداد في الواجهة
+          }
           heartButton.classList.add("clicked"); // إضافة كلاس للتفاعل
           setTimeout(() => heartButton.classList.remove("clicked"), 300); // إزالة الكلاس بعد 300ms
         };
@@ -248,7 +253,8 @@
         for (let i = 0; i < images.length; i++) {
           const docId = images[i].getAttribute("data-doc-id");
           const imageRef = doc(db, "images", docId);
-          const currentOrder = parseInt(images[i].dataset.order || i, 10); // اقرأ الترتيب الحالي إذا كان متاحاً
+          // Use the current index as the base for order if data-order is not reliable
+          const currentOrder = i;
           updates.push(updateDoc(imageRef, { order: currentOrder + 1 }));
         }
         // انتظر اكتمال تحديث الترتيب قبل إضافة الجديد
@@ -322,6 +328,34 @@
         }
     }
 
+    // --------------------------------------------------
+    // --- حركة الفراشة ---
+    // --------------------------------------------------
+    function moveButterfly() {
+        const butterfly = document.getElementById('butterfly');
+        if (!butterfly) return;
+
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const butterflySize = 50; // حجم الفراشة
+
+        // حساب المواقع العشوائية مع الأخذ في الاعتبار حجم الفراشة
+        const randomX = Math.random() * (viewportWidth - butterflySize);
+        const randomY = Math.random() * (viewportHeight - butterflySize);
+
+        // تطبيق الموقع الجديد
+        butterfly.style.left = `${randomX}px`;
+        butterfly.style.top = `${randomY}px`;
+    }
+
+    // بدء تحريك الفراشة كل بضع ثوانٍ
+    function startButterflyMovement() {
+        // تحريك الفراشة فورًا عند التحميل
+        moveButterfly();
+        // ثم تحريكها كل 5 ثوانٍ (يمكن تعديل المدة)
+        setInterval(moveButterfly, 5000); // 5000 ميلي ثانية = 5 ثوانٍ
+    }
+
 
     // --------------------------------------------------
     // --- تحميل البيانات عند بدء تشغيل الصفحة ---
@@ -330,7 +364,12 @@
       loadImages(); // تحميل الصور
       loadText();   // تحميل النص المحفوظ
       setupTextSaving(); // إعداد الحفظ التلقائي للنص
+      startButterflyMovement(); // بدء حركة الفراشة
     });
+
+    // تحديث موقع الفراشة عند تغيير حجم النافذة
+    window.addEventListener('resize', moveButterfly);
+
 
   </script>
    <style>
@@ -347,6 +386,7 @@
       justify-content: flex-start;
       align-items: center;
       background-size: cover; /* تغطية كاملة للصفحة */
+      overflow-x: hidden; /* منع ظهور شريط التمرير الأفقي بسبب الفراشة */
     }
 
     h1 {
@@ -368,7 +408,7 @@
     .upload-btn {
       position: fixed;
       bottom: 50px;
-      left: 150px;
+      left: 50px; /* تعديل الموقع ليكون في الأسفل اليسار */
       width: 60px;
       height: 60px;
       border-radius: 50%;
@@ -383,6 +423,7 @@
       transition: all 0.3s ease;
       border: 2px solid #cfcfcf88; /* إطار أسود فراني */
       animation: bounce 2s infinite;
+      z-index: 100; /* لضمان ظهوره فوق العناصر الأخرى */
     }
 
     .upload-btn:hover {
@@ -450,27 +491,26 @@
     }
 
     /* تعديل تنسيقات زر الحذف */
-.delete-button {
-  position: absolute;
-  bottom: -30px; /* محاذاة مع الأزرار الأخرى */
-  /* تم إزالة transform: translateX(150%); وتغيير left */
-  right: 49px; /* وضع الزر بين زر العداد وزر التنزيل (قيمة تقديرية) */
-  background-color: rgba(255, 255, 255, 0); /* خلفية شفافة قليلاً باللون الأبيض */
-  border: none;
-  padding: 4px 10px; /* إضافة حشو ليكون الزر مرئياً */
-  border-radius: 10px; /* حواف دائرية */
-  color: rgba(255, 255, 255, 0.1); /* لون النص أبيض شفاف قليلاً */
-  font-size: 12px; /* حجم خط مطابق للأزرار الأخرى */
-  cursor: pointer;
-  width: auto; /* السماح للعرض بالتكيف مع المحتوى */
-  height: auto; /* السماح للارتفاع بالتكيف مع المحتوى */
-  opacity: 0.4; /* إظهار الزر قليلاً بشكل دائم */
-  transition: opacity 0.3s ease; /* جعل الانتقال أسرع */
-}
+    .delete-button {
+      position: absolute;
+      bottom: -30px; /* محاذاة مع الأزرار الأخرى */
+      right: 49px; /* وضع الزر بين زر العداد وزر التنزيل (قيمة تقديرية) */
+      background-color: rgba(255, 255, 255, 0); /* خلفية شفافة قليلاً باللون الأبيض */
+      border: none;
+      padding: 4px 10px; /* إضافة حشو ليكون الزر مرئياً */
+      border-radius: 10px; /* حواف دائرية */
+      color: rgba(255, 255, 255, 0.1); /* لون النص أبيض شفاف قليلاً */
+      font-size: 12px; /* حجم خط مطابق للأزرار الأخرى */
+      cursor: pointer;
+      width: auto; /* السماح للعرض بالتكيف مع المحتوى */
+      height: auto; /* السماح للارتفاع بالتكيف مع المحتوى */
+      opacity: 0.4; /* إظهار الزر قليلاً بشكل دائم */
+      transition: opacity 0.3s ease; /* جعل الانتقال أسرع */
+    }
 
-.delete-button:hover {
-  opacity: 0.8; /* زيادة الشفافية عند التمرير ليصبح أكثر وضوحًا */
-}
+    .delete-button:hover {
+      opacity: 0.8; /* زيادة الشفافية عند التمرير ليصبح أكثر وضوحًا */
+    }
 
 
     /* تصميم زر التحميل */
@@ -578,7 +618,7 @@
       position: fixed;
       bottom: 0;
       left: 0;
-      width: 00%;
+      width: 100%;
       background-color: #052720; /* أخضر داكن جدًا ليتناسب مع الخلفية */
       color: white;
       font-size: 12px;
@@ -614,7 +654,7 @@
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-3px); }
     }
-     
+
       /* --- تنسيقات إضافية للنص القابل للتعديل --- */
     #editableTextContainer { /* حاوية للنص للمزيد من التحكم */
         padding: 4px; /* تقليل الحشو الداخلي */
@@ -627,9 +667,9 @@
         direction: rtl;
         color: white;
         background-color: rgba(255, 255, 255, 0.01); /* خلفية شفافة قليلاً */
-       
+    }
 
-     #editableText { /* العنصر القابل للتعديل نفسه */
+    #editableText { /* العنصر القابل للتعديل نفسه */
         padding: 40px;
         min-height: 10px; /* ارتفاع أدنى أصغر */
         outline: none; /* إزالة الإطار عند التركيز */
@@ -638,7 +678,7 @@
         line-height: 1.6; /* تحسين قابلية القراءة */
         text-align: center; /* محاذاة النص لليمين */
         background: transparent; /* جعل الخلفية الداخلية شفافة */
-     }
+    }
 
      /* تغيير مؤشر الماوس للإشارة إلى قابلية التعديل */
      #editableText:focus {
@@ -648,7 +688,17 @@
      #editableText[contenteditable="true"] {
          cursor: text;
      }
-      
+
+    /* --- تنسيقات الفراشة --- */
+    #butterfly {
+        position: fixed; /* لتثبيتها بالنسبة لإطار العرض */
+        width: 50px; /* حجم صغير */
+        height: auto;
+        z-index: 999; /* لضمان ظهورها فوق معظم العناصر */
+        transition: top 10s linear, left 10s linear; /* حركة ناعمة وبطيئة */
+        pointer-events: none; /* تجاهل أحداث الماوس */
+    }
+
   </style>
 </head>
 <body>
@@ -664,7 +714,7 @@
           border-radius: 4px;
           color: white;
       ">
-          
+
       </div>
   </div>
 
@@ -672,6 +722,8 @@
   <label for="fileInput" class="upload-btn">+</label>
 
   <div id="imageContainer"></div>
+
+  <img src="fly.gif" alt="فراشة متحركة" id="butterfly">
 
 </body>
 </html>

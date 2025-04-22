@@ -345,16 +345,6 @@
         const randomX = Math.random() * (viewportWidth - butterflySize);
         const randomY = Math.random() * (viewportHeight - butterflySize);
 
-        // تحديد اتجاه الحركة لقلب الصورة
-        const currentX = butterfly.offsetLeft;
-        const movingLeft = randomX < currentX;
-
-        if (movingLeft) {
-            butterfly.classList.add('facing-left');
-        } else {
-            butterfly.classList.remove('facing-left');
-        }
-
         // تطبيق الموقع الجديد
         butterfly.style.left = `${randomX}px`;
         butterfly.style.top = `${randomY}px`;
@@ -704,34 +694,22 @@
     /* --- تنسيقات الفراشة --- */
     #butterfly {
         position: fixed; /* لتثبيتها بالنسبة لإطار العرض */
-        width: 50px; /* حجم صغير */
+        width: 55px; /* حجم صغير */
         height: auto;
         z-index: 999; /* لضمان ظهورها فوق معظم العناصر */
         /* زيادة مدة الانتقال لجعل الحركة أبطأ */
         /* إضافة transform إلى الانتقال */
-        transition: top 8s linear, left 8s linear, transform 0.5s ease-in-out;
-        pointer-events: none; /* تجاهل أحداث الماوس */
+        transition: top 5s linear, left 6s linear, transform 0.7s ease-in-out;
+        pointer-: none; /* تجاهل أحداث الماوس */
         transform-origin: center center; /* نقطة ارتكاز التحويل في المنتصف */
-        /* تطبيق أنيميشن الرفرفة والدوران */
-        animation: flapping 1.5s ease-in-out infinite, gentle-rotation 3s ease-in-out infinite alternate;
+        /* تطبيق أنيميشن الرفرفة */
+        animation: flapping 1.5s ease-in-out infinite; /* مدة الأنميشن 1.5 ثانية، تكرار لا نهائي */
     }
 
-    /* أنيميشن رفرفة الجناح (يتقلص عرضيًا) */
+    /* أنيميشن رفرفة الجناح */
     @keyframes flapping {
-        0%, 100% { transform: scaleX(1); } /* الحجم الطبيعي */
+        50%, 120% { transform: scaleX(1); } /* الحجم الطبيعي */
         50% { transform: scaleX(0.7); } /* يتقلص عرضيًا في المنتصف */
-    }
-
-    /* أنيميشن الدوران اللطيف */
-    @keyframes gentle-rotation {
-        0% { transform: rotate(-2deg); } /* يميل قليلاً لليسار */
-        100% { transform: rotate(2deg); } /* يميل قليلاً لليمين */
-    }
-
-    /* قلب الصورة أفقياً عند التحرك لليسار */
-    #butterfly.facing-left {
-        transform: scaleX(-1); /* يقلب الصورة أفقياً */
-        /* ملاحظة: يتم دمج هذا مع تحويلات الأنميشن الأخرى بواسطة المتصفح */
     }
 
 

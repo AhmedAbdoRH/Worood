@@ -204,8 +204,9 @@
             for (let i = 0; i < images.length; i++) {
                 const docId = images[i].getAttribute("data-doc-id"); // الحصول على معرف الوثيقة
                 const imageRef = doc(db, "images", docId);
-                // إضافة الوعد الخاص بالتحديث إلى المصفوفة
-                updates.push(updateDoc(imageRef, { order: i }));
+                // Use the current index as the base for order if data-order is not reliable
+                const currentOrder = i;
+                updates.push(updateDoc(imageRef, { order: currentOrder + 1 }));
             }
             // تنفيذ جميع عمليات التحديث معًا
             await Promise.all(updates);
@@ -340,8 +341,19 @@
         const butterflySize = 50; // حجم الفراشة
 
         // حساب المواقع العشوائية مع الأخذ في الاعتبار حجم الفراشة
+        // تأكد من أن الفراشة لا تخرج عن الحدود
         const randomX = Math.random() * (viewportWidth - butterflySize);
         const randomY = Math.random() * (viewportHeight - butterflySize);
+
+        // تحديد اتجاه الحركة لقلب الصورة
+        const currentX = butterfly.offsetLeft;
+        const movingLeft = randomX < currentX;
+
+        if (movingLeft) {
+            butterfly.classList.add('facing-left');
+        } else {
+            butterfly.classList.remove('facing-left');
+        }
 
         // تطبيق الموقع الجديد
         butterfly.style.left = `${randomX}px`;
@@ -352,8 +364,8 @@
     function startButterflyMovement() {
         // تحريك الفراشة فورًا عند التحميل
         moveButterfly();
-        // ثم تحريكها كل 5 ثوانٍ (يمكن تعديل المدة)
-        setInterval(moveButterfly, 5000); // 5000 ميلي ثانية = 5 ثوانٍ
+        // ثم تحريكها كل 8 ثوانٍ (تم زيادة المدة لجعل الحركة أبطأ)
+        setInterval(moveButterfly, 8000); // 8000 ميلي ثانية = 8 ثوانٍ
     }
 
 
@@ -695,9 +707,33 @@
         width: 50px; /* حجم صغير */
         height: auto;
         z-index: 999; /* لضمان ظهورها فوق معظم العناصر */
-        transition: top 10s linear, left 10s linear; /* حركة ناعمة وبطيئة */
+        /* زيادة مدة الانتقال لجعل الحركة أبطأ */
+        /* إضافة transform إلى الانتقال */
+        transition: top 8s linear, left 8s linear, transform 0.5s ease-in-out;
         pointer-events: none; /* تجاهل أحداث الماوس */
+        transform-origin: center center; /* نقطة ارتكاز التحويل في المنتصف */
+        /* تطبيق أنيميشن الرفرفة والدوران */
+        animation: flapping 1.5s ease-in-out infinite, gentle-rotation 3s ease-in-out infinite alternate;
     }
+
+    /* أنيميشن رفرفة الجناح (يتقلص عرضيًا) */
+    @keyframes flapping {
+        0%, 100% { transform: scaleX(1); } /* الحجم الطبيعي */
+        50% { transform: scaleX(0.7); } /* يتقلص عرضيًا في المنتصف */
+    }
+
+    /* أنيميشن الدوران اللطيف */
+    @keyframes gentle-rotation {
+        0% { transform: rotate(-2deg); } /* يميل قليلاً لليسار */
+        100% { transform: rotate(2deg); } /* يميل قليلاً لليمين */
+    }
+
+    /* قلب الصورة أفقياً عند التحرك لليسار */
+    #butterfly.facing-left {
+        transform: scaleX(-1); /* يقلب الصورة أفقياً */
+        /* ملاحظة: يتم دمج هذا مع تحويلات الأنميشن الأخرى بواسطة المتصفح */
+    }
+
 
   </style>
 </head>
@@ -723,7 +759,7 @@
 
   <div id="imageContainer"></div>
 
-  <img src="fly.gif" alt="فراشة متحركة" id="butterfly">
+  <img src="fly.png" alt="فراشة متحركة" id="butterfly">
 
 </body>
 </html>

@@ -1,4 +1,4 @@
-Canvas <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
@@ -58,7 +58,8 @@ Canvas <!DOCTYPE html>
         heartButton.classList.add("heart-button");
         heartButton.innerHTML = "الحمد لله ❤️"; // نص الزر
         heartButton.onclick = function() {
-          const newHeartCount = heartsCount + 1;
+          const currentHeartCount = parseInt(heartButton.closest('.image-item').querySelector('.count-button').innerHTML) || 0;
+          const newHeartCount = currentHeartCount + 1;
           updateHeartCount(docId, newHeartCount); // تحديث عدد القلوب في Firestore
           // Find the count button within this image-item and update its text
           const currentImageItem = heartButton.closest('.image-item');
@@ -99,7 +100,7 @@ Canvas <!DOCTYPE html>
         // زر رفع الصورة لأعلى (أعلى يسار)
         const moveUpButton = document.createElement("button");
         moveUpButton.classList.add("move-button", "move-up-button");
-        moveUpButton.innerHTML = "  ";
+        moveUpButton.innerHTML = " "; // تغيير الرمز ليكون أوضح
         moveUpButton.onclick = function() {
           moveImageUp(imgDiv);
         };
@@ -108,7 +109,7 @@ Canvas <!DOCTYPE html>
         // زر إنزال الصورة لأسفل (أعلى يمين)
         const moveDownButton = document.createElement("button");
         moveDownButton.classList.add("move-button", "move-down-button");
-        moveDownButton.innerHTML = "  ";
+        moveDownButton.innerHTML = " "; // تغيير الرمز ليكون أوضح
         moveDownButton.onclick = function() {
           moveImageDown(imgDiv);
         };
@@ -119,20 +120,21 @@ Canvas <!DOCTYPE html>
       });
     }
 
-    // 🟢 4. تحديث عدد القلوب في Firestore
+    // 🟢 4. تحديث عدد القلوب للصور في Firestore
     async function updateHeartCount(docId, newHeartCount) {
         try {
             const imageRef = doc(db, "images", docId);
             await updateDoc(imageRef, { hearts: newHeartCount });
         } catch (error) {
-            console.error("Error updating heart count: ", error);
-            alert("حدث خطأ أثناء تحديث عدد القلوب.");
+            console.error("Error updating image heart count: ", error);
+            alert("حدث خطأ أثناء تحديث عدد القلوب للصورة.");
         }
     }
 
     // 🟢 5. حذف الصورة من Firestore
     async function deleteImage(docId) {
         try {
+            if (!confirm("هل أنت متأكد من حذف هذه الصورة؟")) return; // تأكيد الحذف
             const imageRef = doc(db, "images", docId);
             await deleteDoc(imageRef);
             loadImages(); // إعادة تحميل الصور بعد الحذف
@@ -203,13 +205,20 @@ Canvas <!DOCTYPE html>
             const updates = []; // مصفوفة لتجميع عمليات التحديث
             for (let i = 0; i < images.length; i++) {
                 const docId = images[i].getAttribute("data-doc-id"); // الحصول على معرف الوثيقة
-                const imageRef = doc(db, "images", docId);
-                // Use the current index as the base for order if data-order is not reliable
-                const currentOrder = i;
-                updates.push(updateDoc(imageRef, { order: currentOrder + 1 }));
+                if (docId) { // التأكد من وجود معرف المستند
+                    const imageRef = doc(db, "images", docId);
+                    const currentOrder = i; // استخدام الفهرس الحالي كأساس للترتيب
+                    updates.push(updateDoc(imageRef, { order: currentOrder })); // تحديث الترتيب بدءًا من 0
+                } else {
+                    console.warn("Image item missing data-doc-id:", images[i]);
+                }
             }
             // تنفيذ جميع عمليات التحديث معًا
-            await Promise.all(updates);
+            if (updates.length > 0) {
+               await Promise.all(updates);
+            }
+            // لا داعي لإعادة تحميل الصور هنا لأن الترتيب تم بالفعل في الواجهة
+            // loadImages(); // يمكن إزالة هذا السطر إذا لم تكن هناك حاجة ماسة لإعادة التحميل
         } catch (error) {
             console.error("Error updating image order: ", error);
             alert("حدث خطأ أثناء تحديث ترتيب الصور.");
@@ -220,7 +229,7 @@ Canvas <!DOCTYPE html>
     document.getElementById("fileInput").addEventListener("change", async () => {
       const fileInput = document.getElementById("fileInput");
       if (!fileInput.files.length) {
-        alert("يرجى اختيار صورة.");
+        // لا داعي لإظهار تنبيه إذا لم يتم اختيار ملف
         return;
       }
 
@@ -229,6 +238,11 @@ Canvas <!DOCTYPE html>
       formData.append("image", file);
 
       const clientId = "0a4e691f4781a44"; // استبدل بـ Client-ID الصحيح لـ Imgur
+
+      // إظهار مؤشر تحميل أو تعطيل الزر (اختياري)
+      const uploadButtonLabel = document.querySelector('.upload-btn');
+      uploadButtonLabel.textContent = '⏳'; // تغيير مؤقت للأيقونة
+      uploadButtonLabel.style.pointerEvents = 'none'; // تعطيل النقر أثناء الرفع
 
       try {
         // --- رفع الصورة إلى Imgur ---
@@ -245,26 +259,19 @@ Canvas <!DOCTYPE html>
 
         const imageUrl = data.data.link;
 
-        // --- تحديث ترتيب الصور الحالية في Firestore ---
+        // --- الحصول على عدد الصور الحالية لتحديد الترتيب التالي ---
         const imageContainer = document.getElementById("imageContainer");
-        const images = imageContainer.querySelectorAll(".image-item");
-        const updates = [];
+        const currentImageCount = imageContainer.querySelectorAll(".image-item").length;
 
-        // زيادة ترتيب الصور الحالية بمقدار 1
-        for (let i = 0; i < images.length; i++) {
-          const docId = images[i].getAttribute("data-doc-id");
-          const imageRef = doc(db, "images", docId);
-          // Use the current index as the base for order if data-order is not reliable
-          const currentOrder = i;
-          updates.push(updateDoc(imageRef, { order: currentOrder + 1 }));
-        }
-        // انتظر اكتمال تحديث الترتيب قبل إضافة الجديد
-        await Promise.all(updates);
+        // --- إضافة الصورة الجديدة بالترتيب الصحيح إلى Firestore ---
+        // الترتيب الجديد سيكون هو عدد الصور الحالية (يبدأ من 0)
+        await addDoc(collection(db, "images"), {
+            url: imageUrl,
+            hearts: 0,
+            order: currentImageCount // الترتيب الجديد
+        });
 
-        // --- إضافة الصورة الجديدة بترتيب 0 إلى Firestore ---
-        await addDoc(collection(db, "images"), { url: imageUrl, hearts: 0, order: 0 });
-
-        loadImages(); // إعادة تحميل الصور بعد الرفع والتحديث
+        loadImages(); // إعادة تحميل الصور لإظهار الصورة الجديدة والمحافظة على الترتيب
 
       } catch (error) {
         console.error("خطأ أثناء رفع الصورة:", error);
@@ -272,48 +279,60 @@ Canvas <!DOCTYPE html>
       } finally {
         // إعادة تعيين حقل الإدخال للسماح برفع نفس الملف مرة أخرى إذا لزم الأمر
         fileInput.value = '';
+        // إعادة الزر إلى حالته الطبيعية
+        uploadButtonLabel.textContent = '+';
+        uploadButtonLabel.style.pointerEvents = 'auto';
       }
     });
 
     // --------------------------------------------------
-    // --- وظائف حفظ وتحميل النص القابل للتعديل ---
+    // --- وظائف حفظ وتحميل النص القابل للتعديل وقلوبه ---
     // --------------------------------------------------
 
-    // معرف المستند الذي سيتم تخزين النص فيه
+    // معرف المستند الذي سيتم تخزين النص والقلوب فيه
     const textDocId = "mainContent"; // يمكنك تغيير هذا الاسم
-    const textCollectionName = "userText"; // اسم المجموعة للنص
+    const textCollectionName = "userText"; // اسم المجموعة للنص والقلوب
 
     // 🟢 11. حفظ النص في Firestore
     async function saveText(text) {
       try {
         const textRef = doc(db, textCollectionName, textDocId);
-        await setDoc(textRef, { content: text }); // استخدام setDoc لإنشاء أو استبدال المستند
+        // استخدام merge: true للحفاظ على حقل القلوب عند تحديث النص فقط
+        await setDoc(textRef, { content: text }, { merge: true });
         console.log("Text saved successfully!");
       } catch (error) {
         console.error("Error saving text: ", error);
-        alert("حدث خطأ أثناء حفظ النص.");
+        // لا تعرض تنبيه للمستخدم عند الحفظ التلقائي لتجنب الإزعاج
+        // alert("حدث خطأ أثناء حفظ النص.");
       }
     }
 
-    // 🟢 12. تحميل النص من Firestore
-    async function loadText() {
+    // 🟢 12. تحميل النص وعدد القلوب من Firestore
+    async function loadTextAndHearts() {
       const editableDiv = document.getElementById("editableText");
+      const textHeartCountSpan = document.getElementById("textHeartCount");
       try {
         const textRef = doc(db, textCollectionName, textDocId);
         const docSnap = await getDoc(textRef);
 
         if (docSnap.exists()) {
-          editableDiv.innerHTML = docSnap.data().content; // استخدام innerHTML للحفاظ على تنسيق بسيط مثل فواصل الأسطر
+          const data = docSnap.data();
+          editableDiv.innerHTML = data.content || "اكتب هنا..."; // استخدام innerHTML للحفاظ على تنسيق بسيط مثل فواصل الأسطر
+          textHeartCountSpan.textContent = data.hearts || 0; // تحميل عدد القلوب أو 0
         } else {
-          // النص الافتراضي إذا لم يتم العثور على مستند
+          // النص والقلوب الافتراضية إذا لم يتم العثور على مستند
           editableDiv.innerHTML = "اكتب هنا...";
-          console.log("No such document! Displaying default text.");
+          textHeartCountSpan.textContent = 0;
+          console.log("No such document! Displaying default text and 0 hearts.");
+          // يمكنك إنشاء المستند هنا بالقيم الافتراضية إذا أردت
+          // await setDoc(textRef, { content: "اكتب هنا...", hearts: 0 });
         }
       } catch (error) {
-        console.error("Error loading text: ", error);
-        // الحفاظ على النص الافتراضي في حالة حدوث خطأ
+        console.error("Error loading text and hearts: ", error);
+        // الحفاظ على النص الافتراضي والقلوب في حالة حدوث خطأ
         editableDiv.innerHTML = "اكتب هنا...";
-        alert("حدث خطأ أثناء تحميل النص.");
+        textHeartCountSpan.textContent = 0;
+        alert("حدث خطأ أثناء تحميل النص والقلوب.");
       }
     }
 
@@ -329,6 +348,46 @@ Canvas <!DOCTYPE html>
         }
     }
 
+    // 🟢 14. تحديث عدد قلوب النص في Firestore
+    async function updateTextHeartCount(newCount) {
+      try {
+        const textRef = doc(db, textCollectionName, textDocId);
+        await setDoc(textRef, { hearts: newCount }, { merge: true }); // استخدام setDoc مع merge لتحديث أو إضافة حقل القلوب
+        console.log("Text hearts updated successfully!");
+      } catch (error) {
+        console.error("Error updating text hearts: ", error);
+        alert("حدث خطأ أثناء تحديث عدد قلوب النص.");
+      }
+    }
+
+    // 🟢 15. إعداد أزرار تفاعل النص (القلب وإعادة الضبط)
+    function setupTextActions() {
+        const heartButton = document.getElementById("textHeartButton");
+        const resetButton = document.getElementById("resetTextHeartsButton");
+        const countSpan = document.getElementById("textHeartCount");
+
+        if (heartButton && resetButton && countSpan) {
+            // إضافة قلب
+            heartButton.addEventListener("click", () => {
+                let currentCount = parseInt(countSpan.textContent) || 0;
+                currentCount++;
+                countSpan.textContent = currentCount;
+                updateTextHeartCount(currentCount); // تحديث Firestore
+                // إضافة تأثير النبض
+                heartButton.classList.add("clicked");
+                setTimeout(() => heartButton.classList.remove("clicked"), 300);
+            });
+
+            // إعادة ضبط العداد بدون تأكيد
+            resetButton.addEventListener("click", () => {
+                countSpan.textContent = 0;
+                updateTextHeartCount(0); // تحديث Firestore
+            });
+        } else {
+            console.error("Text action buttons or counter span not found!");
+        }
+    }
+
     // --------------------------------------------------
     // --- حركة الفراشة ---
     // --------------------------------------------------
@@ -338,23 +397,26 @@ Canvas <!DOCTYPE html>
 
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
-        const butterflySize = 50; // حجم الفراشة
+        const butterflySize = 50; // حجم الفراشة التقريبي
 
-        // حساب المواقع العشوائية مع الأخذ في الاعتبار حجم الفراشة
-        // تأكد من أن الفراشة لا تخرج عن الحدود
-        const randomX = Math.random() * (viewportWidth - butterflySize);
-        const randomY = Math.random() * (viewportHeight - butterflySize);
+        // حساب المواقع العشوائية مع الأخذ في الاعتبار حجم الفراشة وشريط التمرير المحتمل
+        const randomX = Math.random() * (viewportWidth - butterflySize - 20); // 20 بكسل هامش إضافي
+        const randomY = Math.random() * (viewportHeight - butterflySize - 20); // 20 بكسل هامش إضافي
+
+        // التأكد من أن القيم ليست سالبة
+        const finalX = Math.max(10, randomX); // 10 بكسل هامش أدنى
+        const finalY = Math.max(10, randomY); // 10 بكسل هامش أدنى
 
         // تطبيق الموقع الجديد
-        butterfly.style.left = `${randomX}px`;
-        butterfly.style.top = `${randomY}px`;
+        butterfly.style.left = `${finalX}px`;
+        butterfly.style.top = `${finalY}px`;
     }
 
     // بدء تحريك الفراشة كل بضع ثوانٍ
     function startButterflyMovement() {
         // تحريك الفراشة فورًا عند التحميل
         moveButterfly();
-        // ثم تحريكها كل 8 ثوانٍ (تم زيادة المدة لجعل الحركة أبطأ)
+        // ثم تحريكها كل 8 ثوانٍ
         setInterval(moveButterfly, 8000); // 8000 ميلي ثانية = 8 ثوانٍ
     }
 
@@ -363,9 +425,10 @@ Canvas <!DOCTYPE html>
     // --- تحميل البيانات عند بدء تشغيل الصفحة ---
     // --------------------------------------------------
     document.addEventListener("DOMContentLoaded", () => {
-      loadImages(); // تحميل الصور
-      loadText();   // تحميل النص المحفوظ
-      setupTextSaving(); // إعداد الحفظ التلقائي للنص
+      loadImages();         // تحميل الصور
+      loadTextAndHearts();  // تحميل النص المحفوظ وعدد القلوب
+      setupTextSaving();    // إعداد الحفظ التلقائي للنص
+      setupTextActions();   // إعداد أزرار تفاعل النص
       startButterflyMovement(); // بدء حركة الفراشة
     });
 
@@ -373,398 +436,727 @@ Canvas <!DOCTYPE html>
     window.addEventListener('resize', moveButterfly);
 
 
-  </script>
-   <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      margin: 0;
-      padding: 0;
-      background: linear-gradient(135deg, #223D0A, #192705, #323B04); /* تدرج أخضر داكن */
-      color: rgb(80, 100, 80); /* لون نص أفتح للقراءة على خلفية خضراء */
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      align-items: center;
-      background-size: cover; /* تغطية كاملة للصفحة */
-      overflow-x: hidden; /* منع ظهور شريط التمرير الأفقي بسبب الفراشة */
-    }
+</script>
 
-    h1 {
-      color: #FFA500; /* اللون الأصفر البرتقالي */
-      font-size: 2.5rem;
-      margin-top: 20px;
-      animation: fadeIn 1s ease-in-out;
-    }
+<style>
 
-    h1::after {
-      content: " ❤️"; /* إضافة رمز قلب */
-    }
+body {
 
-    /* تصميم زر رفع الصورة */
-    #fileInput {
-      display: none; /* إخفاء المدخل الافتراضي */
-    }
+font-family: Arial, sans-serif;
 
-    .upload-btn {
-      position: fixed;
-      bottom: 50px;
-      left: 50px; /* تعديل الموقع ليكون في الأسفل اليسار */
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      background-color: rgba(255, 255, 255, 0.103); /* خلفية شفافة أكثر */
-      color: #ffffff9f; /* اللون الأبيض */
-      font-size: 30px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-      box-shadow: 0 5px 15px rgba(167, 167, 167, 0.041);
-      transition: all 0.3s ease;
-      border: 2px solid #cfcfcf88; /* إطار أسود فراني */
-      animation: bounce 2s infinite;
-      z-index: 100; /* لضمان ظهوره فوق العناصر الأخرى */
-    }
+text-align: center;
 
-    .upload-btn:hover {
-      background-color: rgba(58, 58, 58, 0.6); /* زيادة الشفافية عند التمرير */
-      transform: scale(1.1);
-    }
+margin: 0;
 
-    button {
-      margin: 5px;
-      padding: 10px;
-      cursor: pointer;
-    }
+padding: 0;
 
-    /* تصميم زر الحمد لله */
-    .heart-button {
-      position: absolute;
-      bottom: -30px;
-      left: 10px; /* زر الحمد لله على اليسار */
-      background: rgba(255, 255, 255, 0.2);
-      border: none;
-      padding: 4px 10px;
-      border-radius: 10px 0 0 10px; /* حواف دائرية على اليسار فقط */
-      color: #FFA500;
-      font-size: 12px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      direction: rtl;
-      display: flex;
-      align-items: center;
-      gap: 3px;
-      height: 30px; /* نفس ارتفاع زر العداد */
-    }
+background: linear-gradient(135deg, #223D0A, #192705, #323B04); /* تدرج أخضر داكن */
 
-    .heart-button:hover {
-      background: rgba(255, 165, 0, 0.3); /* تعديل تأثير التحويم */
-    }
+color: rgb(80, 100, 80); /* لون نص أفتح للقراءة على خلفية خضراء */
 
-    .heart-button.clicked {
-      animation: pulse 0.3s ease-in-out; /* تأثير النبض عند الضغط */
-    }
+min-height: 100vh;
 
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.1); }
-      100% { transform: scale(1); }
-    }
+display: flex;
 
-    /* تصميم زر العداد */
-    .count-button {
-      position: absolute;
-      bottom: -30px;
-      left: 92px; /* ملتصق بجانب زر الحمد لله من اليمين */
-      background: rgba(255, 255, 255, 0.2); /* نفس خلفية زر الحمد لله */
-      border: none;
-      padding: 4px 10px;
-      border-radius: 0 10px 10px 0; /* حواف دائرية على اليمين فقط */
-      color: #FFA500;
-      font-size: 12px;
-      cursor: default; /* لا يتفاعل مع المؤشر */
-      pointer-events: none; /* تعطيل التفاعل */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 30px; /* نفس ارتفاع زر الحمد لله */
-    }
+flex-direction: column;
 
-    /* تعديل تنسيقات زر الحذف */
-    .delete-button {
-      position: absolute;
-      bottom: -30px; /* محاذاة مع الأزرار الأخرى */
-      right: 49px; /* وضع الزر بين زر العداد وزر التنزيل (قيمة تقديرية) */
-      background-color: rgba(255, 255, 255, 0); /* خلفية شفافة قليلاً باللون الأبيض */
-      border: none;
-      padding: 4px 10px; /* إضافة حشو ليكون الزر مرئياً */
-      border-radius: 10px; /* حواف دائرية */
-      color: rgba(255, 255, 255, 0.1); /* لون النص أبيض شفاف قليلاً */
-      font-size: 12px; /* حجم خط مطابق للأزرار الأخرى */
-      cursor: pointer;
-      width: auto; /* السماح للعرض بالتكيف مع المحتوى */
-      height: auto; /* السماح للارتفاع بالتكيف مع المحتوى */
-      opacity: 0.4; /* إظهار الزر قليلاً بشكل دائم */
-      transition: opacity 0.3s ease; /* جعل الانتقال أسرع */
-    }
+justify-content: flex-start;
 
-    .delete-button:hover {
-      opacity: 0.8; /* زيادة الشفافية عند التمرير ليصبح أكثر وضوحًا */
-    }
+align-items: center;
+
+background-size: cover; /* تغطية كاملة للصفحة */
+
+overflow-x: hidden; /* منع ظهور شريط التمرير الأفقي بسبب الفراشة */
+
+}
 
 
-    /* تصميم زر التحميل */
-    .download-button {
-      position: absolute;
-      bottom: -30px;
-      right: 10px; /* وضع الزر في أسفل اليمين */
-      background: rgba(255, 255, 255, 0.2);
-      border: none;
-      padding: 4px 10px;
-      border-radius: 10px;
-      color: #FFFFFF;
-      font-size: 12px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      height: 30px;
-    }
 
-    .download-button:hover {
-      background: rgba(255, 165, 0, 0.3);
-    }
+h1 {
 
-    .move-button {
-      position: absolute;
-      top: 10px;
-      background-color: rgba(255, 255, 255, 0); /* شفافية */
-      border: none;
-      padding: 5px;
-      cursor: pointer;
-      border-radius: 50%;
-      font-size: 29px;
-      opacity: 0.7;
-      transition: opacity 0.3s ease;
-    }
+color: #FFA500; /* اللون الأصفر البرتقالي */
 
-    .move-up-button {
-      right: 10px; /* زر الرفع في أعلى يسار */
-    }
+font-size: 2.5rem;
 
-    .move-down-button {
-      left: 10px; /* زر الإنزال في أعلى يمين */
-    }
+margin-top: 20px;
 
-    .move-button:hover {
-      opacity: 1;
-    }
+animation: fadeIn 1s ease-in-out;
 
-    .image-item {
-      position: relative;
-      display: inline-block;
-      margin: 30px; /* زيادة المسافة بين الصور */
-      animation: slideIn 0.5s ease-in-out;
-    }
+}
 
-    .image {
-      border-radius: 15px; /* حواف دائرية */
-      width: 100%;
-      max-width: 200px;
-      height: auto;
-    }
 
-    #imageContainer {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      padding: 10px;
-      width: 100%;
-      padding-bottom: 60px;
-    }
 
-    /* تحسين التوافق مع الأجهزة المحمولة */
-    @media (max-width: 600px) {
-      h1 {
-        font-size: 2rem;
-      }
+h1::after {
 
-      .upload-btn {
-        bottom: 50px;
-        left: 50px;
-        width: 50px;
-        height: 50px;
-        font-size: 30px;
-      }
+content: " ❤️"; /* إضافة رمز قلب */
 
-      .image-item {
-        margin: 20px;
-      }
+}
 
-      #imageContainer {
-        flex-direction: column;
-        align-items: center;
-      }
 
-      .image {
-        max-width: 330px;
-      }
 
-      button {
-        font-size: 15px;
-      }
-    }
+/* تصميم زر رفع الصورة */
 
-    /* النص في أسفل الصفحة */
-    .footer-text {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      background-color: #052720; /* أخضر داكن جدًا ليتناسب مع الخلفية */
-      color: white;
-      font-size: 12px;
-      text-align: center;
-      padding: 10px;
-    }
+#fileInput {
 
-    /* أنيميشن ظهور العناصر */
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
+display: none; /* إخفاء المدخل الافتراضي */
 
-    @keyframes slideIn {
-      from { transform: translateY(20px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
+}
 
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-1px); }
-    }
 
-    /* أنيميشن للوجو */
-    .logo {
-      width: 120px;
-      height: auto;
-      margin-top: 40px; /* مسافة بسيطة بين اللوجو وأعلى الصفحة */
-      animation: float 4s ease-in-out infinite;
-    }
 
-    @keyframes float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-3px); }
-    }
+.upload-btn {
 
-      /* --- تنسيقات إضافية للنص القابل للتعديل --- */
-    #editableTextContainer { /* حاوية للنص للمزيد من التحكم */
-        padding: 4px; /* تقليل الحشو الداخلي */
-        border-radius: 4px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* تخفيف الظل */
-        max-width: 60%; /* عرض أقصى بنسبة مئوية */
-        width: 800px; /* الحفاظ على عرض محدد للشاشات الكبيرة */
-        margin: 10px auto; /* تقليل الهامش العلوي */
-        font-family: Arial, sans-serif;
-        direction: rtl;
-        color: white;
-        background-color: rgba(255, 255, 255, 0.01); /* خلفية شفافة قليلاً */
-    }
+position: fixed;
 
-    #editableText { /* العنصر القابل للتعديل نفسه */
-        padding: 40px;
-        min-height: 10px; /* ارتفاع أدنى أصغر */
-        outline: none; /* إزالة الإطار عند التركيز */
-        border-radius: 8px;
-        color: #E0E0E0; /* لون نص أفتح قليلاً */
-        line-height: 1.6; /* تحسين قابلية القراءة */
-        text-align: center; /* محاذاة النص لليمين */
-        background: transparent; /* جعل الخلفية الداخلية شفافة */
-    }
+bottom: 50px;
 
-     /* تغيير مؤشر الماوس للإشارة إلى قابلية التعديل */
-     #editableText:focus {
-         box-shadow: 0 0 5px rgba(255, 165, 0, 0.5); /* ظل برتقالي خفيف عند التركيز */
-     }
-      /* مؤشر الكتابة */
-     #editableText[contenteditable="true"] {
-         cursor: text;
-     }
+left: 50px; /* تعديل الموقع ليكون في الأسفل اليسار */
 
-    /* --- تنسيقات الفراشة --- */
-    #butterfly {
-        position: fixed; /* لتثبيتها بالنسبة لإطار العرض */
-        width: 55px; /* حجم صغير */
-        height: auto;
-        z-index: 999; /* لضمان ظهورها فوق معظم العناصر */
-        /* زيادة مدة الانتقال لجعل الحركة أبطأ */
-        /* إضافة transform إلى الانتقال */
-        transition: top 5s linear, left 6s linear, transform 0.7s ease-in-out;
-        pointer-: none; /* تجاهل أحداث الماوس */
-        transform-origin: center center; /* نقطة ارتكاز التحويل في المنتصف */
-        /* تطبيق أنيميشن الرفرفة */
-        animation: flapping 1.5s ease-in-out infinite; /* مدة الأنميشن 1.5 ثانية، تكرار لا نهائي */
-    }
+width: 60px;
 
-    /* أنيميشن رفرفة الجناح */
-    @keyframes flapping {
-        50%, 120% { transform: scaleX(1); } /* الحجم الطبيعي */
-        50% { transform: scaleX(0.7); } /* يتقلص عرضيًا في المنتصف */
-    }
+height: 60px;
+
+border-radius: 50%;
+
+background-color: rgba(255, 255, 255, 0.103); /* خلفية شفافة أكثر */
+
+color: #ffffff9f; /* اللون الأبيض */
+
+font-size: 30px;
+
+display: flex;
+
+justify-content: center;
+
+align-items: center;
+
+cursor: pointer;
+
+box-shadow: 0 5px 15px rgba(167, 167, 167, 0.041);
+
+transition: all 0.3s ease;
+
+border: 2px solid #cfcfcf88; /* إطار أسود فراني */
+
+animation: bounce 2s infinite;
+
+z-index: 100; /* لضمان ظهوره فوق العناصر الأخرى */
+
+}
+
+
+
+.upload-btn:hover {
+
+background-color: rgba(58, 58, 58, 0.6); /* زيادة الشفافية عند التمرير */
+
+transform: scale(1.1);
+
+}
+
+
+
+button {
+
+margin: 5px;
+
+padding: 10px;
+
+cursor: pointer;
+
+}
+
+
+
+/* تصميم زر الحمد لله */
+
+.heart-button {
+
+position: absolute;
+
+bottom: -30px;
+
+left: 10px; /* زر الحمد لله على اليسار */
+
+background: rgba(255, 255, 255, 0.2);
+
+border: none;
+
+padding: 4px 10px;
+
+border-radius: 10px 0 0 10px; /* حواف دائرية على اليسار فقط */
+
+color: #FFA500;
+
+font-size: 12px;
+
+cursor: pointer;
+
+transition: all 0.2s ease;
+
+direction: rtl;
+
+display: flex;
+
+align-items: center;
+
+gap: 3px;
+
+height: 30px; /* نفس ارتفاع زر العداد */
+
+}
+
+
+
+.heart-button:hover {
+
+background: rgba(255, 165, 0, 0.3); /* تعديل تأثير التحويم */
+
+}
+
+
+
+.heart-button.clicked {
+
+animation: pulse 0.3s ease-in-out; /* تأثير النبض عند الضغط */
+
+}
+
+
+
+@keyframes pulse {
+
+0% { transform: scale(1); }
+
+50% { transform: scale(1.1); }
+
+100% { transform: scale(1); }
+
+}
+
+
+
+/* تصميم زر العداد */
+
+.count-button {
+
+position: absolute;
+
+bottom: -30px;
+
+left: 92px; /* ملتصق بجانب زر الحمد لله من اليمين */
+
+background: rgba(255, 255, 255, 0.2); /* نفس خلفية زر الحمد لله */
+
+border: none;
+
+padding: 4px 10px;
+
+border-radius: 0 10px 10px 0; /* حواف دائرية على اليمين فقط */
+
+color: #FFA500;
+
+font-size: 12px;
+
+cursor: default; /* لا يتفاعل مع المؤشر */
+
+pointer-events: none; /* تعطيل التفاعل */
+
+display: flex;
+
+align-items: center;
+
+justify-content: center;
+
+height: 30px; /* نفس ارتفاع زر الحمد لله */
+
+}
+
+
+
+/* تعديل تنسيقات زر الحذف */
+
+.delete-button {
+
+position: absolute;
+
+bottom: -30px; /* محاذاة مع الأزرار الأخرى */
+
+right: 49px; /* وضع الزر بين زر العداد وزر التنزيل (قيمة تقديرية) */
+
+background-color: rgba(255, 255, 255, 0); /* خلفية شفافة قليلاً باللون الأبيض */
+
+border: none;
+
+padding: 4px 10px; /* إضافة حشو ليكون الزر مرئياً */
+
+border-radius: 10px; /* حواف دائرية */
+
+color: rgba(255, 255, 255, 0.1); /* لون النص أبيض شفاف قليلاً */
+
+font-size: 12px; /* حجم خط مطابق للأزرار الأخرى */
+
+cursor: pointer;
+
+width: auto; /* السماح للعرض بالتكيف مع المحتوى */
+
+height: auto; /* السماح للارتفاع بالتكيف مع المحتوى */
+
+opacity: 0.4; /* إظهار الزر قليلاً بشكل دائم */
+
+transition: opacity 0.3s ease; /* جعل الانتقال أسرع */
+
+}
+
+
+
+.delete-button:hover {
+
+opacity: 0.8; /* زيادة الشفافية عند التمرير ليصبح أكثر وضوحًا */
+
+}
+
+
+
+
+
+/* تصميم زر التحميل */
+
+.download-button {
+
+position: absolute;
+
+bottom: -30px;
+
+right: 10px; /* وضع الزر في أسفل اليمين */
+
+background: rgba(255, 255, 255, 0.2);
+
+border: none;
+
+padding: 4px 10px;
+
+border-radius: 10px;
+
+color: #FFFFFF;
+
+font-size: 12px;
+
+cursor: pointer;
+
+transition: all 0.2s ease;
+
+height: 30px;
+
+}
+
+
+
+.download-button:hover {
+
+background: rgba(255, 165, 0, 0.3);
+
+}
+
+
+
+.move-button {
+
+position: absolute;
+
+top: 10px;
+
+background-color: rgba(255, 255, 255, 0); /* شفافية */
+
+border: none;
+
+padding: 5px;
+
+cursor: pointer;
+
+border-radius: 50%;
+
+font-size: 29px;
+
+opacity: 0.7;
+
+transition: opacity 0.3s ease;
+
+}
+
+
+
+.move-up-button {
+
+right: 10px; /* زر الرفع في أعلى يسار */
+
+}
+
+
+
+.move-down-button {
+
+left: 10px; /* زر الإنزال في أعلى يمين */
+
+}
+
+
+
+.move-button:hover {
+
+opacity: 1;
+
+}
+
+
+
+.image-item {
+
+position: relative;
+
+display: inline-block;
+
+margin: 30px; /* زيادة المسافة بين الصور */
+
+animation: slideIn 0.5s ease-in-out;
+
+}
+
+
+
+.image {
+
+border-radius: 15px; /* حواف دائرية */
+
+width: 100%;
+
+max-width: 200px;
+
+height: auto;
+
+}
+
+
+
+#imageContainer {
+
+display: flex;
+
+flex-wrap: wrap;
+
+justify-content: center;
+
+padding: 10px;
+
+width: 100%;
+
+padding-bottom: 60px;
+
+}
+
+
+
+/* تحسين التوافق مع الأجهزة المحمولة */
+
+@media (max-width: 600px) {
+
+h1 {
+
+font-size: 2rem;
+
+}
+
+
+
+.upload-btn {
+
+bottom: 50px;
+
+left: 50px;
+
+width: 50px;
+
+height: 50px;
+
+font-size: 30px;
+
+}
+
+
+
+.image-item {
+
+margin: 20px;
+
+}
+
+
+
+#imageContainer {
+
+flex-direction: column;
+
+align-items: center;
+
+}
+
+
+
+.image {
+
+max-width: 330px;
+
+}
+
+
+
+button {
+
+font-size: 15px;
+
+}
+
+}
+
+
+
+/* النص في أسفل الصفحة */
+
+.footer-text {
+
+position: fixed;
+
+bottom: 0;
+
+left: 0;
+
+width: 100%;
+
+background-color: #052720; /* أخضر داكن جدًا ليتناسب مع الخلفية */
+
+color: white;
+
+font-size: 12px;
+
+text-align: center;
+
+padding: 10px;
+
+}
+
+
+
+/* أنيميشن ظهور العناصر */
+
+@keyframes fadeIn {
+
+from { opacity: 0; }
+
+to { opacity: 1; }
+
+}
+
+
+
+@keyframes slideIn {
+
+from { transform: translateY(20px); opacity: 0; }
+
+to { transform: translateY(0); opacity: 1; }
+
+}
+
+
+
+@keyframes bounce {
+
+0%, 100% { transform: translateY(0); }
+
+50% { transform: translateY(-1px); }
+
+}
+
+
+
+/* أنيميشن للوجو */
+
+.logo {
+
+width: 120px;
+
+height: auto;
+
+margin-top: 40px; /* مسافة بسيطة بين اللوجو وأعلى الصفحة */
+
+animation: float 4s ease-in-out infinite;
+
+}
+
+
+
+@keyframes float {
+
+0%, 100% { transform: translateY(0); }
+
+50% { transform: translateY(-3px); }
+
+}
+
+
+
+/* --- تنسيقات إضافية للنص القابل للتعديل --- */
+
+#editableTextContainer { /* حاوية للنص للمزيد من التحكم */
+
+padding: 4px; /* تقليل الحشو الداخلي */
+
+border-radius: 4px;
+
+box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* تخفيف الظل */
+
+max-width: 60%; /* عرض أقصى بنسبة مئوية */
+
+width: 800px; /* الحفاظ على عرض محدد للشاشات الكبيرة */
+
+margin: 10px auto; /* تقليل الهامش العلوي */
+
+font-family: Arial, sans-serif;
+
+direction: rtl;
+
+color: white;
+
+background-color: rgba(255, 255, 255, 0.01); /* خلفية شفافة قليلاً */
+
+}
+
+
+
+#editableText { /* العنصر القابل للتعديل نفسه */
+
+padding: 40px;
+
+min-height: 10px; /* ارتفاع أدنى أصغر */
+
+outline: none; /* إزالة الإطار عند التركيز */
+
+border-radius: 8px;
+
+color: #E0E0E0; /* لون نص أفتح قليلاً */
+
+line-height: 1.6; /* تحسين قابلية القراءة */
+
+text-align: center; /* محاذاة النص لليمين */
+
+background: transparent; /* جعل الخلفية الداخلية شفافة */
+
+}
+
+
+
+/* تغيير مؤشر الماوس للإشارة إلى قابلية التعديل */
+
+#editableText:focus {
+
+box-shadow: 0 0 5px rgba(255, 165, 0, 0.5); /* ظل برتقالي خفيف عند التركيز */
+
+}
+
+/* مؤشر الكتابة */
+
+#editableText[contenteditable="true"] {
+
+cursor: text;
+
+}
+
+
+
+/* --- تنسيقات الفراشة --- */
+
+#butterfly {
+
+position: fixed; /* لتثبيتها بالنسبة لإطار العرض */
+
+width: 55px; /* حجم صغير */
+
+height: auto;
+
+z-index: 999; /* لضمان ظهورها فوق معظم العناصر */
+
+/* زيادة مدة الانتقال لجعل الحركة أبطأ */
+
+/* إضافة transform إلى الانتقال */
+
+transition: top 5s linear, left 6s linear, transform 0.7s ease-in-out;
+
+pointer-: none; /* تجاهل أحداث الماوس */
+
+transform-origin: center center; /* نقطة ارتكاز التحويل في المنتصف */
+
+/* تطبيق أنيميشن الرفرفة */
+
+animation: flapping 1.5s ease-in-out infinite; /* مدة الأنميشن 1.5 ثانية، تكرار لا نهائي */
+
+}
+
+
+
+/* أنيميشن رفرفة الجناح */
+
+@keyframes flapping {
+
+50%, 120% { transform: scaleX(1); } /* الحجم الطبيعي */
+
+50% { transform: scaleX(0.7); } /* يتقلص عرضيًا في المنتصف */
+
+  
+  
 #textHeartButton {
   background-color: transparent; /* Makes the button background fully invisible */
   border: none; /* Remove default border */
   color: rgba(255, 255, 255, 0.4); /* Sets the color of the icon/text to white with 60% opacity */
   /* Adjust the '0.6' value (between 0 and 1) for more or less transparency on the icon */
   /* You might also need to set font-size if it's not inherited */
-  font-size: inherit; 
+  font-size: inherit;
   margin-top: 0px;
-  
+
 }
 
   /* أو أي قيمة صغيرة أخرى تناسبك */
   /* يمكنك تعيينها إلى 0 إذا أردت أن تكون ملتصقة تماماً */
-#resetTextHeartsButton {
+#"text-action-button {
   background-color: transparent; /* Makes the button background fully invisible */
   border: none; /* Remove default border */
   color: rgba(255, 255, 255, 0.1); /* Sets the color of the icon/text to white with 60% opacity */
+
 }
 
 
-  </style>
+</style>
 </head>
 <body>
 
- <img src="logo.png" alt="شعار تطبيق ممتن" class="logo">
- 
-    <div id="editableTextContainer">
-  <div id="editableText" contenteditable="true" style="
-          /* يمكن إزالة الأنماط المباشرة إذا تم تضمينها في CSS أعلاه */
-          padding: 5px;
-          min-height: 5px;
-          outline: none;
-          border-radius: 4px;
-          color: white;
-          margin-bottom: 0px;
-      ">
+  <img src="logo.png" alt="شعار تطبيق ممتن" class="logo">
+
+  <div id="editableTextContainer">
+      <div id="editableText" contenteditable="true">
+          </div>
   </div>
-</div>
 
-<div id="textActionsContainer">
-  <button id="textHeartButton" class="text-action-button">️♡</button>
-  <span id="textHeartCount" class="text-heart-count">0</span> <button id="resetTextHeartsButton" class="text-action-button reset-text-button">↻</button>
-</div>
+  <div 
+      <button id="textHeartButton" class="text-action-button">❤️</button>
+      <span id="textHeartCount" class="text-heart-count">0</span> <button id="resetTextHeartsButton"
+class="text-action-button">↻</button> </div>
 
 
-<input type="file" id="fileInput" accept="image/*">
-<label for="fileInput" class="upload-btn">+</label>
+  <input type="file" id="fileInput" accept="image/*">
+  <label for="fileInput" class="upload-btn">+</label>
 
-<div id="imageContainer">
-</div>
+  <div id="imageContainer">
+      </div>
 
-<img src="fly.png" alt="فراشة متحركة" id="butterfly">
+  <img src="fly.png" alt="فراشة متحركة" id="butterfly">
 
 </body>
-
 </html>
-

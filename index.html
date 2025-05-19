@@ -48,6 +48,12 @@
 
         const img = document.createElement("img");
         img.src = imageUrl;
+        // إضافة معالجة خطأ للصورة إذا لم يتم تحميلها (مثل رابط غير صالح)
+        img.onerror = function() {
+            console.error("Failed to load image:", imageUrl);
+            // يمكنك إزالة العنصر أو عرض صورة بديلة
+            imgDiv.remove(); // إزالة العنصر بالكامل إذا فشل تحميل الصورة
+        };
         img.style.width = "200px";
         img.style.margin = "10px";
         img.style.borderRadius = "15px"; // حواف دائرية
@@ -57,17 +63,26 @@
         const heartButton = document.createElement("button");
         heartButton.classList.add("heart-button");
         heartButton.innerHTML = "الحمد لله ❤️"; // نص الزر
-        heartButton.onclick = function() {
-          const newHeartCount = heartsCount + 1;
-          updateHeartCount(docId, newHeartCount); // تحديث عدد القلوب في Firestore
-          // Find the count button within this image-item and update its text
+        heartButton.onclick = async function() { // جعل الدالة async
           const currentImageItem = heartButton.closest('.image-item');
+          const docId = currentImageItem.getAttribute("data-doc-id");
           const countButton = currentImageItem.querySelector('.count-button');
-          if (countButton) {
-              countButton.innerHTML = newHeartCount; // تحديث العداد في الواجهة
+
+          // جلب عدد القلوب الحالي من Firestore لتجنب مشاكل التزامن
+          const docRef = doc(db, "images", docId);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+              const currentHearts = docSnap.data().hearts || 0;
+              const newHeartCount = currentHearts + 1;
+              await updateHeartCount(docId, newHeartCount); // تحديث عدد القلوب في Firestore
+              if (countButton) {
+                  countButton.innerHTML = newHeartCount; // تحديث العداد في الواجهة
+              }
+              heartButton.classList.add("clicked"); // إضافة كلاس للتفاعل
+              setTimeout(() => heartButton.classList.remove("clicked"), 300); // إزالة الكلاس بعد 300ms
+          } else {
+              console.error("Document does not exist for heart update:", docId);
           }
-          heartButton.classList.add("clicked"); // إضافة كلاس للتفاعل
-          setTimeout(() => heartButton.classList.remove("clicked"), 300); // إزالة الكلاس بعد 300ms
         };
         imgDiv.appendChild(heartButton);
 
@@ -83,7 +98,8 @@
         deleteButton.classList.add("delete-button");
         deleteButton.innerHTML = "حذف";
         deleteButton.onclick = function() {
-          deleteImage(docId);
+          const docIdToDelete = deleteButton.closest('.image-item').getAttribute("data-doc-id");
+          deleteImage(docIdToDelete);
         };
         imgDiv.appendChild(deleteButton);
 
@@ -126,7 +142,7 @@
             await updateDoc(imageRef, { hearts: newHeartCount });
         } catch (error) {
             console.error("Error updating heart count: ", error);
-            alert("حدث خطأ أثناء تحديث عدد القلوب.");
+            // يمكنك إضافة رسالة خطأ للمستخدم هنا إذا أردت
         }
     }
 
@@ -204,9 +220,9 @@
             for (let i = 0; i < images.length; i++) {
                 const docId = images[i].getAttribute("data-doc-id"); // الحصول على معرف الوثيقة
                 const imageRef = doc(db, "images", docId);
-                // Use the current index as the base for order if data-order is not reliable
-                const currentOrder = i;
-                updates.push(updateDoc(imageRef, { order: currentOrder + 1 }));
+                // Use the current index as the base for order
+                const newOrder = i;
+                updates.push(updateDoc(imageRef, { order: newOrder }));
             }
             // تنفيذ جميع عمليات التحديث معًا
             await Promise.all(updates);
@@ -216,20 +232,13 @@
         }
     }
 
-    // 🟢 10. رفع الصورة (من ملف أو رابط)
-    async function uploadImage(fileOrUrl) {
+    // 🟢 10. رفع الصورة إلى Imgur (للملفات فقط)
+    async function uploadFileToImgur(file) {
       const clientId = "0a4e691f4781a44"; // استبدل بـ Client-ID الصحيح لـ Imgur
       const formData = new FormData();
-
-      if (typeof fileOrUrl === 'string') { // إذا كان المدخل رابط
-          formData.append("image", fileOrUrl);
-          formData.append("type", "url");
-      } else { // إذا كان المدخل ملف
-          formData.append("image", fileOrUrl);
-      }
+      formData.append("image", file);
 
       try {
-        // --- رفع الصورة إلى Imgur ---
         const response = await fetch("https://api.imgur.com/3/upload", {
           method: "POST",
           headers: { "Authorization": `Client-ID ${clientId}` },
@@ -241,37 +250,46 @@
           throw new Error(data.data.error || "حدث خطأ أثناء رفع الصورة إلى Imgur.");
         }
 
-        const imageUrl = data.data.link;
-
-        // --- تحديث ترتيب الصور الحالية في Firestore ---
-        const imageContainer = document.getElementById("imageContainer");
-        const images = imageContainer.querySelectorAll(".image-item");
-        const updates = [];
-
-        // زيادة ترتيب الصور الحالية بمقدار 1
-        for (let i = 0; i < images.length; i++) {
-          const docId = images[i].getAttribute("data-doc-id");
-          const imageRef = doc(db, "images", docId);
-          const currentOrder = parseInt(images[i].getAttribute("data-order") || '0', 10); // قراءة الترتيب الحالي
-           // Use the current index as the base for order if data-order is not reliable
-          const newOrder = i + 1;
-          updates.push(updateDoc(imageRef, { order: newOrder }));
-        }
-        // انتظر اكتمال تحديث الترتيب قبل إضافة الجديد
-        await Promise.all(updates);
-
-        // --- إضافة الصورة الجديدة بترتيب 0 إلى Firestore ---
-        await addDoc(collection(db, "images"), { url: imageUrl, hearts: 0, order: 0 });
-
-        loadImages(); // إعادة تحميل الصور بعد الرفع والتحديث
-
+        return data.data.link; // إرجاع رابط الصورة المرفوعة
       } catch (error) {
-        console.error("خطأ أثناء رفع الصورة:", error);
-        alert(`حدث خطأ أثناء رفع الصورة: ${error.message}. تحقق من وحدة التحكم.`);
-      } finally {
-        // إخفاء خيارات الرفع بعد الانتهاء
-        document.getElementById('uploadOptions').classList.remove('visible');
+        console.error("خطأ أثناء رفع الصورة إلى Imgur:", error);
+        throw new Error(`حدث خطأ أثناء رفع الصورة: ${error.message}`); // إعادة إلقاء الخطأ للتعامل معه في مكان آخر
       }
+    }
+
+    // 🟢 11. إضافة صورة إلى Firestore (سواء من Imgur أو رابط مباشر)
+    async function addImageToFirestore(imageUrl) {
+         try {
+            // --- تحديث ترتيب الصور الحالية في Firestore ---
+            const imageContainer = document.getElementById("imageContainer");
+            const images = imageContainer.querySelectorAll(".image-item");
+            const updates = [];
+
+            // زيادة ترتيب الصور الحالية بمقدار 1
+            for (let i = 0; i < images.length; i++) {
+              const docId = images[i].getAttribute("data-doc-id");
+              const imageRef = doc(db, "images", docId);
+              // Use the current index as the base for order
+              const newOrder = i + 1;
+              updates.push(updateDoc(imageRef, { order: newOrder }));
+            }
+            // انتظر اكتمال تحديث الترتيب قبل إضافة الجديد
+            await Promise.all(updates);
+
+            // --- إضافة الصورة الجديدة بترتيب 0 إلى Firestore ---
+            await addDoc(collection(db, "images"), { url: imageUrl, hearts: 0, order: 0 });
+
+            loadImages(); // إعادة تحميل الصور بعد الإضافة والتحديث
+
+         } catch (error) {
+             console.error("خطأ أثناء إضافة الصورة إلى Firestore:", error);
+             alert("حدث خطأ أثناء إضافة الصورة.");
+         } finally {
+            // إخفاء خيارات الرفع بعد الانتهاء
+            document.getElementById('uploadOptions').classList.remove('visible');
+             // إخفاء نافذة إدخال الرابط المخصصة
+            hideUrlModal();
+         }
     }
 
 
@@ -283,7 +301,7 @@
     const textDocId = "mainContent"; // يمكنك تغيير هذا الاسم
     const textCollectionName = "userText"; // اسم المجموعة للنص
 
-    // 🟢 11. حفظ النص في Firestore
+    // 🟢 12. حفظ النص في Firestore
     async function saveText(text) {
       try {
         const textRef = doc(db, textCollectionName, textDocId);
@@ -295,7 +313,7 @@
       }
     }
 
-    // 🟢 12. تحميل النص من Firestore
+    // 🟢 13. تحميل النص من Firestore
     async function loadText() {
       const editableDiv = document.getElementById("editableText");
       try {
@@ -317,7 +335,7 @@
       }
     }
 
-    // 🟢 13. إضافة مستمع حدث لحفظ النص عند فقدان التركيز (blur)
+    // 🟢 14. إضافة مستمع حدث لحفظ النص عند فقدان التركيز (blur)
     function setupTextSaving() {
         const editableDiv = document.getElementById("editableText");
         if (editableDiv) {
@@ -360,7 +378,8 @@
 
 
     // --------------------------------------------------
-    // --- وظائف خيارات الرفع الجديدة ---
+    // --- وظائف خيارات الرفع الجديدة ومعالجة الإدخال ---
+    // --- بما في ذلك النافذة المنبثقة المخصصة للرابط ---
     // --------------------------------------------------
 
     // تبديل عرض خيارات الرفع
@@ -376,15 +395,40 @@
         // document.getElementById('uploadOptions').classList.remove('visible');
     }
 
-    // معالجة اختيار "إضافة رابط الصورة"
+    // إظهار النافذة المنبثقة لإدخال الرابط
+    function showUrlModal() {
+        document.getElementById('urlModal').classList.add('visible');
+        document.getElementById('urlInput').value = ''; // مسح الحقل عند الفتح
+        document.getElementById('urlInput').focus(); // التركيز على حقل الإدخال
+    }
+
+    // إخفاء النافذة المنبثقة لإدخال الرابط
+    function hideUrlModal() {
+        document.getElementById('urlModal').classList.remove('visible');
+    }
+
+    // معالجة اختيار "إضافة رابط الصورة" (تظهر النافذة المخصصة الآن)
     function handleUploadFromUrl() {
-        const imageUrl = prompt("الرجاء إدخال رابط الصورة:");
+        toggleUploadOptions(); // إخفاء قائمة الخيارات
+        showUrlModal(); // إظهار النافذة المنبثقة المخصصة
+    }
+
+    // معالجة النقر على زر "إضافة" في النافذة المنبثقة للرابط
+    async function handleAddUrl() {
+        const imageUrl = document.getElementById('urlInput').value.trim(); // الحصول على الرابط وإزالة المسافات البيضاء
         if (imageUrl) {
-            uploadImage(imageUrl); // استدعاء دالة الرفع مع الرابط
+            // التحقق من أن الرابط يبدو كعنوان URL صالح
+            try {
+                new URL(imageUrl); // محاولة إنشاء كائن URL للتحقق من الصلاحية الأساسية
+                 await addImageToFirestore(imageUrl); // استدعاء دالة الإضافة إلى Firestore مع الرابط
+            } catch (e) {
+                alert("الرابط الذي أدخلته غير صالح. يرجى إدخال رابط صحيح يبدأ بـ http أو https.");
+            }
         } else {
-             // إخفاء الخيارات حتى لو لم يتم إدخال رابط
-             document.getElementById('uploadOptions').classList.remove('visible');
+             alert("الرجاء إدخال رابط الصورة.");
         }
+         // إخفاء النافذة المنبثقة سواء تم الإدخال أو لا
+         hideUrlModal();
     }
 
 
@@ -402,12 +446,24 @@
       document.getElementById('uploadFromFileBtn').addEventListener('click', handleUploadFromFile);
       document.getElementById('uploadFromUrlBtn').addEventListener('click', handleUploadFromUrl);
 
+      // مستمعي الأحداث لأزرار النافذة المنبثقة للرابط
+      document.getElementById('addUrlButton').addEventListener('click', handleAddUrl);
+      document.getElementById('cancelUrlButton').addEventListener('click', hideUrlModal);
+
       // مستمع حدث لتغيير ملف الإدخال (يبقى كما هو)
       document.getElementById("fileInput").addEventListener("change", async (event) => {
           if (event.target.files.length > 0) {
-              uploadImage(event.target.files[0]); // استدعاء دالة الرفع مع الملف المختار
+              const file = event.target.files[0];
+              try {
+                  const imageUrl = await uploadFileToImgur(file); // رفع الملف إلى Imgur
+                  await addImageToFirestore(imageUrl); // إضافة رابط Imgur إلى Firestore
+              } catch (error) {
+                  // الخطأ تم التعامل معه جزئياً في uploadFileToImgur، يمكنك إضافة المزيد هنا إذا لزم الأمر
+                  console.error("Error during file upload process:", error);
+                  alert(error.message); // عرض رسالة الخطأ للمستخدم
+              }
           }
-           // إخفاء الخيارات بعد اختيار الملف
+           // إخفاء خيارات الرفع بعد اختيار الملف
            document.getElementById('uploadOptions').classList.remove('visible');
             // إعادة تعيين حقل الإدخال للسماح برفع نفس الملف مرة أخرى إذا لزم الأمر
            event.target.value = '';
@@ -418,13 +474,25 @@
     // تحديث موقع الفراشة عند تغيير حجم النافذة
     window.addEventListener('resize', moveButterfly);
 
-    // إخفاء خيارات الرفع عند النقر خارجها
+    // إخفاء خيارات الرفع والنافذة المنبثقة عند النقر خارجها
     window.addEventListener('click', (event) => {
         const uploadOptions = document.getElementById('uploadOptions');
         const uploadBtn = document.getElementById('uploadBtn');
-        // إذا لم يكن النقر على زر الرفع أو داخل قائمة الخيارات، قم بإخفاء القائمة
-        if (!uploadBtn.contains(event.target) && !uploadOptions.contains(event.target)) {
+        const urlModal = document.getElementById('urlModal');
+        const urlModalContent = document.getElementById('urlModalContent'); // محتوى النافذة المنبثقة
+
+        // إذا لم يكن النقر على زر الرفع أو داخل قائمة الخيارات أو داخل النافذة المنبثقة
+        if (!uploadBtn.contains(event.target) && !uploadOptions.contains(event.target) && !urlModalContent.contains(event.target)) {
             uploadOptions.classList.remove('visible');
+            // لا تخفي النافذة المنبثقة إذا كان النقر داخلها
+            // hideUrlModal(); // تم نقل إخفاء النافذة إلى وظائف الأزرار
+        }
+    });
+
+    // إخفاء النافذة المنبثقة عند الضغط على مفتاح Escape
+    window.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            hideUrlModal();
         }
     });
 
@@ -495,7 +563,7 @@
         position: fixed;
         bottom: 120px; /* فوق زر الرفع الرئيسي */
         left: 50px; /* محاذاة مع زر الرفع الرئيسي */
-        background-color: rgba(255, 255, 255, 0.15); /* خلفية شفافة */
+        background-color: rgba(0, 0, 0, 0.5); /* خلفية شبه شفافة وأغمق */
         border-radius: 10px;
         padding: 10px;
         display: flex;
@@ -517,7 +585,7 @@
 
     /* أزرار الخيارات داخل الحاوية */
     .upload-option-btn {
-        background-color: rgba(255, 255, 255, 0.1); /* خلفية أفتح قليلاً */
+        background-color: rgba(255, 255, 255, 0.15); /* خلفية أفتح قليلاً من الخلفية الرئيسية للقائمة */
         border: none;
         padding: 8px 15px;
         border-radius: 8px;
@@ -529,8 +597,23 @@
     }
 
     .upload-option-btn:hover {
-        background-color: rgba(255, 255, 255, 0.2); /* خلفية أغمق عند التحويم */
+        background-color: rgba(255, 255, 255, 0.25); /* خلفية أغمق عند التحويم */
     }
+
+    /* تنسيق رابط Postimages */
+    .postimages-link {
+        font-size: 10px; /* حجم خط أصغر */
+        color: #B0B0B0; /* لون رمادي فاتح */
+        text-decoration: none; /* إزالة الخط تحت الرابط */
+        text-align: center; /* توسيط النص */
+        display: block; /* لجعله يأخذ سطرًا كاملاً */
+        margin-top: 5px; /* مسافة صغيرة فوق الرابط */
+    }
+
+     .postimages-link:hover {
+        color: #FFFFFF; /* لون أبيض عند التحويم */
+        text-decoration: underline; /* إضافة خط تحت الرابط عند التحويم */
+     }
 
 
     button {
@@ -709,6 +792,25 @@
          padding: 6px 10px;
       }
 
+      .postimages-link {
+          font-size: 9px;
+      }
+
+      #urlModalContent {
+          width: 90%;
+          padding: 15px;
+      }
+
+      #urlInput {
+          padding: 8px;
+          font-size: 14px;
+      }
+
+      #urlModal button {
+          padding: 8px 12px;
+          font-size: 12px;
+      }
+
 
       .image-item {
         margin: 20px;
@@ -816,49 +918,5 @@
         pointer-events: none; /* تجاهل أحداث الماوس */
         transform-origin: center center; /* نقطة ارتكاز التحويل في المنتصف */
         /* تطبيق أنيميشن الرفرفة */
-        animation: flapping 1.5s ease-in-out infinite; /* مدة الأنميشن 1.5 ثانية، تكرار لا نهائي */
-    }
-
-    /* أنيميشن رفرفة الجناح */
-    @keyframes flapping {
-        50%, 120% { transform: scaleX(1); } /* الحجم الطبيعي */
-        50% { transform: scaleX(0.7); } /* يتقلص عرضيًا في المنتصف */
-    }
-
-
-  </style>
-</head>
-<body>
-
-  <img src="logo.png" alt="شعار تطبيق ممتن" class="logo">
-
-  <div id="editableTextContainer">
-      <div id="editableText" contenteditable="true" style="
-          /* يمكن إزالة الأنماط المباشرة إذا تم تضمينها في CSS أعلاه */
-          padding: 5px;
-          min-height: 5px;
-          outline: none;
-          border-radius: 4px;
-          color: white;
-      ">
-
-      </div>
-  </div>
-
-  <div id="uploadBtn" class="upload-btn">+</div>
-
-  <div id="uploadOptions">
-      <button id="uploadFromFileBtn" class="upload-option-btn">رفع من خلال الجهاز</button>
-      <button id="uploadFromUrlBtn" class="upload-option-btn">إضافة رابط الصورة</button>
-  </div>
-
-  <input type="file" id="fileInput" accept="image/*">
-
-
-  <div id="imageContainer"></div>
-
-  <img src="fly.png" alt="فراشة متحركة" id="butterfly">
-
-</body>
-</html>
+        animation: flapping 1.5s ease-in-out infinite; /* مدة الأنم
 

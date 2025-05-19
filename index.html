@@ -216,19 +216,17 @@
         }
     }
 
-    // 🟢 10. رفع الصورة تلقائيًا عند اختيارها
-    document.getElementById("fileInput").addEventListener("change", async () => {
-      const fileInput = document.getElementById("fileInput");
-      if (!fileInput.files.length) {
-        alert("يرجى اختيار صورة.");
-        return;
-      }
-
-      const file = fileInput.files[0];
-      const formData = new FormData();
-      formData.append("image", file);
-
+    // 🟢 10. رفع الصورة (من ملف أو رابط)
+    async function uploadImage(fileOrUrl) {
       const clientId = "0a4e691f4781a44"; // استبدل بـ Client-ID الصحيح لـ Imgur
+      const formData = new FormData();
+
+      if (typeof fileOrUrl === 'string') { // إذا كان المدخل رابط
+          formData.append("image", fileOrUrl);
+          formData.append("type", "url");
+      } else { // إذا كان المدخل ملف
+          formData.append("image", fileOrUrl);
+      }
 
       try {
         // --- رفع الصورة إلى Imgur ---
@@ -254,9 +252,10 @@
         for (let i = 0; i < images.length; i++) {
           const docId = images[i].getAttribute("data-doc-id");
           const imageRef = doc(db, "images", docId);
-          // Use the current index as the base for order if data-order is not reliable
-          const currentOrder = i;
-          updates.push(updateDoc(imageRef, { order: currentOrder + 1 }));
+          const currentOrder = parseInt(images[i].getAttribute("data-order") || '0', 10); // قراءة الترتيب الحالي
+           // Use the current index as the base for order if data-order is not reliable
+          const newOrder = i + 1;
+          updates.push(updateDoc(imageRef, { order: newOrder }));
         }
         // انتظر اكتمال تحديث الترتيب قبل إضافة الجديد
         await Promise.all(updates);
@@ -270,10 +269,11 @@
         console.error("خطأ أثناء رفع الصورة:", error);
         alert(`حدث خطأ أثناء رفع الصورة: ${error.message}. تحقق من وحدة التحكم.`);
       } finally {
-        // إعادة تعيين حقل الإدخال للسماح برفع نفس الملف مرة أخرى إذا لزم الأمر
-        fileInput.value = '';
+        // إخفاء خيارات الرفع بعد الانتهاء
+        document.getElementById('uploadOptions').classList.remove('visible');
       }
-    });
+    }
+
 
     // --------------------------------------------------
     // --- وظائف حفظ وتحميل النص القابل للتعديل ---
@@ -338,7 +338,7 @@
 
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
-        const butterflySize = 50; // حجم الفراشة
+        const butterflySize = 55; // حجم الفراشة (تأكد من تطابقه مع CSS)
 
         // حساب المواقع العشوائية مع الأخذ في الاعتبار حجم الفراشة
         // تأكد من أن الفراشة لا تخرج عن الحدود
@@ -360,6 +360,35 @@
 
 
     // --------------------------------------------------
+    // --- وظائف خيارات الرفع الجديدة ---
+    // --------------------------------------------------
+
+    // تبديل عرض خيارات الرفع
+    function toggleUploadOptions() {
+        const optionsDiv = document.getElementById('uploadOptions');
+        optionsDiv.classList.toggle('visible');
+    }
+
+    // معالجة اختيار "رفع من خلال الجهاز"
+    function handleUploadFromFile() {
+        document.getElementById('fileInput').click(); // فتح نافذة اختيار الملف
+        // إخفاء الخيارات بعد الاختيار (يمكن إبقاؤها ظاهرة إذا أردت)
+        // document.getElementById('uploadOptions').classList.remove('visible');
+    }
+
+    // معالجة اختيار "إضافة رابط الصورة"
+    function handleUploadFromUrl() {
+        const imageUrl = prompt("الرجاء إدخال رابط الصورة:");
+        if (imageUrl) {
+            uploadImage(imageUrl); // استدعاء دالة الرفع مع الرابط
+        } else {
+             // إخفاء الخيارات حتى لو لم يتم إدخال رابط
+             document.getElementById('uploadOptions').classList.remove('visible');
+        }
+    }
+
+
+    // --------------------------------------------------
     // --- تحميل البيانات عند بدء تشغيل الصفحة ---
     // --------------------------------------------------
     document.addEventListener("DOMContentLoaded", () => {
@@ -367,10 +396,37 @@
       loadText();   // تحميل النص المحفوظ
       setupTextSaving(); // إعداد الحفظ التلقائي للنص
       startButterflyMovement(); // بدء حركة الفراشة
+
+      // إضافة مستمعي الأحداث للأزرار الجديدة
+      document.getElementById('uploadBtn').addEventListener('click', toggleUploadOptions);
+      document.getElementById('uploadFromFileBtn').addEventListener('click', handleUploadFromFile);
+      document.getElementById('uploadFromUrlBtn').addEventListener('click', handleUploadFromUrl);
+
+      // مستمع حدث لتغيير ملف الإدخال (يبقى كما هو)
+      document.getElementById("fileInput").addEventListener("change", async (event) => {
+          if (event.target.files.length > 0) {
+              uploadImage(event.target.files[0]); // استدعاء دالة الرفع مع الملف المختار
+          }
+           // إخفاء الخيارات بعد اختيار الملف
+           document.getElementById('uploadOptions').classList.remove('visible');
+            // إعادة تعيين حقل الإدخال للسماح برفع نفس الملف مرة أخرى إذا لزم الأمر
+           event.target.value = '';
+      });
+
     });
 
     // تحديث موقع الفراشة عند تغيير حجم النافذة
     window.addEventListener('resize', moveButterfly);
+
+    // إخفاء خيارات الرفع عند النقر خارجها
+    window.addEventListener('click', (event) => {
+        const uploadOptions = document.getElementById('uploadOptions');
+        const uploadBtn = document.getElementById('uploadBtn');
+        // إذا لم يكن النقر على زر الرفع أو داخل قائمة الخيارات، قم بإخفاء القائمة
+        if (!uploadBtn.contains(event.target) && !uploadOptions.contains(event.target)) {
+            uploadOptions.classList.remove('visible');
+        }
+    });
 
 
   </script>
@@ -402,12 +458,8 @@
       content: " ❤️"; /* إضافة رمز قلب */
     }
 
-    /* تصميم زر رفع الصورة */
-    #fileInput {
-      display: none; /* إخفاء المدخل الافتراضي */
-    }
-
-    .upload-btn {
+    /* تصميم زر رفع الصورة الرئيسي (+) */
+    #uploadBtn {
       position: fixed;
       bottom: 50px;
       left: 50px; /* تعديل الموقع ليكون في الأسفل اليسار */
@@ -425,13 +477,61 @@
       transition: all 0.3s ease;
       border: 2px solid #cfcfcf88; /* إطار أسود فراني */
       animation: bounce 2s infinite;
-      z-index: 100; /* لضمان ظهوره فوق العناصر الأخرى */
+      z-index: 101; /* لضمان ظهوره فوق العناصر الأخرى وخيارات الرفع */
     }
 
-    .upload-btn:hover {
+    #uploadBtn:hover {
       background-color: rgba(58, 58, 58, 0.6); /* زيادة الشفافية عند التمرير */
       transform: scale(1.1);
     }
+
+    /* إخفاء مدخل الملف الافتراضي */
+    #fileInput {
+      display: none;
+    }
+
+    /* حاوية خيارات الرفع */
+    #uploadOptions {
+        position: fixed;
+        bottom: 120px; /* فوق زر الرفع الرئيسي */
+        left: 50px; /* محاذاة مع زر الرفع الرئيسي */
+        background-color: rgba(255, 255, 255, 0.15); /* خلفية شفافة */
+        border-radius: 10px;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        z-index: 100; /* أقل من زر الرفع الرئيسي */
+        opacity: 0; /* مخفي افتراضيًا */
+        visibility: hidden; /* مخفي افتراضيًا */
+        transform: translateY(20px); /* يبدأ من أسفل قليلاً */
+        transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out, visibility 0.3s ease-in-out;
+    }
+
+    #uploadOptions.visible {
+        opacity: 1; /* يظهر عند إضافة الكلاس visible */
+        visibility: visible; /* يظهر عند إضافة الكلاس visible */
+        transform: translateY(0); /* يعود إلى مكانه الأصلي */
+    }
+
+
+    /* أزرار الخيارات داخل الحاوية */
+    .upload-option-btn {
+        background-color: rgba(255, 255, 255, 0.1); /* خلفية أفتح قليلاً */
+        border: none;
+        padding: 8px 15px;
+        border-radius: 8px;
+        color: #E0E0E0; /* لون نص فاتح */
+        font-size: 14px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        text-align: right; /* محاذاة النص لليمين */
+    }
+
+    .upload-option-btn:hover {
+        background-color: rgba(255, 255, 255, 0.2); /* خلفية أغمق عند التحويم */
+    }
+
 
     button {
       margin: 5px;
@@ -589,13 +689,26 @@
         font-size: 2rem;
       }
 
-      .upload-btn {
+      #uploadBtn {
         bottom: 50px;
         left: 50px;
         width: 50px;
         height: 50px;
         font-size: 30px;
       }
+
+      #uploadOptions {
+         bottom: 110px; /* ضبط الموقع للأجهزة الصغيرة */
+         left: 40px;
+         padding: 8px;
+         gap: 8px;
+      }
+
+      .upload-option-btn {
+         font-size: 12px;
+         padding: 6px 10px;
+      }
+
 
       .image-item {
         margin: 20px;
@@ -700,7 +813,7 @@
         /* زيادة مدة الانتقال لجعل الحركة أبطأ */
         /* إضافة transform إلى الانتقال */
         transition: top 5s linear, left 6s linear, transform 0.7s ease-in-out;
-        pointer-: none; /* تجاهل أحداث الماوس */
+        pointer-events: none; /* تجاهل أحداث الماوس */
         transform-origin: center center; /* نقطة ارتكاز التحويل في المنتصف */
         /* تطبيق أنيميشن الرفرفة */
         animation: flapping 1.5s ease-in-out infinite; /* مدة الأنميشن 1.5 ثانية، تكرار لا نهائي */
@@ -732,8 +845,15 @@
       </div>
   </div>
 
+  <div id="uploadBtn" class="upload-btn">+</div>
+
+  <div id="uploadOptions">
+      <button id="uploadFromFileBtn" class="upload-option-btn">رفع من خلال الجهاز</button>
+      <button id="uploadFromUrlBtn" class="upload-option-btn">إضافة رابط الصورة</button>
+  </div>
+
   <input type="file" id="fileInput" accept="image/*">
-  <label for="fileInput" class="upload-btn">+</label>
+
 
   <div id="imageContainer"></div>
 
@@ -741,3 +861,4 @@
 
 </body>
 </html>
+

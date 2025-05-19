@@ -439,14 +439,12 @@
   <div id="imageModal" class="modal fixed inset-0 z-50 flex items-center justify-center p-4">
       <div class="modal-overlay absolute inset-0 modal-overlay"></div>
 
-      <div class="modal-content bg-black p-6 rounded-lg shadow-xl z-10 w-full max-w-sm mx-auto transform transition-all duration-300 ease-out scale-95 opacity-0" id="modalContent">
-          <h3 class="text-lg font-bold mb-4 text-white-800 text-center">رفع صورة من خلال الرابط</h3>
-
-          <div class="mb-4">
+      <div class="modal-content bg-white p-6 rounded-lg shadow-xl z-10 w-full max-w-sm mx-auto transform transition-all duration-300 ease-out scale-95 opacity-0" id="modalContent">
+          <h3 class="text-lg font-bold mb-4 text-gray-800 text-center">إضافة صورة من خلال الرابط</h3> <div class="mb-4">
               <label for="imageUrl" class="block text-sm font-medium text-gray-700 mb-2">رابط الصورة:</label>
               <input type="url" id="imageUrl" name="imageUrl" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="أدخل رابط الصورة هنا">
-              <p class="text-sm text-white-300 mt-2 text-right">
-                احصل على الرابط من هنا:
+              <p class="text-sm text-gray-600 mt-2 text-right">
+                إذا لم يكن لديك رابط مباشر، يمكنك رفعه أولاً على موقع مثل:
                 <a href="https://postimages.org/" target="_blank" class="text-blue-600 hover:underline">انقر هنا</a>
               </p>
           </div>
@@ -455,8 +453,8 @@
               <button id="cancelBtn" class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-200 focus:ring-opacity-50 transition duration-200 ease-in-out">
                   إلغاء
               </button>
-              <button id="uploadUrlBtn" class="px-4 py-2 bg-green-600 text-white font-semibold rounded-md shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 transition duration-200 ease-in-out">
-                  رفع
+              <button id="addUrlBtn" class="px-4 py-2 bg-green-600 text-white font-semibold rounded-md shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 transition duration-200 ease-in-out">
+                  إضافة
               </button>
           </div>
       </div>
@@ -651,7 +649,7 @@
 
     // 🟢 8. تحريك الصورة لأسفل وتحديث الترتيب في Firestore
     async function moveImageDown(imgDiv) {
-      const nextElement = imgDiv.nextElementSibling;
+       const nextElement = imgDiv.nextElementSibling;
        if (nextElement && nextElement.classList.contains('image-item')) { // تأكد أنه عنصر صورة
         imgDiv.parentNode.insertBefore(nextElement, imgDiv);
         await updateImageOrder(); // تحديث الترتيب في Firestore
@@ -682,17 +680,11 @@
         }
     }
 
-    // 🟢 10. رفع الصورة (من ملف أو رابط)
-    async function uploadImage(fileOrUrl) {
+    // 🟢 10. رفع الصورة من ملف إلى Imgur وإضافتها لـ Firestore
+    async function uploadFileImage(file) {
       const clientId = "0a4e691f4781a44"; // استبدل بـ Client-ID الصحيح لـ Imgur
       const formData = new FormData();
-
-      if (typeof fileOrUrl === 'string') { // إذا كان المدخل رابط
-          formData.append("image", fileOrUrl);
-          formData.append("type", "url");
-      } else { // إذا كان المدخل ملف
-          formData.append("image", fileOrUrl);
-      }
+      formData.append("image", file);
 
       try {
         // --- رفع الصورة إلى Imgur ---
@@ -709,8 +701,8 @@
 
         const imageUrl = data.data.link;
 
-        // --- إضافة الصورة الجديدة بترتيب 0 إلى Firestore ---
-        // نحتاج أولاً للحصول على عدد الصور الحالية لتحديد الترتيب الجديد
+        // --- إضافة الصورة الجديدة إلى Firestore ---
+         // نحتاج أولاً للحصول على عدد الصور الحالية لتحديد الترتيب الجديد
         const imageContainer = document.getElementById("imageContainer");
         const images = imageContainer.querySelectorAll(".image-item");
         const newOrder = images.length; // إضافة الصورة الجديدة في النهاية بترتيب هو عدد العناصر الحالي
@@ -725,9 +717,30 @@
       } finally {
         // إخفاء خيارات الرفع بعد الانتهاء
         document.getElementById('uploadOptions').classList.remove('visible');
-        // إغلاق النافذة المنبثقة لرفع الرابط إذا كانت مفتوحة
-        closeModal();
       }
+    }
+
+    // 🟢 11. إضافة الصورة من الرابط مباشرة إلى Firestore
+    async function addImageUrlToFirestore(imageUrl) {
+        try {
+             // نحتاج أولاً للحصول على عدد الصور الحالية لتحديد الترتيب الجديد
+            const imageContainer = document.getElementById("imageContainer");
+            const images = imageContainer.querySelectorAll(".image-item");
+            const newOrder = images.length; // إضافة الصورة الجديدة في النهاية بترتيب هو عدد العناصر الحالي
+
+            // إضافة الصورة الجديدة إلى Firestore مباشرة بالرابط
+            await addDoc(collection(db, "images"), { url: imageUrl, hearts: 0, order: newOrder });
+
+            console.log("Image URL added to Firestore:", imageUrl);
+            loadImages(); // إعادة تحميل الصور بعد الإضافة
+
+        } catch (error) {
+            console.error("Error adding image URL to Firestore: ", error);
+            alert("حدث خطأ أثناء إضافة رابط الصورة.");
+        } finally {
+            // إغلاق النافذة المنبثقة بعد الانتهاء
+            closeModal();
+        }
     }
 
 
@@ -739,7 +752,7 @@
     const textDocId = "mainContent"; // يمكنك تغيير هذا الاسم
     const textCollectionName = "userText"; // اسم المجموعة للنص
 
-    // 🟢 11. حفظ النص في Firestore
+    // 🟢 12. حفظ النص في Firestore
     async function saveText(text) {
       try {
         const textRef = doc(db, textCollectionName, textDocId);
@@ -751,7 +764,7 @@
       }
     }
 
-    // 🟢 12. تحميل النص من Firestore
+    // 🟢 13. تحميل النص من Firestore
     async function loadText() {
       const editableDiv = document.getElementById("editableText");
       try {
@@ -773,7 +786,7 @@
       }
     }
 
-    // 🟢 13. إضافة مستمع حدث لحفظ النص عند فقدان التركيز (blur)
+    // 🟢 14. إضافة مستمع حدث لحفظ النص عند فقدان التركيز (blur)
     function setupTextSaving() {
         const editableDiv = document.getElementById("editableText");
         if (editableDiv) {
@@ -855,7 +868,7 @@
     const imageModal = document.getElementById('imageModal');
     const modalContent = document.getElementById('modalContent');
     const cancelBtn = document.getElementById('cancelBtn');
-    const uploadUrlBtn = document.getElementById('uploadUrlBtn'); // تم تغيير الاسم لتمييزه عن زر الرفع الرئيسي
+    const addUrlBtn = document.getElementById('addUrlBtn'); // تم تغيير الاسم لتمييزه
     const imageUrlInput = document.getElementById('imageUrl');
     const modalOverlay = imageModal.querySelector('.modal-overlay');
 
@@ -900,7 +913,7 @@
       // مستمع حدث لتغيير ملف الإدخال (يبقى كما هو)
       document.getElementById("fileInput").addEventListener("change", async (event) => {
           if (event.target.files.length > 0) {
-              uploadImage(event.target.files[0]); // استدعاء دالة الرفع مع الملف المختار
+              uploadFileImage(event.target.files[0]); // استدعاء دالة الرفع مع الملف المختار (ترفع إلى Imgur)
           }
            // إخفاء الخيارات بعد اختيار الملف
            document.getElementById('uploadOptions').classList.remove('visible');
@@ -912,11 +925,11 @@
       cancelBtn.addEventListener('click', closeModal); // زر الإلغاء في النافذة المنبثقة
       modalOverlay.addEventListener('click', closeModal); // النقر على الخلفية الشفافة
 
-      uploadUrlBtn.addEventListener('click', () => { // زر الرفع داخل النافذة المنبثقة
+      addUrlBtn.addEventListener('click', () => { // زر الإضافة داخل النافذة المنبثقة (تم تغيير الاسم)
           const imageUrl = imageUrlInput.value.trim(); // الحصول على الرابط وإزالة المسافات البيضاء الزائدة
           if (imageUrl) {
-              uploadImage(imageUrl); // استدعاء دالة الرفع مع الرابط المدخل
-              // إغلاق النافذة سيتم في دالة uploadImage في جزء finally
+              addImageUrlToFirestore(imageUrl); // استدعاء الدالة الجديدة لإضافة الرابط مباشرة
+              // إغلاق النافذة سيتم في دالة addImageUrlToFirestore في جزء finally
           } else {
               alert('الرجاء إدخال رابط الصورة.');
               imageUrlInput.focus();
@@ -941,7 +954,7 @@
     window.addEventListener('click', (event) => {
         const uploadOptions = document.getElementById('uploadOptions');
         const uploadBtn = document.getElementById('uploadBtn');
-        // إذا لم يكن النقر ع
+        // إذا لم يكن النقر على زر الرفع أو داخل قائمة الخيارات، قم بإخفاء القائمة
         if (!uploadBtn.contains(event.target) && !uploadOptions.contains(event.target)) {
             uploadOptions.classList.remove('visible');
         }

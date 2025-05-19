@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <script src="https://cdn.tailwindcss.com/3.4.1"></script>
+    <style>
+        body {
+            background: linear-gradient(to bottom right, #2c0b4d, #6e0000); /* Darker Purple to Darker Red */
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Cairo', sans-serif; /* Using a modern Arabic font */
+            color: #f0f0f0; /* Light gray text for better contrast on dark background */
+            overflow: hidden;
+        }
+        .container {
+            background-color: rgba(0, 0, 0, 0.75); /* Even darker, slightly more transparent background */
+            padding: 3.5rem; /* Slightly increased padding */
+            border-radius: 2rem; /* More rounded corners */
+            text-align: center;
+            max-width: 95%;
+            width: 480px; /* Slightly wider for better spacing */
+            box-shadow: 0 20px 35px rgba(0, 0, 0, 0.6); /* More prominent container shadow */
+            backdrop-filter: blur(10px); /* Frosted glass effect for modern look */
+            border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border */
+        }
+        .word-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2.5rem; /* Increased margin */
+            font-size: 1.6rem; /* Larger font */
+            font-weight: 500;
+        }
+        .word-item label {
+             margin-left: 1rem; /* Increased space between word and checkbox */
+             flex-grow: 1;
+             text-align: right;
+             color: #e0e0e0; /* Brighter label color */
+             cursor: pointer; /* Make label clickable to toggle checkbox */
+        }
+        .word-item input[type="checkbox"] {
+            width: 2.2rem; /* Slightly larger checkbox for interaction */
+            height: 2.2rem; /* Slightly larger checkbox for interaction */
+            cursor: pointer;
+            accent-color: #ffd700; /* Gold accent for checkbox (matches button) */
+            border-radius: 0.6rem; /* Slightly more rounded checkbox corners */
+            border: 2px solid #ffd700;
+            appearance: none;
+            background-color: rgba(255,255,255,0.1);
+            transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease; /* Added transform to transition */
+            display: flex; /* For centering the checkmark */
+            align-items: center;
+            justify-content: center;
+        }
+
+        .word-item input[type="checkbox"]:hover {
+            border-color: #f0c400; /* Darker gold border on hover */
+            transform: scale(1.1); /* Slightly scale up on hover */
+        }
+
+        .word-item input[type="checkbox"]:focus,
+        .word-item input[type="checkbox"]:active { /* Added :active for immediate feedback */
+            outline: none; /* Remove default outline */
+            border-color: #e0b400; /* Even darker gold border */
+            box-shadow: 0 0 8px rgba(255, 215, 0, 0.5); /* Add a glow effect */
+            transform: scale(1.05); /* Slight scale on focus/active */
+        }
+
+        .word-item input[type="checkbox"]:checked {
+            background-color: #ffd700;
+            border-color: #daa520;
+        }
+
+        .word-item input[type="checkbox"]:checked::before {
+            content: '✔';
+            display: block;
+            text-align: center;
+            color: #2c0b4d;
+            font-size: 1.3rem; /* Adjust checkmark size */
+            line-height: 2rem; /* Adjust for new checkbox size */
+            font-weight: bold;
+        }
+
+        button {
+            background-color: #ffd700; /* Bright Yellow (Gold) */
+            color: #3d2b00; /* Dark brown/gold text for contrast */
+            padding: 1.5rem 2.5rem;
+            border-radius: 0.85rem; /* Slightly more rounded corners */
+            font-size: 1.5rem; /* Larger font */
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+            border: none;
+            box-shadow: 0 8px 18px rgba(255, 215, 0, 0.3); /* Yellowish shadow */
+            width: 100%;
+            margin-top: 3rem; /* More space above the button */
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.1em;
+            outline: none;
+            display: inline-block;
+        }
+
+        button:hover {
+            background-color: #f0c400; /* Slightly darker yellow on hover */
+            box-shadow: 0 12px 25px rgba(255, 215, 0, 0.45); /* Enhanced shadow on hover */
+            transform: translateY(-5px); /* More pronounced lift effect */
+        }
+
+        button:active {
+            background-color: #e0b400; /* Even darker yellow on active */
+            transform: translateY(-1px); /* Press down effect */
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.35); /* Smaller shadow when pressed */
+        }
+
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            transform: scale(0);
+            animation: ripple 0.6s linear;
+            background-color: rgba(255, 255, 255, 0.7); /* White ripple */
+            pointer-events: none;
+        }
+
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* Add Cairo font from Google Fonts if not available locally */
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;700&display=swap');
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1 style="font-size: 2.5rem; margin-bottom: 2.5rem; font-weight: 700; color: #ffd700;">تطبيق التحقق</h1>
+        <div class="word-item">
+            <label for="word1">شور</label>
+            <input type="checkbox" id="word1">
+        </div>
+
+        <div class="word-item">
+            <label for="word2">متأكده</label>
+            <input type="checkbox" id="word2">
+        </div>
+
+        <div class="word-item">
+            <label for="word3">بجد</label>
+            <input type="checkbox" id="word3">
+        </div>
+
+        <div class="word-item">
+            <label for="word4">اكيد</label>
+            <input type="checkbox" id="word4">
+        </div>
+
+        <button id="sendButton">ارسال</button>
+
+    </div>
+
+    <script>
+        const sendButton = document.getElementById('sendButton');
+        const checkboxes = document.querySelectorAll('.word-item input[type="checkbox"]'); // Get checkboxes
+
+        sendButton.addEventListener('click', function(e) {
+            // Ripple effect
+            const ripple = document.createElement('span');
+            const diameter = Math.max(sendButton.clientWidth, sendButton.clientHeight);
+            const radius = diameter / 2;
+
+            ripple.style.width = ripple.style.height = `${diameter}px`;
+            ripple.style.left = `${e.clientX - sendButton.getBoundingClientRect().left - radius}px`;
+            ripple.style.top = `${e.clientY - sendButton.getBoundingClientRect().top - radius}px`;
+            ripple.classList.add('ripple');
+
+            const oldRipple = sendButton.querySelector('.ripple');
+            if (oldRipple) {
+                oldRipple.remove();
+            }
+            sendButton.appendChild(ripple);
+
+            // Count checked checkboxes
+            let checkedCount = 0;
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    checkedCount++;
+                }
+            });
+
+            // Determine the message and corresponding emoji
+            let resultMessage = '';
+            let emoji = '';
+
+            switch (checkedCount) {
+                case 4:
+                    resultMessage = 'كله زي الفل';
+                    emoji = 🌷'; // Party popper, 100 points, and a flower (e.g., tulip)
+                    break;
+                case 3:
+                    resultMessage = 'الامور كويسه';
+                    emoji = '👍😊';
+                    break;
+                case 2:
+                    resultMessage = 'نص نص';
+                    emoji = '🤔👌';
+                    break;
+                case 1:
+                    resultMessage = 'يعني';
+                    emoji = '😬🤷‍♂️';
+                    break;
+                case 0:
+                    resultMessage = 'لم يتم تحديد أي خيار.';
+                    emoji = '🚫❓';
+                    break;
+                default:
+                    resultMessage = 'حالة غير معروفة.';
+                    emoji = '⚠️';
+            }
+
+            const phoneNumber = '201100434503';
+            const messageWithEmoji = `${emoji} ${resultMessage}`;
+            const encodedMessage = encodeURIComponent(messageWithEmoji);
+
+            const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+
+            setTimeout(() => {
+                 window.open(whatsappUrl, '_blank');
+            }, 600);
+        });
+
+        // Add event listeners to labels to toggle checkboxes if needed
+        // This makes the text label itself clickable to toggle the checkbox
+        document.querySelectorAll('.word-item label').forEach(label => {
+            label.addEventListener('click', function() {
+                const checkboxId = this.getAttribute('for');
+                const checkbox = document.getElementById(checkboxId);
+                if (checkbox) {
+                    checkbox.checked = !checkbox.checked;
+                    // Manually trigger change event if needed for other scripts, though not strictly necessary here
+                    // checkbox.dispatchEvent(new Event('change'));
+                }
+            });
+        });
+
+    </script>
+
+</body>
+</html>

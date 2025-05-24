@@ -5,92 +5,108 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>تطبيق ورود</title>
   <script type="module">
-    // 🟢 1. استيراد Firebase SDK
+    // 🟢 1. استيراد Firebase SDK (تم الرجوع للإصدار 11.2.0 كما في الكود الأصلي)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
-    // استيراد الدوال اللازمة لـ Firestore
-    import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
+    // استيراد الدوال اللازمة لـ Firestore (تم تضمين query و orderBy)
+    import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, setDoc, getDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
 
-    // 🟢 2. إعداد Firebase
+    // 🟢 2. إعداد Firebase (باستخدام إعدادات قاعدة البيانات التي قدمها المستخدم)
     const firebaseConfig = {
-      apiKey: "AIzaSyBt33Ut9nw0WX-DDRi46pB4klvXB8eNe90", // استبدل بمفتاح API الخاص بك
+      apiKey: "AIzaSyBt33Ut9nw0WX-DDRi46pB4klvXB8eNe90",
       authDomain: "rhm-banking.firebaseapp.com",
       projectId: "rhm-banking",
       storageBucket: "rhm-banking.appspot.com",
       messagingSenderId: "441668952624",
-      appId: "1:441668952624:web:f45150dcdc42c6c48203f5",
+      appId: "1:441668952624:web:f45150dcdc42c6c48203f5"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // 🟢 3. تحميل الصور من Firestore عند فتح الموقع
+    // 🟢 3. عرض نافذة التأكيد المخصصة (بدلاً من alert و confirm)
+    function showConfirmationModal(message, onConfirmCallback) {
+        const modal = document.getElementById('confirmationModal');
+        const confirmMessage = document.getElementById('confirmMessage');
+        const confirmYesBtn = document.getElementById('confirmYes');
+        const confirmNoBtn = document.getElementById('confirmNo');
+
+        confirmMessage.textContent = message;
+        modal.style.display = 'flex'; // Use flex to center content
+
+        confirmYesBtn.onclick = () => {
+            onConfirmCallback();
+            modal.style.display = 'none';
+        };
+
+        confirmNoBtn.onclick = () => {
+            modal.style.display = 'none';
+        };
+    }
+
+    // 🟢 4. تحميل الصور من Firestore عند فتح الموقع
     async function loadImages() {
       const imageContainer = document.getElementById("imageContainer");
       imageContainer.innerHTML = ""; // تفريغ المحتوى قبل تحميل الصور الجديدة
-      const querySnapshot = await getDocs(collection(db, "images"));
+      // مسار الصور لم يتغير، فهو مباشرة تحت "images"
+      const q = query(collection(db, "images"), orderBy("order")); // ترتيب الصور
+      const querySnapshot = await getDocs(q);
       const images = [];
       querySnapshot.forEach((docData) => {
         images.push({ id: docData.id, ...docData.data() });
       });
 
-      // ترتيب الصور بناءً على الحقل order
-      images.sort((a, b) => (a.order || 0) - (b.order || 0));
-
       images.forEach((image) => {
         const imageUrl = image.url;
-        const docId = image.id; // معرف الوثيقة لحذفها لاحقًا
-        const heartsCount = image.hearts || 0; // استرجاع عدد القلوب
+        const docId = image.id;
+        const heartsCount = image.hearts || 0;
 
         // إنشاء عنصر الصورة
         const imgDiv = document.createElement("div");
         imgDiv.classList.add("image-item");
-        imgDiv.setAttribute("data-doc-id", docId); // إضافة معرف الوثيقة كخاصية
+        imgDiv.setAttribute("data-doc-id", docId);
 
         const img = document.createElement("img");
         img.src = imageUrl;
-        // إضافة معالجة خطأ للصورة إذا لم يتم تحميلها (مثل رابط غير صالح)
         img.onerror = function() {
             console.error("Failed to load image:", imageUrl);
-            // يمكنك إزالة العنصر أو عرض صورة بديلة
-            imgDiv.remove(); // إزالة العنصر بالكامل إذا فشل تحميل الصورة
+            imgDiv.remove(); // إزالة العنصر إذا فشل تحميل الصورة
         };
         img.style.width = "200px";
         img.style.margin = "10px";
-        img.style.borderRadius = "15px"; // حواف دائرية
+        img.style.borderRadius = "15px";
         imgDiv.appendChild(img);
 
         // زر "الحمد لله" مع التفاعل
         const heartButton = document.createElement("button");
         heartButton.classList.add("heart-button");
-        heartButton.innerHTML = "الحمد لله ❤️"; // نص الزر
-        heartButton.onclick = async function() { // جعل الدالة async
+        heartButton.innerHTML = "الحمد لله ❤"; // Changed heart icon
+        heartButton.onclick = async function() {
           const currentImageItem = heartButton.closest('.image-item');
           const docId = currentImageItem.getAttribute("data-doc-id");
           const countButton = currentImageItem.querySelector('.count-button');
 
-          // جلب عدد القلوب الحالي من Firestore لتجنب مشاكل التزامن
           const docRef = doc(db, "images", docId);
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
               const currentHearts = docSnap.data().hearts || 0;
               const newHeartCount = currentHearts + 1;
-              await updateHeartCount(docId, newHeartCount); // تحديث عدد القلوب في Firestore
+              await updateHeartCount(docId, newHeartCount);
               if (countButton) {
-                  countButton.innerHTML = newHeartCount; // تحديث العداد في الواجهة
+                  countButton.innerHTML = newHeartCount;
               }
-              heartButton.classList.add("clicked"); // إضافة كلاس للتفاعل
-              setTimeout(() => heartButton.classList.remove("clicked"), 300); // إزالة الكلاس بعد 300ms
+              heartButton.classList.add("clicked");
+              setTimeout(() => heartButton.classList.remove("clicked"), 300);
           } else {
               console.error("Document does not exist for heart update:", docId);
           }
         };
         imgDiv.appendChild(heartButton);
 
-        // زر العداد (غير قابل للتفاعل)
+        // زر العداد
         const countButton = document.createElement("button");
         countButton.classList.add("count-button");
-        countButton.innerHTML = heartsCount; // عرض عدد القلوب
-        countButton.disabled = true; // تعطيل التفاعل مع الزر
+        countButton.innerHTML = heartsCount;
+        countButton.disabled = true;
         imgDiv.appendChild(countButton);
 
         // زر الحذف
@@ -99,7 +115,9 @@
         deleteButton.innerHTML = "حذف";
         deleteButton.onclick = function() {
           const docIdToDelete = deleteButton.closest('.image-item').getAttribute("data-doc-id");
-          deleteImage(docIdToDelete);
+          showConfirmationModal("هل أنت متأكد أنك تريد حذف هذه الصورة؟", () => {
+              deleteImage(docIdToDelete);
+          });
         };
         imgDiv.appendChild(deleteButton);
 
@@ -112,129 +130,117 @@
         };
         imgDiv.appendChild(downloadButton);
 
-        // زر رفع الصورة لأعلى (أعلى يسار)
+        // زر رفع الصورة لأعلى
         const moveUpButton = document.createElement("button");
         moveUpButton.classList.add("move-button", "move-up-button");
-        moveUpButton.innerHTML = "  ";
+        moveUpButton.innerHTML = "⬆️";
         moveUpButton.onclick = function() {
           moveImageUp(imgDiv);
         };
         imgDiv.appendChild(moveUpButton);
 
-        // زر إنزال الصورة لأسفل (أعلى يمين)
+        // زر إنزال الصورة لأسفل
         const moveDownButton = document.createElement("button");
         moveDownButton.classList.add("move-button", "move-down-button");
-        moveDownButton.innerHTML = "  ";
+        moveDownButton.innerHTML = "⬇️";
         moveDownButton.onclick = function() {
           moveImageDown(imgDiv);
         };
         imgDiv.appendChild(moveDownButton);
 
-        // إضافة الصورة إلى الحاوية
         imageContainer.appendChild(imgDiv);
       });
     }
 
-    // 🟢 4. تحديث عدد القلوب في Firestore
+    // 🟢 5. تحديث عدد القلوب في Firestore
     async function updateHeartCount(docId, newHeartCount) {
         try {
             const imageRef = doc(db, "images", docId);
             await updateDoc(imageRef, { hearts: newHeartCount });
         } catch (error) {
             console.error("Error updating heart count: ", error);
-            // يمكنك إضافة رسالة خطأ للمستخدم هنا إذا أردت
         }
     }
 
-    // 🟢 5. حذف الصورة من Firestore
+    // 🟢 6. حذف الصورة من Firestore
     async function deleteImage(docId) {
         try {
             const imageRef = doc(db, "images", docId);
             await deleteDoc(imageRef);
-            loadImages(); // إعادة تحميل الصور بعد الحذف
+            loadImages();
         } catch (error) {
             console.error("Error deleting image: ", error);
-            alert("حدث خطأ أثناء حذف الصورة.");
         }
     }
 
-    // 🟢 6. تحميل الصورة الأصلية
+    // 🟢 7. تحميل الصورة الأصلية
     async function downloadImage(imageUrl) {
       try {
-        // جلب الصورة كـ Blob
         const response = await fetch(imageUrl, {
-          mode: 'cors', // التعامل مع CORS
+          mode: 'cors',
         });
         if (!response.ok) {
              throw new Error(`HTTP error! status: ${response.status}`);
         }
         const blob = await response.blob();
 
-        // إنشاء رابط تحميل
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
 
-        // استخراج اسم الملف أو استخدام اسم افتراضي
         const filename = imageUrl.split('/').pop().split('?')[0] || 'image.jpg';
         a.download = filename;
 
-        // محاكاة النقر للتنزيل
         document.body.appendChild(a);
         a.click();
 
-        // تنظيف
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
       } catch (error) {
         console.error("خطأ أثناء تحميل الصورة:", error);
-        alert("حدث خطأ أثناء تحميل الصورة. قد تكون هناك مشكلة في الوصول إلى رابط الصورة أو CORS.");
       }
     }
 
-    // 🟢 7. تحريك الصورة لأعلى وتحديث الترتيب في Firestore
+    // 🟢 8. تحريك الصورة لأعلى وتحديث الترتيب في Firestore
     async function moveImageUp(imgDiv) {
       const prevElement = imgDiv.previousElementSibling;
       if (prevElement) {
         imgDiv.parentNode.insertBefore(imgDiv, prevElement);
-        await updateImageOrder(); // تحديث الترتيب في Firestore
+        await updateImageOrder();
       }
     }
 
-    // 🟢 8. تحريك الصورة لأسفل وتحديث الترتيب في Firestore
+    // 🟢 9. تحريك الصورة لأسفل وتحديث الترتيب في Firestore
     async function moveImageDown(imgDiv) {
       const nextElement = imgDiv.nextElementSibling;
       if (nextElement) {
         imgDiv.parentNode.insertBefore(nextElement, imgDiv);
-        await updateImageOrder(); // تحديث الترتيب في Firestore
+        await updateImageOrder();
       }
     }
 
-    // 🟢 9. تحديث ترتيب الصور في Firestore
+    // 🟢 10. تحديث ترتيب الصور في Firestore
     async function updateImageOrder() {
         try {
             const imageContainer = document.getElementById("imageContainer");
             const images = imageContainer.querySelectorAll(".image-item");
 
-            const updates = []; // مصفوفة لتجميع عمليات التحديث
+            const updates = [];
             for (let i = 0; i < images.length; i++) {
-                const docId = images[i].getAttribute("data-doc-id"); // الحصول على معرف الوثيقة
+                const docId = images[i].getAttribute("data-doc-id");
                 const imageRef = doc(db, "images", docId);
-                // Use the current index as the base for order
                 const newOrder = i;
                 updates.push(updateDoc(imageRef, { order: newOrder }));
             }
-            // تنفيذ جميع عمليات التحديث معًا
             await Promise.all(updates);
         } catch (error) {
             console.error("Error updating image order: ", error);
-            alert("حدث خطأ أثناء تحديث ترتيب الصور.");
         }
     }
 
-    // 🟢 10. رفع الصورة إلى Imgur (للملفات فقط)
+    // 🟢 11. رفع الصورة إلى Imgur (للملفات فقط)
     async function uploadFileToImgur(file) {
-      const clientId = "0a4e691f4781a44"; // استبدل بـ Client-ID الصحيح لـ Imgur
+      const clientId = "0a4e691f4781a44"; // Imgur Client ID
       const formData = new FormData();
       formData.append("image", file);
 
@@ -250,256 +256,377 @@
           throw new Error(data.data.error || "حدث خطأ أثناء رفع الصورة إلى Imgur.");
         }
 
-        return data.data.link; // إرجاع رابط الصورة المرفوعة
+        return data.data.link;
       } catch (error) {
         console.error("خطأ أثناء رفع الصورة إلى Imgur:", error);
-        throw new Error(`حدث خطأ أثناء رفع الصورة: ${error.message}`); // إعادة إلقاء الخطأ للتعامل معه في مكان آخر
+        throw new Error(`حدث خطأ أثناء رفع الصورة: ${error.message}`);
       }
     }
 
-    // 🟢 11. إضافة صورة إلى Firestore (سواء من Imgur أو رابط مباشر)
+    // 🟢 12. إضافة صورة إلى Firestore
     async function addImageToFirestore(imageUrl) {
          try {
-            // --- تحديث ترتيب الصور الحالية في Firestore ---
             const imageContainer = document.getElementById("imageContainer");
             const images = imageContainer.querySelectorAll(".image-item");
             const updates = [];
 
-            // زيادة ترتيب الصور الحالية بمقدار 1
+            // Update existing images' order to make space for the new one at the top (order 0)
             for (let i = 0; i < images.length; i++) {
               const docId = images[i].getAttribute("data-doc-id");
               const imageRef = doc(db, "images", docId);
-              // Use the current index as the base for order
-              const newOrder = i + 1;
+              const newOrder = i + 1; // Shift existing images down by 1
               updates.push(updateDoc(imageRef, { order: newOrder }));
             }
-            // انتظر اكتمال تحديث الترتيب قبل إضافة الجديد
             await Promise.all(updates);
 
-            // --- إضافة الصورة الجديدة بترتيب 0 إلى Firestore ---
+            // Add the new image with order 0
             await addDoc(collection(db, "images"), { url: imageUrl, hearts: 0, order: 0 });
 
-            loadImages(); // إعادة تحميل الصور بعد الإضافة والتحديث
+            loadImages();
 
          } catch (error) {
              console.error("خطأ أثناء إضافة الصورة إلى Firestore:", error);
-             alert("حدث خطأ أثناء إضافة الصورة.");
          } finally {
-            // إخفاء خيارات الرفع بعد الانتهاء
             document.getElementById('uploadOptions').classList.remove('visible');
          }
     }
 
-
-    // --------------------------------------------------
-    // --- وظائف حفظ وتحميل النص القابل للتعديل ---
-    // --------------------------------------------------
-
-    // معرف المستند الذي سيتم تخزين النص فيه
-    const textDocId = "mainContent"; // يمكنك تغيير هذا الاسم
-    const textCollectionName = "userText"; // اسم المجموعة للنص
-
-    // 🟢 12. حفظ النص في Firestore
-    async function saveText(text) {
+    // 🟢 13. حفظ النص في Firestore (تم تعديل المسار ليشمل hearts)
+    async function saveText(content, hearts = 0) {
       try {
-        const textRef = doc(db, textCollectionName, textDocId);
-        await setDoc(textRef, { content: text }); // استخدام setDoc لإنشاء أو استبدال المستند
+        const textRef = doc(db, "userText", "mainContent"); // مسار مباشر
+        await setDoc(textRef, { content: content, hearts: hearts });
         console.log("Text saved successfully!");
       } catch (error) {
         console.error("Error saving text: ", error);
-        alert("حدث خطأ أثناء حفظ النص.");
       }
     }
 
-    // 🟢 13. تحميل النص من Firestore
+    // 🟢 14. تحميل النص من Firestore (تم تعديل المسار ليشمل hearts)
     async function loadText() {
       const editableDiv = document.getElementById("editableText");
+      const heartCountSpan = document.getElementById("heartCount");
       try {
-        const textRef = doc(db, textCollectionName, textDocId);
+        const textRef = doc(db, "userText", "mainContent"); // مسار مباشر
         const docSnap = await getDoc(textRef);
 
         if (docSnap.exists()) {
-          editableDiv.innerHTML = docSnap.data().content; // استخدام innerHTML للحفاظ على تنسيق بسيط مثل فواصل الأسطر
+          const data = docSnap.data();
+          editableDiv.innerHTML = data.content;
+          heartCountSpan.textContent = data.hearts || 0; // تحميل عدد القلوب
         } else {
-          // النص الافتراضي إذا لم يتم العثور على مستند
-          editableDiv.innerHTML = "اكتب هنا...";
+          editableDiv.innerHTML = " ";
+          heartCountSpan.textContent = 0; // تعيين 0 إذا لم يكن هناك نص
           console.log("No such document! Displaying default text.");
+          await saveText(" ", 0); // حفظ النص الافتراضي مع 0 قلب
         }
       } catch (error) {
         console.error("Error loading text: ", error);
-        // الحفاظ على النص الافتراضي في حالة حدوث خطأ
-        editableDiv.innerHTML = "اكتب هنا...";
-        alert("حدث خطأ أثناء تحميل النص.");
+        editableDiv.innerHTML = " ";
+        heartCountSpan.textContent = 0;
       }
     }
 
-    // 🟢 14. إضافة مستمع حدث لحفظ النص عند فقدان التركيز (blur)
+    // 🟢 15. إعداد مستمع حدث لحفظ النص عند فقدان التركيز
     function setupTextSaving() {
         const editableDiv = document.getElementById("editableText");
+        const heartCountSpan = document.getElementById("heartCount");
         if (editableDiv) {
             editableDiv.addEventListener("blur", () => {
-                saveText(editableDiv.innerHTML); // حفظ محتوى HTML
+                // عند فقدان التركيز، احفظ النص وعدد القلوب الحالي
+                saveText(editableDiv.innerHTML, parseInt(heartCountSpan.textContent));
             });
         } else {
             console.error("Editable text element not found!");
         }
     }
 
-    // --------------------------------------------------
-    // --- حركة الفراشة ---
-    // --------------------------------------------------
+    // 🟢 16. إعداد عدادات القلب والأرشفة
+    async function setupInteractionButtons() {
+      // زر القلب
+      document.getElementById("heartBtn").addEventListener("click", async (event) => {
+        const textRef = doc(db, "userText", "mainContent");
+        const docSnap = await getDoc(textRef);
+        let currentHearts = 0;
+        if (docSnap.exists()) {
+            currentHearts = docSnap.data().hearts || 0;
+        }
+        const newHeartCount = currentHearts + 1;
+        await updateDoc(textRef, { hearts: newHeartCount });
+        document.getElementById("heartCount").textContent = newHeartCount;
+
+        // تأثير النبض
+        const heartBtn = event.currentTarget; // استخدم currentTarget للحصول على الزر نفسه
+        heartBtn.classList.add("clicked");
+        setTimeout(() => heartBtn.classList.remove("clicked"), 300);
+      });
+
+      // إعداد حدث النقر على زر الأرشفة
+      document.getElementById("archiveBtn").addEventListener("click", async () => {
+          await archiveCurrentText();
+      });
+
+      // إعداد حدث النقر على زر الأرشيف (لفتح المودال)
+      document.getElementById("archiveListBtn").addEventListener("click", () => {
+          openArchiveModal();
+      });
+    }
+
+    // 🟢 17. حركة الفراشة
     function moveButterfly() {
         const butterfly = document.getElementById('butterfly');
         if (!butterfly) return;
 
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
-        const butterflySize = 55; // حجم الفراشة (تأكد من تطابقه مع CSS)
+        const butterflySize = 55;
 
-        // حساب المواقع العشوائية مع الأخذ في الاعتبار حجم الفراشة
-        // تأكد من أن الفراشة لا تخرج عن الحدود
         const randomX = Math.random() * (viewportWidth - butterflySize);
         const randomY = Math.random() * (viewportHeight - butterflySize);
 
-        // تطبيق الموقع الجديد
         butterfly.style.left = `${randomX}px`;
         butterfly.style.top = `${randomY}px`;
     }
 
-    // بدء تحريك الفراشة كل بضع ثوانٍ
     function startButterflyMovement() {
-        // تحريك الفراشة فورًا عند التحميل
         moveButterfly();
-        // ثم تحريكها كل 8 ثوانٍ (تم زيادة المدة لجعل الحركة أبطأ)
-        setInterval(moveButterfly, 8000); // 8000 ميلي ثانية = 8 ثوانٍ
+        setInterval(moveButterfly, 8000);
     }
 
-
-    // --------------------------------------------------
-    // --- وظائف خيارات الرفع الجديدة ومعالجة الإدخال ---
-    // --------------------------------------------------
-
-    // تبديل عرض خيارات الرفع
+    // 🟢 18. تبديل عرض خيارات الرفع
     function toggleUploadOptions() {
         const optionsDiv = document.getElementById('uploadOptions');
         optionsDiv.classList.toggle('visible');
     }
 
-    // معالجة اختيار "رفع من خلال الجهاز"
+    // 🟢 19. معالجة اختيار "رفع من خلال الجهاز"
     function handleUploadFromFile() {
-        document.getElementById('fileInput').click(); // فتح نافذة اختيار الملف
-        // إخفاء الخيارات بعد الاختيار (يمكن إبقاؤها ظاهرة إذا أردت)
-        // document.getElementById('uploadOptions').classList.remove('visible');
+        document.getElementById('fileInput').click();
     }
 
-    // معالجة اختيار "إضافة رابط الصورة"
+    // 🟢 20. معالجة اختيار "إضافة رابط الصورة"
     async function handleUploadFromUrl() {
+        // يمكن استبدال prompt بـ modal مخصص إذا أردت تحسين تجربة المستخدم
         const imageUrl = prompt("الرجاء إدخال رابط الصورة:");
         if (imageUrl) {
-            // التحقق من أن الرابط يبدو كعنوان URL صالح
             try {
-                new URL(imageUrl); // محاولة إنشاء كائن URL للتحقق من الصلاحية الأساسية
-                 await addImageToFirestore(imageUrl); // استدعاء دالة الإضافة إلى Firestore مع الرابط
+                new URL(imageUrl); // Validate URL
+                 await addImageToFirestore(imageUrl);
             } catch (e) {
-                alert("الرابط الذي أدخلته غير صالح. يرجى إدخال رابط صحيح يبدأ بـ http أو https.");
-                 // إخفاء الخيارات حتى لو كان الرابط غير صالح
+                showConfirmationModal("الرابط الذي أدخلته غير صالح. يرجى إدخال رابط صحيح يبدأ بـ http أو https.", () => {});
                  document.getElementById('uploadOptions').classList.remove('visible');
             }
         } else {
-             // إخفاء الخيارات حتى لو لم يتم إدخال رابط
              document.getElementById('uploadOptions').classList.remove('visible');
         }
     }
 
+    // 🟢 21. أرشفة النص الحالي (مع إعادة ضبط عداد القلب)
+    async function archiveCurrentText() {
+        const editableDiv = document.getElementById("editableText");
+        const heartCountSpan = document.getElementById("heartCount");
+        const textToArchive = editableDiv.innerHTML;
+        const heartsToArchive = parseInt(heartCountSpan.textContent) || 0;
 
-    // --------------------------------------------------
-    // --- تحميل البيانات عند بدء تشغيل الصفحة ---
-    // --------------------------------------------------
+        if (textToArchive.trim() === "" || textToArchive.trim() === " ") {
+            return;
+        }
+
+        try {
+            // مسار مباشر لمجموعة "archivedTexts"
+            await addDoc(collection(db, "archivedTexts"), {
+                content: textToArchive,
+                hearts: heartsToArchive, // حفظ عدد القلوب مع النص المؤرشف
+                timestamp: new Date().toISOString()
+            });
+
+            // إعادة ضبط النص وعداد القلوب للنص الرئيسي بعد الأرشفة
+            editableDiv.innerHTML = " ";
+            heartCountSpan.textContent = 0;
+            await saveText(" ", 0); // حفظ النص الفارغ وعدد القلوب 0
+        } catch (error) {
+            console.error("Error archiving text:", error);
+        }
+    }
+
+    // 🟢 22. فتح مودال الأرشيف وتحميل النصوص المؤرشفة (تم تعديل المسار)
+    async function openArchiveModal() {
+        const modal = document.getElementById('archiveModal');
+        const container = document.getElementById('archivedTextsContainer');
+        container.innerHTML = '<p class="loading-message">جاري تحميل الأرشيف...</p>'; // Loading message
+        modal.style.display = 'flex';
+
+        try {
+            // مسار مباشر لمجموعة "archivedTexts"
+            const q = query(collection(db, "archivedTexts"), orderBy("timestamp", "desc"));
+            const querySnapshot = await getDocs(q);
+            container.innerHTML = ''; // Clear loading message
+
+            if (querySnapshot.empty) {
+                container.innerHTML = '<p class="no-archive-message">لا توجد نصوص مؤرشفة بعد.</p>';
+                return;
+            }
+
+            querySnapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                const docId = docSnap.id; // Get docId for updating hearts
+                const itemDiv = document.createElement('div');
+                itemDiv.classList.add('archived-text-item');
+
+                const contentP = document.createElement('p');
+                contentP.innerHTML = data.content; // Use innerHTML to preserve formatting
+
+                // جعل زر القلب في الأرشيف تفاعلياً
+                const heartsButton = document.createElement('button'); // Changed to button
+                heartsButton.classList.add('archive-hearts-button'); // New class for styling
+                heartsButton.innerHTML = `♡ <span class="archive-heart-count">${data.hearts || 0}</span>`; // Changed heart icon and added span for count
+                heartsButton.onclick = async (event) => {
+                    const heartCountSpanInArchive = event.currentTarget.querySelector('.archive-heart-count');
+                    let currentArchivedHearts = parseInt(heartCountSpanInArchive.textContent) || 0;
+                    const newArchivedHeartCount = currentArchivedHearts + 1;
+
+                    heartCountSpanInArchive.textContent = newArchivedHeartCount; // Update UI instantly
+                    event.currentTarget.classList.add("clicked");
+                    setTimeout(() => event.currentTarget.classList.remove("clicked"), 300);
+
+                    try {
+                        await updateDoc(doc(db, "archivedTexts", docId), { hearts: newArchivedHeartCount });
+                    } catch (error) {
+                        console.error("Error updating archived heart count:", error);
+                        // Revert UI if update fails
+                        heartCountSpanInArchive.textContent = currentArchivedHearts;
+                    }
+                };
+
+                const dateSpan = document.createElement('span');
+                dateSpan.classList.add('archive-date');
+                const date = new Date(data.timestamp);
+                dateSpan.textContent = date.toLocaleString('ar-EG', {
+                    year: 'numeric', month: 'long', day: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                });
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.classList.add('delete-archive-btn');
+                deleteBtn.innerHTML = '🗑️'; // Trash can icon
+                deleteBtn.onclick = () => {
+                    // حذف مباشر بدون تأكيد
+                    deleteArchivedText(docId);
+                };
+
+                itemDiv.appendChild(contentP);
+                itemDiv.appendChild(heartsButton); // إضافة زر القلوب التفاعلي
+                itemDiv.appendChild(dateSpan);
+                itemDiv.appendChild(deleteBtn);
+                container.appendChild(itemDiv);
+            });
+        } catch (error) {
+            console.error("Error loading archived texts:", error);
+            container.innerHTML = '<p class="error-message">حدث خطأ أثناء تحميل الأرشيف.</p>';
+        }
+    }
+
+    // 🟢 23. حذف نص مؤرشف (تم تعديل المسار)
+    async function deleteArchivedText(docId) {
+        try {
+            // مسار مباشر لمجموعة "archivedTexts"
+            await deleteDoc(doc(db, "archivedTexts", docId));
+            openArchiveModal(); // إعادة تحميل قائمة الأرشيف بعد الحذف
+        } catch (error) {
+            console.error("Error deleting archived text:", error);
+        }
+    }
+
+    // 🟢 24. إغلاق مودال الأرشيف
+    function closeArchiveModal() {
+        document.getElementById('archiveModal').style.display = 'none';
+    }
+
+    // تحميل البيانات عند بدء تشغيل الصفحة
     document.addEventListener("DOMContentLoaded", () => {
-      loadImages(); // تحميل الصور
-      loadText();   // تحميل النص المحفوظ
-      setupTextSaving(); // إعداد الحفظ التلقائي للنص
-      startButterflyMovement(); // بدء حركة الفراشة
+      loadImages();
+      loadText(); // سيتم تحميل النص وعدد القلوب المرتبط به
+      setupTextSaving();
+      setupInteractionButtons();
+      startButterflyMovement();
 
-      // إضافة مستمعي الأحداث للأزرار الجديدة
       document.getElementById('uploadBtn').addEventListener('click', toggleUploadOptions);
       document.getElementById('uploadFromFileBtn').addEventListener('click', handleUploadFromFile);
       document.getElementById('uploadFromUrlBtn').addEventListener('click', handleUploadFromUrl);
+      document.getElementById('closeArchiveModalBtn').addEventListener('click', closeArchiveModal);
 
-      // مستمع حدث لتغيير ملف الإدخال (يبقى كما هو)
       document.getElementById("fileInput").addEventListener("change", async (event) => {
           if (event.target.files.length > 0) {
               const file = event.target.files[0];
               try {
-                  const imageUrl = await uploadFileToImgur(file); // رفع الملف إلى Imgur
-                  await addImageToFirestore(imageUrl); // إضافة رابط Imgur إلى Firestore
+                  const imageUrl = await uploadFileToImgur(file);
+                  await addImageToFirestore(imageUrl);
               } catch (error) {
-                  // الخطأ تم التعامل معه جزئياً في uploadFileToImgur، يمكنك إضافة المزيد هنا إذا لزم الأمر
                   console.error("Error during file upload process:", error);
-                  alert(error.message); // عرض رسالة الخطأ للمستخدم
+                  showConfirmationModal(error.message, () => {});
               }
           }
-           // إخفاء الخيارات بعد اختيار الملف
            document.getElementById('uploadOptions').classList.remove('visible');
-            // إعادة تعيين حقل الإدخال للسماح برفع نفس الملف مرة أخرى إذا لزم الأمر
-           event.target.value = '';
+           event.target.value = ''; // Clear file input
       });
-
     });
 
-    // تحديث موقع الفراشة عند تغيير حجم النافذة
     window.addEventListener('resize', moveButterfly);
 
-    // إخفاء خيارات الرفع عند النقر خارجها
     window.addEventListener('click', (event) => {
         const uploadOptions = document.getElementById('uploadOptions');
         const uploadBtn = document.getElementById('uploadBtn');
-        // إذا لم يكن النقر على زر الرفع أو داخل قائمة الخيارات، قم بإخفاء القائمة
-        if (!uploadBtn.contains(event.target) && !uploadOptions.contains(event.target)) {
+        // Close upload options if click outside
+        if (uploadOptions && uploadBtn && !uploadBtn.contains(event.target) && !uploadOptions.contains(event.target)) {
             uploadOptions.classList.remove('visible');
+        }
+        // Close archive modal if click outside content
+        const archiveModal = document.getElementById('archiveModal');
+        const archiveModalContent = document.getElementById('archiveModalContent');
+        if (archiveModal && event.target === archiveModal && !archiveModalContent.contains(event.target)) {
+             closeArchiveModal();
         }
     });
 
-
   </script>
-   <style>
+  <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Inter', Arial, sans-serif; /* Changed font to Inter */
       text-align: center;
       margin: 0;
       padding: 0;
-      background: linear-gradient(135deg, #223D0A, #192705, #323B04); /* تدرج أخضر داكن */
-      color: rgb(80, 100, 80); /* لون نص أفتح للقراءة على خلفية خضراء */
+      background: linear-gradient(135deg, #223D0A, #192705, #323B04);
+      color: rgb(80, 100, 80);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
       align-items: center;
-      background-size: cover; /* تغطية كاملة للصفحة */
-      overflow-x: hidden; /* منع ظهور شريط التمرير الأفقي بسبب الفراشة */
+      background-size: cover;
+      overflow-x: hidden;
     }
 
     h1 {
-      color: #FFA500; /* اللون الأصفر البرتقالي */
+      color: #FFA500;
       font-size: 2.5rem;
       margin-top: 20px;
       animation: fadeIn 1s ease-in-out;
     }
 
     h1::after {
-      content: " ❤️"; /* إضافة رمز قلب */
+      content: " ❤️";
     }
 
     /* تصميم زر رفع الصورة الرئيسي (+) */
     #uploadBtn {
       position: fixed;
       bottom: 50px;
-      left: 50px; /* تعديل الموقع ليكون في الأسفل اليسار */
+      left: 50px;
       width: 60px;
       height: 60px;
       border-radius: 50%;
-      background-color: rgba(255, 255, 255, 0.103); /* خلفية شفافة أكثر */
-      color: #ffffff9f; /* اللون الأبيض */
+      background-color: rgba(255, 255, 255, 0.103);
+      color: #ffffff9f;
       font-size: 30px;
       display: flex;
       justify-content: center;
@@ -507,13 +634,13 @@
       cursor: pointer;
       box-shadow: 0 5px 15px rgba(167, 167, 167, 0.041);
       transition: all 0.3s ease;
-      border: 2px solid #cfcfcf88; /* إطار أسود فراني */
+      border: 2px solid #cfcfcf88;
       animation: bounce 2s infinite;
-      z-index: 101; /* لضمان ظهوره فوق العناصر الأخرى وخيارات الرفع */
+      z-index: 101;
     }
 
     #uploadBtn:hover {
-      background-color: rgba(58, 58, 58, 0.6); /* زيادة الشفافية عند التمرير */
+      background-color: rgba(58, 58, 58, 0.6);
       transform: scale(1.1);
     }
 
@@ -525,76 +652,76 @@
     /* حاوية خيارات الرفع */
     #uploadOptions {
         position: fixed;
-        bottom: 120px; /* فوق زر الرفع الرئيسي */
-        left: 50px; /* محاذاة مع زر الرفع الرئيسي */
-        background-color: rgba(0, 0, 0, 0.5); /* خلفية شبه شفافة وأغمق */
+        bottom: 120px;
+        left: 50px;
+        background-color: rgba(0, 0, 0, 0.5);
         border-radius: 10px;
         padding: 10px;
         display: flex;
         flex-direction: column;
         gap: 10px;
-        z-index: 100; /* أقل من زر الرفع الرئيسي */
-        opacity: 0; /* مخفي افتراضيًا */
-        visibility: hidden; /* مخفي افتراضيًا */
-        transform: translateY(20px); /* يبدأ من أسفل قليلاً */
+        z-index: 100;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(20px);
         transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out, visibility 0.3s ease-in-out;
     }
 
     #uploadOptions.visible {
-        opacity: 1; /* يظهر عند إضافة الكلاس visible */
-        visibility: visible; /* يظهر عند إضافة الكلاس visible */
-        transform: translateY(0); /* يعود إلى مكانه الأصلي */
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
     }
-
 
     /* أزرار الخيارات داخل الحاوية */
     .upload-option-btn {
-        background-color: rgba(255, 255, 255, 0.15); /* خلفية أفتح قليلاً من الخلفية الرئيسية للقائمة */
+        background-color: rgba(255, 255, 255, 0.15);
         border: none;
         padding: 8px 15px;
         border-radius: 8px;
-        color: #E0E0E0; /* لون نص فاتح */
+        color: #E0E0E0;
         font-size: 14px;
         cursor: pointer;
         transition: background-color 0.2s ease;
-        text-align: right; /* محاذاة النص لليمين */
+        text-align: right;
     }
 
     .upload-option-btn:hover {
-        background-color: rgba(255, 255, 255, 0.25); /* خلفية أغمق عند التحويم */
+        background-color: rgba(255, 255, 255, 0.25);
     }
 
     /* تنسيق رابط Postimages */
     .postimages-link {
-        font-size: 10px; /* حجم خط أصغر */
-        color: #B0B0B0; /* لون رمادي فاتح */
-        text-decoration: none; /* إزالة الخط تحت الرابط */
-        text-align: center; /* توسيط النص */
-        display: block; /* لجعله يأخذ سطرًا كاملاً */
-        margin-top: 5px; /* مسافة صغيرة فوق الرابط */
+        font-size: 10px;
+        color: #B0B0B0;
+        text-decoration: none;
+        text-align: center;
+        display: block;
+        margin-top: 5px;
     }
 
      .postimages-link:hover {
-        color: #FFFFFF; /* لون أبيض عند التحويم */
-        text-decoration: underline; /* إضافة خط تحت الرابط عند التحويم */
+        color: #FFFFFF;
+        text-decoration: underline;
      }
-
 
     button {
       margin: 5px;
       padding: 10px;
       cursor: pointer;
+      border-radius: 8px; /* Added rounded corners */
+      border: none; /* Ensure no default border */
     }
 
     /* تصميم زر الحمد لله */
     .heart-button {
       position: absolute;
       bottom: -30px;
-      left: 10px; /* زر الحمد لله على اليسار */
+      left: 10px;
       background: rgba(255, 255, 255, 0.2);
       border: none;
       padding: 4px 10px;
-      border-radius: 10px 0 0 10px; /* حواف دائرية على اليسار فقط */
+      border-radius: 10px 0 0 10px;
       color: #FFA500;
       font-size: 12px;
       cursor: pointer;
@@ -603,15 +730,15 @@
       display: flex;
       align-items: center;
       gap: 3px;
-      height: 30px; /* نفس ارتفاع زر العداد */
+      height: 30px;
     }
 
     .heart-button:hover {
-      background: rgba(255, 165, 0, 0.3); /* تعديل تأثير التحويم */
+      background: rgba(255, 165, 0, 0.3);
     }
 
     .heart-button.clicked {
-      animation: pulse 0.3s ease-in-out; /* تأثير النبض عند الضغط */
+      animation: pulse 0.3s ease-in-out;
     }
 
     @keyframes pulse {
@@ -624,49 +751,48 @@
     .count-button {
       position: absolute;
       bottom: -30px;
-      left: 92px; /* ملتصق بجانب زر الحمد لله من اليمين */
-      background: rgba(255, 255, 255, 0.2); /* نفس خلفية زر الحمد لله */
+      left: 92px;
+      background: rgba(255, 255, 255, 0.2);
       border: none;
       padding: 4px 10px;
-      border-radius: 0 10px 10px 0; /* حواف دائرية على اليمين فقط */
+      border-radius: 0 10px 10px 0;
       color: #FFA500;
       font-size: 12px;
-      cursor: default; /* لا يتفاعل مع المؤشر */
-      pointer-events: none; /* تعطيل التفاعل */
+      cursor: default;
+      pointer-events: none;
       display: flex;
       align-items: center;
       justify-content: center;
-      height: 30px; /* نفس ارتفاع زر الحمد لله */
+      height: 30px;
     }
 
     /* تعديل تنسيقات زر الحذف */
     .delete-button {
       position: absolute;
-      bottom: -30px; /* محاذاة مع الأزرار الأخرى */
-      right: 49px; /* وضع الزر بين زر العداد وزر التنزيل (قيمة تقديرية) */
-      background-color: rgba(255, 255, 255, 0); /* خلفية شفافة قليلاً باللون الأبيض */
+      bottom: -30px;
+      right: 49px;
+      background-color: rgba(255, 255, 255, 0);
       border: none;
-      padding: 4px 10px; /* إضافة حشو ليكون الزر مرئياً */
-      border-radius: 10px; /* حواف دائرية */
-      color: rgba(255, 255, 255, 0.1); /* لون النص أبيض شفاف قليلاً */
-      font-size: 12px; /* حجم خط مطابق للأزرار الأخرى */
+      padding: 4px 10px;
+      border-radius: 10px;
+      color: rgba(255, 255, 255, 0.1);
+      font-size: 12px;
       cursor: pointer;
-      width: auto; /* السماح للعرض بالتكيف مع المحتوى */
-      height: auto; /* السماح للارتفاع بالتكيف مع المحتوى */
-      opacity: 0.4; /* إظهار الزر قليلاً بشكل دائم */
-      transition: opacity 0.3s ease; /* جعل الانتقال أسرع */
+      width: auto;
+      height: auto;
+      opacity: 0.4;
+      transition: opacity 0.3s ease;
     }
 
     .delete-button:hover {
-      opacity: 0.8; /* زيادة الشفافية عند التمرير ليصبح أكثر وضوحًا */
+      opacity: 0.8;
     }
-
 
     /* تصميم زر التحميل */
     .download-button {
       position: absolute;
       bottom: -30px;
-      right: 10px; /* وضع الزر في أسفل اليمين */
+      right: 10px;
       background: rgba(255, 255, 255, 0.2);
       border: none;
       padding: 4px 10px;
@@ -685,37 +811,38 @@
     .move-button {
       position: absolute;
       top: 10px;
-      background-color: rgba(255, 255, 255, 0); /* شفافية */
+      background-color: rgba(255, 255, 255, 0);
       border: none;
       padding: 5px;
       cursor: pointer;
       border-radius: 50%;
       font-size: 29px;
-      opacity: 0.7;
+      opacity: 0; /* Fully transparent */
       transition: opacity 0.3s ease;
+      color: #FFA500; /* Added color for arrows */
     }
 
     .move-up-button {
-      right: 10px; /* زر الرفع في أعلى يسار */
+      right: 10px;
     }
 
     .move-down-button {
-      left: 10px; /* زر الإنزال في أعلى يمين */
+      left: 10px;
     }
 
     .move-button:hover {
-      opacity: 1;
+      opacity: 1; /* Visible on hover */
     }
 
     .image-item {
       position: relative;
       display: inline-block;
-      margin: 30px; /* زيادة المسافة بين الصور */
+      margin: 30px;
       animation: slideIn 0.5s ease-in-out;
     }
 
     .image {
-      border-radius: 15px; /* حواف دائرية */
+      border-radius: 15px;
       width: 100%;
       max-width: 200px;
       height: auto;
@@ -730,6 +857,72 @@
       padding-bottom: 60px;
     }
 
+    /* تنسيقات أزرار التفاعل أسفل مربع النص */
+    .interaction-buttons {
+      display: flex;
+      justify-content: center; /* Center the buttons */
+      align-items: center;
+      width: 100%; /* Take full width to center */
+      max-width: 800px;
+      margin: -10px auto 10px auto; /* Moved closer to text box */
+      padding: 0 20px; /* Adjusted padding */
+      gap: 15px; /* Space between buttons */
+      flex-wrap: wrap; /* Allow wrapping on small screens */
+    }
+
+    .heart-counter {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background-color: transparent; /* No background */
+      padding: 0; /* Removed padding */
+      border-radius: 0; /* Removed border-radius */
+      box-shadow: none; /* Removed shadow */
+    }
+
+    .heart-btn {
+      background: transparent;
+      border: none;
+      font-size: 20px;
+      color: #E3FF8C; /* Lighter yellow-green color */
+      cursor: pointer;
+      opacity: 0.7;
+      transition: all 0.3s ease;
+      padding: 0; /* Removed padding */
+      margin: 0; /* Removed margin */
+    }
+
+    .heart-btn:hover {
+      opacity: 1;
+      transform: scale(1.2);
+    }
+
+    .count-display {
+      color: #ECFF9C; /* Lighter yellow-green color */
+      font-size: 11px;
+    }
+
+    /* New Archive Buttons */
+    .archive-btn, .archive-list-btn {
+        background-color: transparent; /* No background */
+        color: rgba(255, 165, 0, 0.7); /* Orange transparent */
+        padding: 4px 8px; /* Smaller padding */
+        border-radius: 6px; /* Smaller border-radius */
+        cursor: pointer;
+        transition: color 0.3s ease, transform 0.2s ease, opacity 0.3s ease;
+        font-size: 11px; /* Smaller font size */
+        box-shadow: none; /* No shadow */
+        opacity: 0.3; /* Highly transparent */
+    }
+
+    .archive-btn:hover, .archive-list-btn:hover {
+        background-color: transparent;
+        color: #FFA500; /* Solid orange on hover */
+        transform: translateY(-2px);
+        opacity: 1; /* Fully visible on hover */
+    }
+
+
     /* تحسين التوافق مع الأجهزة المحمولة */
     @media (max-width: 600px) {
       h1 {
@@ -738,15 +931,15 @@
 
       #uploadBtn {
         bottom: 50px;
-        left: 50px;
+        left: 20px; /* Adjusted for mobile */
         width: 50px;
         height: 50px;
         font-size: 30px;
       }
 
       #uploadOptions {
-         bottom: 110px; /* ضبط الموقع للأجهزة الصغيرة */
-         left: 40px;
+         bottom: 110px;
+         left: 20px; /* Adjusted for mobile */
          padding: 8px;
          gap: 8px;
       }
@@ -759,7 +952,6 @@
       .postimages-link {
           font-size: 9px;
       }
-
 
       .image-item {
         margin: 20px;
@@ -777,6 +969,12 @@
       button {
         font-size: 15px;
       }
+
+      .interaction-buttons {
+        width: 90%;
+        padding: 0 10px; /* Adjusted padding */
+        gap: 10px; /* Adjusted gap */
+      }
     }
 
     /* النص في أسفل الصفحة */
@@ -785,7 +983,7 @@
       bottom: 0;
       left: 0;
       width: 100%;
-      background-color: #052720; /* أخضر داكن جدًا ليتناسب مع الخلفية */
+      background-color: #052720;
       color: white;
       font-size: 12px;
       text-align: center;
@@ -812,7 +1010,7 @@
     .logo {
       width: 120px;
       height: auto;
-      margin-top: 40px; /* مسافة بسيطة بين اللوجو وأعلى الصفحة */
+      margin-top: 40px;
       animation: float 4s ease-in-out infinite;
     }
 
@@ -821,34 +1019,33 @@
       50% { transform: translateY(-3px); }
     }
 
-      /* --- تنسيقات إضافية للنص القابل للتعديل --- */
-    #editableTextContainer { /* حاوية للنص للمزيد من التحكم */
-        padding: 4px; /* تقليل الحشو الداخلي */
+    /* --- تنسيقات إضافية للنص القابل للتعديل --- */
+    #editableTextContainer {
+        padding: 4px;
         border-radius: 4px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* تخفيف الظل */
-        max-width: 60%; /* عرض أقصى بنسبة مئوية */
-        width: 800px; /* الحفاظ على عرض محدد للشاشات الكبيرة */
-        margin: 10px auto; /* تقليل الهامش العلوي */
-        font-family: Arial, sans-serif;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        max-width: 60%;
+        width: 800px;
+        margin: 10px auto;
+        font-family: 'Inter', Arial, sans-serif; /* Changed font to Inter */
         direction: rtl;
         color: white;
-        background-color: rgba(255, 255, 255, 0.01); /* خلفية شفافة قليلاً */
+        background-color: rgba(255, 255, 255, 0.01);
     }
 
-    #editableText { /* العنصر القابل للتعديل نفسه */
+    #editableText {
         padding: 40px;
-        min-height: 10px; /* ارتفاع أدنى أصغر */
-        outline: none; /* إزالة الإطار عند التركيز */
+        min-height: 10px;
+        outline: none;
         border-radius: 8px;
-        color: #E0E0E0; /* لون نص أفتح قليلاً */
-        line-height: 1.6; /* تحسين قابلية القراءة */
-        text-align: center; /* محاذاة النص لليمين */
-        background: transparent; /* جعل الخلفية الداخلية شفافة */
+        color: #E0E0E0;
+        line-height: 1.6;
+        text-align: center;
+        background: transparent;
     }
 
-     /* تغيير مؤشر الماوس للإشارة إلى قابلية التعديل */
      #editableText:focus {
-         box-shadow: 0 0 5px rgba(255, 165, 0, 0.5); /* ظل برتقالي خفيف عند التركيز */
+         box-shadow: 0 0 5px rgba(255, 165, 0, 0.5);
      }
       /* مؤشر الكتابة */
      #editableText[contenteditable="true"] {
@@ -857,43 +1054,196 @@
 
     /* --- تنسيقات الفراشة --- */
     #butterfly {
-        position: fixed; /* لتثبيتها بالنسبة لإطار العرض */
-        width: 55px; /* حجم صغير */
+        position: fixed;
+        width: 55px;
         height: auto;
-        z-index: 999; /* لضمان ظهورها فوق معظم العناصر */
-        /* زيادة مدة الانتقال لجعل الحركة أبطأ */
-        /* إضافة transform إلى الانتقال */
+        z-index: 999;
         transition: top 5s linear, left 6s linear, transform 0.7s ease-in-out;
-        pointer-events: none; /* تجاهل أحداث الماوس */
-        transform-origin: center center; /* نقطة ارتكاز التحويل في المنتصف */
-        /* تطبيق أنيميشن الرفرفة */
-        animation: flapping 1.5s ease-in-out infinite; /* مدة الأنميشن 1.5 ثانية، تكرار لا نهائي */
+        pointer-events: none;
+        transform-origin: center center;
+        animation: flapping 1.5s ease-in-out infinite;
     }
 
     /* أنيميشن رفرفة الجناح */
     @keyframes flapping {
-        50%, 120% { transform: scaleX(1); } /* الحجم الطبيعي */
-        50% { transform: scaleX(0.7); } /* يتقلص عرضيًا في المنتصف */
+        50%, 120% { transform: scaleX(1); }
+        50% { transform: scaleX(0.7); }
     }
 
+    /* --- Modal Styles (Confirmation & Archive) --- */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: none; /* Hidden by default */
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .modal-content {
+        background-color: #1a1a1a;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        text-align: center;
+        max-width: 90%;
+        width: 400px;
+        color: #E0E0E0;
+        position: relative;
+    }
+
+    .modal-content h2 {
+        color: #FFA500;
+        margin-bottom: 20px;
+        font-size: 1.8rem;
+    }
+
+    .modal-content p {
+        margin-bottom: 20px;
+        font-size: 1.1rem;
+    }
+
+    .modal-buttons button {
+        background-color: #FFA500;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        margin: 0 10px;
+        transition: background-color 0.3s ease;
+    }
+
+    .modal-buttons button:hover {
+        background-color: #e69500;
+    }
+
+    .close-modal-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #B0B0B0;
+        cursor: pointer;
+        transition: color 0.3s ease;
+    }
+
+    .close-modal-btn:hover {
+        color: #FFFFFF;
+    }
+
+    /* Archive Modal Specific Styles */
+    #archiveModalContent {
+        max-height: 70vh; /* Limit height for scrollability */
+        overflow-y: auto;
+        padding-right: 10px; /* For scrollbar */
+        text-align: right; /* RTL content */
+    }
+
+    .archived-text-item {
+        background-color: rgba(255, 255, 255, 0.05);
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 15px;
+        position: relative;
+        text-align: right;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .archived-text-item p {
+        margin-bottom: 10px;
+        color: #F0F0F0;
+        font-size: 1rem;
+        line-height: 1.5;
+        text-align: right;
+    }
+
+    .archive-date {
+        font-size: 0.8rem;
+        color: #B0B0B0;
+        display: block;
+        text-align: left; /* Date on left */
+        margin-top: 10px;
+    }
+
+    .archive-hearts-button { /* Changed from span to button */
+        background: transparent;
+        border: none;
+        font-size: 0.9rem;
+        color: #FFA500;
+        cursor: pointer;
+        display: inline-block; /* To allow side-by-side with date if needed */
+        margin-top: 5px;
+        padding: 0;
+        transition: all 0.2s ease;
+    }
+
+    .archive-hearts-button:hover {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+
+    .archive-hearts-button.clicked {
+      animation: pulse 0.3s ease-in-out;
+    }
+
+    .archive-heart-count { /* New style for the number inside the heart button */
+        font-size: 0.65rem; /* Even smaller font size for the number */
+        color: rgba(236, 255, 156, 0.7); /* Lighter yellow-green color, more transparent */
+        margin-left: 3px; /* Space between heart icon and number */
+    }
+
+    .delete-archive-btn {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: none;
+        border: none;
+        font-size: 1.2rem;
+        cursor: pointer;
+        color: rgba(255, 255, 255, 0.4);
+        transition: color 0.3s ease;
+    }
+
+    .delete-archive-btn:hover {
+        color: #FF6347; /* Tomato color for delete */
+    }
+
+    .loading-message, .no-archive-message, .error-message {
+        color: #B0B0B0;
+        font-style: italic;
+        margin-top: 20px;
+    }
 
   </style>
 </head>
 <body>
 
-  <img src="logo.png" alt="شعار تطبيق ممتن" class="logo">
+  <img src="https://placehold.co/120x60/323B04/FFFFFF?text=Logo" alt="شعار تطبيق ممتن" class="logo">
 
   <div id="editableTextContainer">
       <div id="editableText" contenteditable="true" style="
-          /* يمكن إزالة الأنماط المباشرة إذا تم تضمينها في CSS أعلاه */
           padding: 5px;
           min-height: 5px;
           outline: none;
           border-radius: 4px;
           color: white;
-      ">
+      "></div>
+  </div>
 
-      </div>
+  <div class="interaction-buttons">
+    <div class="heart-counter">
+      <button id="heartBtn" class="heart-btn">♡</button> <span id="heartCount" class="count-display">0</span>
+    </div>
+    <button id="archiveListBtn" class="archive-list-btn">الأرشيف</button>
+    <button id="archiveBtn" class="archive-btn">أرشفة</button>
   </div>
 
   <div id="uploadBtn" class="upload-btn">+</div>
@@ -906,11 +1256,33 @@
 
   <input type="file" id="fileInput" accept="image/*">
 
-
   <div id="imageContainer"></div>
 
-  <img src="fly.png" alt="فراشة متحركة" id="butterfly">
+  <img id="butterfly" src="fly.png" alt="فراشة متحركة">
+
+
+  <div id="confirmationModal" class="modal-overlay">
+    <div class="modal-content">
+      <button class="close-modal-btn" onclick="document.getElementById('confirmationModal').style.display='none'">✖️</button>
+      <h2>تأكيد</h2>
+      <p id="confirmMessage"></p>
+      <div class="modal-buttons">
+        <button id="confirmYes">نعم</button>
+        <button id="confirmNo">لا</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="archiveModal" class="modal-overlay">
+    <div class="modal-content" id="archiveModalContent">
+      <button class="close-modal-btn" id="closeArchiveModalBtn">✖️</button>
+      <h2></h2>
+      <div id="archivedTextsContainer">
+        </div>
+    </div>
+  </div>
 
 </body>
 </html>
+
 
